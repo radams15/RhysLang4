@@ -1,8 +1,13 @@
-sub hello(name) {
-	print "Hello !";
-	print name;
-	print "\n";
+
+sub hello(name: str): int {
+	my age = 5;
+	
+	return age;
 }
 
-my age = 5;
-my name = 'rhys';
+sub main(): void {
+	my name = 'rhys';
+	my name2 = 'adams';
+
+	hello(name);
+}

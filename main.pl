@@ -7,6 +7,8 @@ use lib './lib';
 
 use Token;
 use Lexer;
+use Parser;
+use Visitor;
 
 open FH, '<', 'in.rl';
 my $data = join '', <FH>;
@@ -16,6 +18,12 @@ my $lex = Lexer->new($data);
 
 my $tokens = $lex->scan_tokens;
 
-for (@$tokens) {
-	print $_->str, "\n";
-}
+#print join "\n", (map {$_->str} @$tokens), "\n--------------\n\n";
+
+my $parser = Parser->new($tokens);
+
+my $visitor = Visitor->new;
+
+my $program = $parser->parse;
+
+$visitor->visit($program);

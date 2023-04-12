@@ -65,7 +65,7 @@ sub add_token {
 	my ($type, $literal) = @_;
 
 	my $value = $class->source_at($class->{start}, $class->{current});
-	push @{$class->{tokens}}, Token->new($type, $value, $literal);
+	push @{$class->{tokens}}, Token->new($type, $value, $literal, $class->{line}, $class->{start});
 }
 
 sub scan_token {
@@ -83,6 +83,7 @@ sub scan_token {
 		when ('-') { $class->add_token('MINUS') }
 		when ('+') { $class->add_token('PLUS') }
 		when (';') { $class->add_token('SEMICOLON') }
+		when (':') { $class->add_token('COLON') }
 
 		when ('!') { $class->add_token($class->match('=')? 'BANG_EQUALS' : 'BANG') }
 		when ('=') { $class->add_token($class->match('=')? 'EQUALS_EQUALS' : 'EQUALS') }
