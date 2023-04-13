@@ -415,6 +415,22 @@ sub unary {
 		};
 	}
 
+	$class->asm;
+}
+
+sub asm {
+	my $class = shift;
+
+	if($class->match('ASM')) {
+		$class->consume('LEFT_PAREN');
+		my $str = $class->expression;
+		$class->consume('RIGHT_PAREN');
+		return {
+			type => 'ASM',
+			str => $str,
+		};
+	}
+
 	$class->call;
 }
 
@@ -477,11 +493,6 @@ sub primary {
 		return {
 			type => 'LITERAL',
 			value => $class->previous->{literal},
-		};
-	} elsif($class->match('ASM')) {
-		return {
-			type => 'ASM',
-			value => $class->previous,
 		};
 	} elsif($class->match('IDENTIFIER')) {
 		return {

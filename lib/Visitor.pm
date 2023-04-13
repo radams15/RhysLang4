@@ -282,9 +282,11 @@ sub get_str_ref {
 	
 	my $id = 'str_' . (scalar @{$class->{strings}} + 1);
 	
-	push @{$class->{strings}}, "$id: db '$val', 0";
+	my $len = length $val;
 	
-	"[$id]";
+	push @{$class->{strings}}, "$id: db $len, '$val'";
+	
+	"$id";
 }
 
 sub visit_literal {
@@ -352,6 +354,13 @@ sub visit_call {
 	
 	$class->visit($call->{callee});
 	$class->expel("call " . register('ax'));
+}
+
+sub visit_asm {
+	my $class = shift;
+	my ($asm) = @_;
+	
+	$class->expel($asm->{str}->{value});
 }
 
 1;
