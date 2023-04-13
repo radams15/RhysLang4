@@ -264,14 +264,13 @@ sub sub_def {
 	$class->consume('LEFT_PAREN', "Sub requires '('"); 
 
 	my %params;
-
 	unless ($class->check('RIGHT_PAREN')) {
 		do {
 			my $name = $class->consume('IDENTIFIER', 'Function declaration requires parameters');
 			$class->consume('COLON', 'Function parameter requires type');
 			my $type = $class->consume('IDENTIFIER', 'Function parameter requires type');
 
-			$params{$name} = $type;
+			$params{$name->{value}} = $type->{value};
 		} while ($class->match('COMMA'));
 	}
 
@@ -279,9 +278,13 @@ sub sub_def {
 	$class->consume('COLON', "Sub requires type after paremeter list!");
 	my $type = $class->consume('IDENTIFIER', "Sub requires type after paremeter list!");
 
-	$class->consume('LEFT_BRACE', "Sub requires '{' to open code block");
-	my $block = $class->block;
-	
+	my $block;
+	if($class->check('LEFT_BRACE')) {
+		$class->consume('LEFT_BRACE', "Sub requires '{' to open code block");
+		$block = $class->block;
+	} else {
+		$class->consume('SEMICOLON', "Sub declaration requires ';'.");
+	}
 
 	return {
 		type => 'SUB',
@@ -422,7 +425,7 @@ sub call {
 	
 	while (1) {
 		if($class->match('LEFT_PAREN')) {
-			$expr = $class->finish_call;
+			$expr = $class->finish_call($expr);
 		} else {
 			last;
 		}
@@ -474,6 +477,11 @@ sub primary {
 		return {
 			type => 'LITERAL',
 			value => $class->previous->{literal},
+		};
+	} elsif($class->match('ASM')) {
+		return {
+			type => 'ASM',
+			value => $class->previous,
 		};
 	} elsif($class->match('IDENTIFIER')) {
 		return {

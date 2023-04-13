@@ -17,7 +17,9 @@ sub get {
 	my $class = shift;
 	my ($name) = @_;
 	
-	$class->get_scope_of($name)->{variables}->{$name};
+	eval {
+		my $out = $class->get_scope_of($name)->{variables}->{$name};
+	} or undef;
 }
 
 sub set_new {

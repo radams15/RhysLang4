@@ -10,31 +10,8 @@ use Data::Dumper;
 
 use Scope;
 
-my @PROLOGUE = ("push bp", "mov bp, sp");
-my @EPILOGUE = ("pop bp", "ret");
+use Registers_x86_64;
 
-my %REGISTERS = (
-	AX => 'ax',
-	AH => 'ah',
-	AL => 'al',
-	BX => 'bx',
-	BH => 'bh',
-	BL => 'bl',
-	CX => 'cx',
-	CH => 'ch',
-	CL => 'cl',
-	DX => 'dx',
-	DH => 'dh',
-	DL => 'dl',
-	SI => 'si',
-	DI => 'di',
-	SP => 'sp',
-	BP => 'bp',
-	CS => 'cs',
-	DS => 'ds',
-	SS => 'ss',
-	ES => 'es',
-);
 
 sub register {
 	my ($name, $address, $offset) = @_;
@@ -43,13 +20,45 @@ sub register {
 	
 	$out .= '[' if $address;
 	
-	$out .= $REGISTERS{uc $name};
+	$out .= Registers::registers->{uc $name};
 	
 	$out .= "+$offset" if $offset;
 	
 	$out .= ']' if $address;
 	
 	$out;
+}
+
+=pod
+sub prologue {
+	(
+		'mov ' . register('cx') . ', ' . register('bp'),
+		'mov ' . register('bp') . ', ' . register('sp'),
+	);
+}
+
+sub epilogue {
+	(
+		'mov ' . register('bp') . ', ' . register('cx'),
+		'ret',
+	);
+}
+=cut
+
+
+sub prologue {
+	(
+		'push ' . register('bp'),
+		'mov ' . register('bp') . ', ' . register('sp'),
+	);
+}
+
+sub epilogue {
+	(
+		'mov ' . register('sp') . ', ' . register('bp'),
+		'pop ' . register('bp'),
+		'ret',
+	);
 }
 
 sub typeof {
@@ -64,20 +73,24 @@ sub sizeof_type {
 	my ($type) = @_;
 	
 	given ($type) {
-		when ('INT') { return 4 }
-		when ('STR') { return 4 }
-		when ('PTR') { return 4 }
+		when (/INT|STR|PTR/i) { Registers::datasizes->{'INT'} }
 		
 		default { die "Unknown type: $type" }
 	}
 }
 
 sub sizeof {
+	my $class = shift;
 	my ($data) = @_;
 	
 	given ($data->{type}) {
 		when ('LITERAL') {
 			return sizeof_type(typeof($data->{value}));
+		}
+		
+		when ('VARIABLE') {
+			my $var = $class->{scope}->get($data->{name}->{value});
+			return sizeof_type(typeof($var->{type}));
 		}
 		
 		default { die "Unknown type: " . $data->{type} }
@@ -94,9 +107,16 @@ sub new {
 		in_sub => 0,
 		scope => $global_scope,
 		strings => [],
+		subs => {},
+		call_registers => [
+			register('di'),
+			register('si'),
+			register('dx'),
+			register('cx'),
+		],
 		
 		global_scope => $global_scope,
-		stack_offset => -4,
+		stack_offset => -sizeof_type('PTR'),
 	}, $class;
 }
 
@@ -145,7 +165,14 @@ sub visit_program {
 	my $class = shift;
 	my ($program) = @_;
 	
-	#map {$class->visit($_)} @{$program->{body}};
+	$class->expel(
+		"section .text\n",
+		"global _start\n",
+		"_start:",
+		"\tcall main",
+		"\n",
+	);
+	
 	$class->visit_all(@{$program->{body}});
 	
 	$class->expel("\nsection .data:");
@@ -161,18 +188,48 @@ sub visit_sub {
 	
 	my $sub_name = $sub->{name}->{value};
 	
+	$class->{subs}->{$sub_name} = $sub;
+	$class->{global_scope}->set($sub_name, {
+		type => 'GLOBAL',
+		name => $sub_name,
+	});
+	
+	return unless defined $sub->{block};
+	
 	my $old_sub = $class->{in_sub};
 	my $old_stack_offset = $class->{stack_offset};
 	
 	$class->expel("$sub_name:");
 	$class->{in_sub} = $sub;
 	$class->{scope} = $class->{scope}->child;
+	$class->{stack_offset} = -sizeof_type('PTR');
 	
 	$class->inc;
-	$class->expel(@PROLOGUE);
-	$class->visit($sub->{block});
+	$class->expel(&prologue);
 	
-	$class->expel(@EPILOGUE);
+	my $used_regs=0;
+	my ($register, $offset, $arg_size);
+	while(my ($name, $type) = each %{$sub->{params}}) {
+		$register = $class->{call_registers}[$used_regs];
+
+		$arg_size = sizeof_type($type);
+		$offset = $class->{stack_offset};
+		$class->expel("push $register");
+		$class->{scope}->set($name, {
+			type => 'LOCAL',
+			offset => $offset,
+		});
+		
+		$class->{stack_offset} -= $arg_size;
+		$used_regs++;
+	}
+	
+	$class->visit($sub->{block});
+		
+	$class->dec;
+	$class->expel(".end_$sub_name:");
+	$class->inc;
+	$class->expel(&epilogue);
 	
 	$class->{scope} = $class->{scope}->{parent};
 	$class->{in_sub} = $old_sub;
@@ -183,7 +240,6 @@ sub visit_sub {
 
 sub visit_block {
 	my $class = shift;
-	
 	my ($block) = @_;
 	
 	map {$class->visit($_)} @{$block->{statements}}
@@ -201,7 +257,7 @@ sub visit_my {
 		offset => $class->{stack_offset},
 	});
 	
-	$class->{stack_offset} += sizeof($my->{initialiser});
+	$class->{stack_offset} -= $class->sizeof($my->{initialiser});
 }
 
 sub visit_return {
@@ -210,7 +266,7 @@ sub visit_return {
 	
 	$class->visit($return->{value});
 	
-	$class->expel(@EPILOGUE);
+	$class->expel("jmp .end_$class->{in_sub}->{name}->{value}");
 }
 
 sub visit_expression {
@@ -226,7 +282,7 @@ sub get_str_ref {
 	
 	my $id = 'str_' . (scalar @{$class->{strings}} + 1);
 	
-	push @{$class->{strings}}, "$id: db '$val'";
+	push @{$class->{strings}}, "$id: db '$val', 0";
 	
 	"[$id]";
 }
@@ -246,6 +302,56 @@ sub visit_literal {
 			$class->expel("mov $reg, $literal->{value}")
 		}
 	}
+}
+
+sub visit_variable {
+	my $class = shift;
+	my ($var) = shift;
+	
+	my $name = $var->{name}->{value};
+	
+	my $value = $class->{scope}->get($name);
+	
+	die "Unknown variable: $name" unless defined $value;
+	
+	given($value->{type}) {
+		when ('LOCAL') {
+			$class->expel("mov ". register('ax') .", " . register('bp', 1, $value->{offset}));
+		}
+		
+		when ('GLOBAL') {
+			$class->expel("mov ". register('ax') .", $value->{name}");
+		}
+		
+		default {
+			die "Unknown variable type: $value->{type}";
+		}
+	}
+	
+	$name;
+}
+
+sub visit_call {
+	my $class = shift;
+	my ($call) = @_;
+	
+	my @args = @{$call->{arguments}};
+	my $num_args = scalar @args;
+	
+	for my $arg (@args) {
+		$class->visit($arg);
+		
+		$class->expel("push " . register('ax'));
+	}
+	
+	
+	my @reversed_registers = reverse( @{$class->{call_registers}}[0..$num_args-1] );
+	for my $register(@reversed_registers) {		
+		$class->expel("pop $register");
+	}
+	
+	$class->visit($call->{callee});
+	$class->expel("call " . register('ax'));
 }
 
 1;

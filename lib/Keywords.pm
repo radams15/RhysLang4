@@ -11,6 +11,7 @@ my @keywords = qw(
 	and
 	not
 	return
+	asm
 );
 
 
