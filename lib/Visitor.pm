@@ -12,7 +12,6 @@ use Scope;
 
 use Registers_x86_64;
 
-
 sub register {
 	my ($name, $address, $offset) = @_;
 	
@@ -29,28 +28,11 @@ sub register {
 	$out;
 }
 
-=pod
-sub prologue {
-	(
-		'mov ' . register('cx') . ', ' . register('bp'),
-		'mov ' . register('bp') . ', ' . register('sp'),
-	);
-}
-
-sub epilogue {
-	(
-		'mov ' . register('bp') . ', ' . register('cx'),
-		'ret',
-	);
-}
-=cut
-
 my @CALL_REGISTERS = qw/di si dx cx/;
 
 sub prologue_def {
 	(
 		'%macro PROLOGUE 0',
-		#(map {"push ".register($_)} @CALL_REGISTERS),
 		'push ' . register('bp'),
 		'mov ' . register('bp') . ', ' . register('sp'),
 		'%endmacro', ''
@@ -62,7 +44,6 @@ sub epilogue_def {
 		'%macro EPILOGUE 0',
 		'mov ' . register('sp') . ', ' . register('bp'),
 		'pop ' . register('bp'),
-		#(map {"pop ".register($_)} @CALL_REGISTERS),
 		'ret',
 		'%endmacro', ''
 	);
@@ -403,14 +384,6 @@ sub visit_index {
 		$class->expel('inc ' . register('ax')); # Go over the string length.
 	}
 	$class->expel('push ' . register('ax'));
-	
-=pod
-	$class->expel('pop ' . register('bx')); # bx = index
-	$class->expel('pop ' . register('cx')); # cx = array
-	$class->expel('add ' . register('cx') . ', ' . register('bx'));
-	$class->expel('xor ' . register('ax') . ', ' . register('ax'));
-	$class->expel('mov ' . register('al') . ', ' . register('cx', 1));
-=cut
 
 	$class->expel('pop ' . register('si')); # si = index
 	$class->expel('pop ' . register('bx')); # bx = array
