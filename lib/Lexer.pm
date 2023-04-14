@@ -78,6 +78,8 @@ sub scan_token {
 		when (')') { $class->add_token('RIGHT_PAREN') }
 		when ('{') { $class->add_token('LEFT_BRACE') }
 		when ('}') { $class->add_token('RIGHT_BRACE') }
+		when ('[') { $class->add_token('LEFT_BRACKET') }
+		when (']') { $class->add_token('RIGHT_BRACKET') }
 		when (',') { $class->add_token('COMMA') }
 		when ('.') { $class->add_token('DOT') }
 		when ('-') { $class->add_token('MINUS') }

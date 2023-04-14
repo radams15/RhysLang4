@@ -5,6 +5,8 @@ use strict;
 
 use Devel::StackTrace;
 
+use Data::Dumper;
+
 use constant (
 	DEBUG => 1
 );
@@ -92,20 +94,6 @@ sub match {
 	}
 
 	return 0;
-
-=pod
-	for (@_) {
-		print "Match: '$_'\n";
-		if($class->check($_)) {
-			$class->advance;
-			return 1;
-		}
-	}
-	
-	print "\n\n";
-=cut
-
-	return 0;
 }
 
 sub parse {
@@ -151,7 +139,7 @@ sub var_declaration {
 	if($class->match('EQUALS')) {
 		$initialiser = $class->expression;
 	}
-
+	
 	$class->consume('SEMICOLON', "Declaration must end with ';'");
 
 	return {
@@ -415,7 +403,26 @@ sub unary {
 		};
 	}
 
-	$class->asm;
+	$class->index;
+}
+
+sub index {
+	my $class = shift;
+	
+	my $expr = $class->asm;
+	
+	if($class->match('LEFT_BRACKET')) {
+		my $index_expr = $class->expression;
+		$class->consume('RIGHT_BRACKET', "Index requires closing ']'");
+				
+		return {
+			type => 'INDEX',
+			value => $expr,
+			index => $index_expr,
+		};
+	}
+	
+	$expr;
 }
 
 sub asm {
@@ -437,8 +444,8 @@ sub asm {
 sub call {
 	my $class = shift;
 	
-	my $expr = $class->primary;
-	
+	my $expr = $class->primary; # Left value
+		
 	while (1) {
 		if($class->match('LEFT_PAREN')) {
 			$expr = $class->finish_call($expr);

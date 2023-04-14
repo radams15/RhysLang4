@@ -62,7 +62,17 @@ sub epilogue {
 }
 
 sub typeof {
+	my $class = shift;
 	my ($data) = @_;
+	
+	if(ref $data eq 'HASH') {
+		given($data->{type}) {
+			when ('VARIABLE') {
+				my $var = $class->{scope}->get($data->{name}->{value});
+				return $var->{datatype};
+			}
+		}
+	}
 	
 	return 'INT' if($data =~ /\d+(?:\.\d+)?/);
 	
@@ -85,12 +95,22 @@ sub sizeof {
 	
 	given ($data->{type}) {
 		when ('LITERAL') {
-			return sizeof_type(typeof($data->{value}));
+			return sizeof_type($class->typeof($data->{value}));
 		}
 		
 		when ('VARIABLE') {
 			my $var = $class->{scope}->get($data->{name}->{value});
-			return sizeof_type(typeof($var->{type}));
+			return sizeof_type($class->typeof($var->{type}));
+		}
+		
+		when ('INDEX') {
+			my $indexed = $data->{value};
+			my $indexed_type = $class->typeof($indexed);
+			
+			given ($indexed_type) {
+				when('STR') { return sizeof_type('INT') } # e.g. a char.
+				default { die "Cannot index '$indexed_type'" }
+			}
 		}
 		
 		default { die "Unknown type: " . $data->{type} }
@@ -192,6 +212,7 @@ sub visit_sub {
 	$class->{global_scope}->set($sub_name, {
 		type => 'GLOBAL',
 		name => $sub_name,
+		datatype => 'SUB',
 	});
 	
 	return unless defined $sub->{block};
@@ -218,6 +239,7 @@ sub visit_sub {
 		$class->{scope}->set($name, {
 			type => 'LOCAL',
 			offset => $offset,
+			datatype => $type,
 		});
 		
 		$class->{stack_offset} -= $arg_size;
@@ -236,6 +258,8 @@ sub visit_sub {
 	$class->{stack_offset} = $old_stack_offset;
 	
 	$class->dec;
+	
+	$sub->{returns};
 }
 
 sub visit_block {
@@ -252,12 +276,17 @@ sub visit_my {
 	$class->visit($my->{initialiser});
 	$class->expel('push '. register('ax'));
 	
+	my $datatype = $class->typeof($my->{initialiser}->{value});
+	
 	$class->{scope}->set_new($my->{name}->{value}, {
 		type => 'LOCAL',
 		offset => $class->{stack_offset},
+		datatype => $datatype,
 	});
 	
 	$class->{stack_offset} -= $class->sizeof($my->{initialiser});
+	
+	$datatype;
 }
 
 sub visit_return {
@@ -295,7 +324,9 @@ sub visit_literal {
 	
 	my $reg = register('ax');
 	
-	given (typeof($literal->{value})) {
+	my $type = $class->typeof($literal->{value});
+	
+	given ($type) {
 		when ('STR') {
 			$class->expel("mov $reg, " . $class->get_str_ref($literal->{value}))
 		}
@@ -330,7 +361,37 @@ sub visit_variable {
 		}
 	}
 	
-	$name;
+	$value->{datatype};
+}
+
+sub visit_index {
+	my $class = shift;
+	my ($index) = @_;
+	
+	my $type = $class->visit($index->{value});
+	
+	$class->expel('push ' . register('ax'));
+
+	$class->visit($index->{index});
+	if($type eq 'STR') {
+		$class->expel('inc ' . register('ax')); # Go over the string length.
+	}
+	$class->expel('push ' . register('ax'));
+	
+=pod
+	$class->expel('pop ' . register('bx')); # bx = index
+	$class->expel('pop ' . register('cx')); # cx = array
+	$class->expel('add ' . register('cx') . ', ' . register('bx'));
+	$class->expel('xor ' . register('ax') . ', ' . register('ax'));
+	$class->expel('mov ' . register('al') . ', ' . register('cx', 1));
+=cut
+
+	$class->expel('pop ' . register('si')); # si = index
+	$class->expel('pop ' . register('bx')); # bx = array
+	$class->expel('add ' . register('bx') . ', rsi');
+	
+	$class->expel('xor ' . register('ax') . ', ' . register('ax'));
+	$class->expel('mov ' . register('al') . ', ' . register('bx', 1));
 }
 
 sub visit_call {

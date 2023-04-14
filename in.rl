@@ -1,13 +1,3 @@
-sub putc(char: int) : void {
-	asm ('
-	mov rax, 1 ; write
-	mov rdi, 1 ; stdout
-	mov rsi, [rbp-8] ; message
-	mov rdx, 1 ; length
-	syscall
-	');
-}
-
 sub cstr(char: str) : ptr {
 	asm ('
 	push rdi
@@ -38,6 +28,16 @@ sub write(char: ptr, len: int) : void {
 	');
 }
 
+sub putc(char: int) : void {
+	asm ('
+	mov rax, 1 ; write
+	mov rdi, 1 ; stdout
+	mov rsi, rsp ; message ptr = rsp as at top of stack.
+	mov rdx, 1 ; length
+	syscall
+	');
+}
+
 sub print(data: str) : void {
 	write(cstr(data), strlen(data));
 }
@@ -60,9 +60,14 @@ sub main(): void {
 	my name = 'rhys';
 	my name2 = 'adams';
 	
+	my letter3 = name2[2];
+	
+	putc(letter3);
+	
 	print(name);
 	print(" ");
 	print(name2);
+	putc(10);
 	
 	exit(strlen(name));
 }
