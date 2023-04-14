@@ -22,10 +22,10 @@ my %REGISTERS = (
 	DI => 'rdi',
 	SP => 'rsp',
 	BP => 'rbp',
-	CS => 'rcs',
-	DS => 'rds',
-	SS => 'rss',
-	ES => 'res',
+	CS => 'cs',
+	DS => 'ds',
+	SS => 'ss',
+	ES => 'es',
 );
 
 sub registers { \%REGISTERS }

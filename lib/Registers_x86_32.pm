@@ -26,10 +26,10 @@ our %REGISTERS = (
 	DI => 'edi',
 	SP => 'esp',
 	BP => 'ebp',
-	CS => 'ecs',
-	DS => 'eds',
-	SS => 'ess',
-	ES => 'ees',
+	CS => 'cs',
+	DS => 'ds',
+	SS => 'ss',
+	ES => 'es',
 );
 
 sub registers { \%REGISTERS }
