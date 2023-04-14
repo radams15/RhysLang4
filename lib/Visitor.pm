@@ -46,18 +46,22 @@ sub epilogue {
 =cut
 
 
-sub prologue {
+sub prologue_def {
 	(
+		'%macro PROLOGUE 0',
 		'push ' . register('bp'),
 		'mov ' . register('bp') . ', ' . register('sp'),
+		'%endmacro', ''
 	);
 }
 
-sub epilogue {
+sub epilogue_def {
 	(
+		'%macro EPILOGUE 0',
 		'mov ' . register('sp') . ', ' . register('bp'),
 		'pop ' . register('bp'),
 		'ret',
+		'%endmacro', ''
 	);
 }
 
@@ -185,6 +189,8 @@ sub visit_program {
 	my $class = shift;
 	my ($program) = @_;
 	
+	$class->expel(prologue_def, epilogue_def);
+	
 	$class->expel(
 		"section .text\n",
 		"global _start\n",
@@ -226,7 +232,7 @@ sub visit_sub {
 	$class->{stack_offset} = -sizeof_type('PTR');
 	
 	$class->inc;
-	$class->expel(&prologue);
+	$class->expel('PROLOGUE');
 	
 	my $used_regs=0;
 	my ($register, $offset, $arg_size);
@@ -251,7 +257,7 @@ sub visit_sub {
 	$class->dec;
 	$class->expel(".end_$sub_name:");
 	$class->inc;
-	$class->expel(&epilogue);
+	$class->expel('EPILOGUE');
 	
 	$class->{scope} = $class->{scope}->{parent};
 	$class->{in_sub} = $old_sub;
@@ -313,7 +319,18 @@ sub get_str_ref {
 	
 	my $len = length $val;
 	
-	push @{$class->{strings}}, "$id: db $len, '$val'";
+	my @str_vals = ();
+	for(split /\\(\w)/, $val) {		
+		if($_ eq 'n') {
+			push @str_vals, ord "\n";
+			$len--; # Length 1 less as removed '\\'.
+		} else {
+			push @str_vals, "'$_'";
+		}
+	}
+		
+	my $str_data = join ', ', ($len, @str_vals);
+	push @{$class->{strings}}, "$id: db $str_data";
 	
 	"$id";
 }

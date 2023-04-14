@@ -18,7 +18,7 @@ sub get {
 	my ($name) = @_;
 	
 	eval {
-		my $out = $class->get_scope_of($name)->{variables}->{$name};
+		return $class->get_scope_of($name)->{variables}->{$name};
 	} or undef;
 }
 

@@ -1,3 +1,10 @@
+asm ('
+%include "stdlib.nasm"
+');
+
+sub putc(char: int) : void;
+sub exit(code: int) : void;
+
 sub cstr(char: str) : ptr {
 	asm ('
 	push rdi
@@ -28,26 +35,8 @@ sub write(char: ptr, len: int) : void {
 	');
 }
 
-sub putc(char: int) : void {
-	asm ('
-	mov rax, 1 ; write
-	mov rdi, 1 ; stdout
-	mov rsi, rsp ; message ptr = rsp as at top of stack.
-	mov rdx, 1 ; length
-	syscall
-	');
-}
-
 sub print(data: str) : void {
 	write(cstr(data), strlen(data));
-}
-
-sub exit(code: int) : void {
-	asm ('
-	mov rdi, [rbp-8] ; zero rdi (rdi hold return value)
-	mov rax, 0x3c ; set syscall number to 60 (0x3c hex)
-	syscall
-	');
 }
 
 sub hello(name: str): int {
@@ -57,7 +46,7 @@ sub hello(name: str): int {
 }
 
 sub main(): void {
-	my name = 'rhys';
+	my name = 'rhys\n';
 	my name2 = 'adams';
 	
 	my letter3 = name2[2];
@@ -65,9 +54,9 @@ sub main(): void {
 	putc(letter3);
 	
 	print(name);
-	print(" ");
 	print(name2);
+	print("\n");
 	putc(10);
 	
-	exit(strlen(name));
+	exit(strlen(name2));
 }
