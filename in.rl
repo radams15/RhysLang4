@@ -10,7 +10,7 @@ sub open(file: str, mode: int) : int;
 sub write(fd: int, char: ptr, len: int) : void;
 
 sub puts(data: str) : void {
-	write(cstr(data), strlen(data));
+	write(1, cstr(data), strlen(data));
 }
 
 sub hello(name: str): int {
