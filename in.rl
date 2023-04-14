@@ -1,41 +1,12 @@
-asm ('
-%include "stdlib.nasm"
-');
+asm ('%include "stdlib.nasm"');
 
 sub putc(char: int) : void;
 sub exit(code: int) : void;
+sub cstr(char: str) : ptr;
+sub strlen(char: str) : int;
+sub write(char: ptr, len: int) : void;
 
-sub cstr(char: str) : ptr {
-	asm ('
-	push rdi
-	mov rdi, [rbp-8]
-	add rdi, 1
-	mov rax, rdi
-	pop rdi
-	');
-}
-
-sub strlen(char: str) : int {
-	asm ('
-	push rdi
-	mov rdi, [rbp-8]
-	xor rax, rax
-	mov al, [rdi]
-	pop rdi
-	');
-}
-
-sub write(char: ptr, len: int) : void {
-	asm ('
-	mov rax, 1 ; write
-	mov rdi, 1 ; stdout
-	mov rsi, [rbp-8] ; message
-	mov rdx, [rbp-16] ; length
-	syscall
-	');
-}
-
-sub print(data: str) : void {
+sub puts(data: str) : void {
 	write(cstr(data), strlen(data));
 }
 
@@ -53,9 +24,9 @@ sub main(): void {
 	
 	putc(letter3);
 	
-	print(name);
-	print(name2);
-	print("\n");
+	puts(name);
+	puts(name2);
+	puts("\n");
 	putc(10);
 	
 	exit(strlen(name2));
