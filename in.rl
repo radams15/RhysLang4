@@ -4,7 +4,10 @@ sub putc(char: int) : void;
 sub exit(code: int) : void;
 sub cstr(char: str) : ptr;
 sub strlen(char: str) : int;
-sub write(char: ptr, len: int) : void;
+
+sub close(fd: int) : int;
+sub open(file: str, mode: int) : int;
+sub write(fd: int, char: ptr, len: int) : void;
 
 sub puts(data: str) : void {
 	write(cstr(data), strlen(data));
@@ -19,6 +22,10 @@ sub hello(name: str): int {
 sub main(): void {
 	my name = 'rhys\n';
 	my name2 = 'adams';
+	
+	my out = open(cstr('out.txt'), 110);
+	write(out, cstr(name), strlen(name));
+	close(out);
 	
 	my letter3 = name2[2];
 	

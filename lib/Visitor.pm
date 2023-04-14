@@ -120,7 +120,12 @@ sub sizeof {
 			}
 		}
 		
-		default { die "Unknown type: " . $data->{type} }
+		when ('CALL') {
+			my $sub = $class->{scope}->get($data->{callee}->{name}->{value});
+			return sizeof_type($sub->{def}->{returns}->{value});
+		}
+		
+		default { die "Unknown sizeof type: " . $data->{type} }
 	}
 }
 
@@ -222,6 +227,7 @@ sub visit_sub {
 		type => 'GLOBAL',
 		name => $sub_name,
 		datatype => 'SUB',
+		def => $sub,
 	});
 	
 	return unless defined $sub->{block};
@@ -320,7 +326,7 @@ sub get_str_ref {
 	
 	my $id = 'str_' . (scalar @{$class->{strings}} + 1);
 	
-	my $len = length $val;
+	my $len = length($val) + 1; # +1 for NULL-termination.
 	
 	my @str_vals = ();
 	for(split /\\(\w)/, $val) {		
@@ -332,7 +338,7 @@ sub get_str_ref {
 		}
 	}
 		
-	my $str_data = join ', ', ($len, @str_vals);
+	my $str_data = join ', ', ($len, @str_vals, 0);
 	push @{$class->{strings}}, "$id: db $str_data";
 	
 	"$id";

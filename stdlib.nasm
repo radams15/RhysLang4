@@ -7,6 +7,28 @@ putc:
 	mov rdx, 1 ; length
 	syscall
 	EPILOGUE
+	
+open:
+	PROLOGUE
+	push rdi
+	push rsi
+	push rdx
+	
+	mov rax, 2
+	mov rdi, [rbp-8] ; file name
+	mov rsi, [rbp-16] ; flags
+	mov rdx, 777 ; mode 777 - r/w/e all
+	syscall
+	EPILOGUE
+	
+close:
+	PROLOGUE
+	push rdi
+	
+	mov rax, 3
+	mov rdi, [rbp-8] ; file handle
+	syscall
+	EPILOGUE
 
 exit:
 	PROLOGUE
@@ -40,9 +62,10 @@ write:
 	PROLOGUE
 	push rdi ; arg 1
 	push rsi ; arg 2
+	push rdx
 	mov rax, 1 ; write
-	mov rdi, 1 ; stdout
-	mov rsi, [rbp-8] ; message
-	mov rdx, [rbp-16] ; length
+	mov rdi, [rbp-8] ; fh
+	mov rsi, [rbp-16] ; message
+	mov rdx, [rbp-24] ; length
 	syscall
 	EPILOGUE

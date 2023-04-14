@@ -6,3 +6,6 @@ compile:
 assemble:
 	nasm -felf64 out.nasm
 	ld out.o -o out
+
+run:
+	./out
