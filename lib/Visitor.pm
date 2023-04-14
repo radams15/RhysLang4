@@ -50,7 +50,7 @@ my @CALL_REGISTERS = qw/di si dx cx/;
 sub prologue_def {
 	(
 		'%macro PROLOGUE 0',
-		(map {"push ".register($_)} @CALL_REGISTERS),
+		#(map {"push ".register($_)} @CALL_REGISTERS),
 		'push ' . register('bp'),
 		'mov ' . register('bp') . ', ' . register('sp'),
 		'%endmacro', ''
@@ -62,7 +62,7 @@ sub epilogue_def {
 		'%macro EPILOGUE 0',
 		'mov ' . register('sp') . ', ' . register('bp'),
 		'pop ' . register('bp'),
-		(map {"pop ".register($_)} @CALL_REGISTERS),
+		#(map {"pop ".register($_)} @CALL_REGISTERS),
 		'ret',
 		'%endmacro', ''
 	);
