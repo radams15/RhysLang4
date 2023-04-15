@@ -10,7 +10,7 @@ use Data::Dumper;
 
 use Scope;
 
-use Registers_x86_64;
+use Registers_x86_16;
 
 sub register {
 	my ($name, $address, $offset) = @_;
@@ -74,6 +74,19 @@ sub sizeof_type {
 		when (/INT|STR|PTR/i) { Registers::datasizes->{'INT'} }
 		
 		default { die "Unknown type: $type" }
+	}
+}
+
+{
+	my $label_count = 0;
+	sub generate_labels {
+		my ($type) = @_;
+		
+		$label_count++;
+		
+		my $start = '.'.$type.'_'.$label_count;
+		
+		($start, $start.'_end');
 	}
 }
 
@@ -184,8 +197,7 @@ sub visit_program {
 		"section .text\n",
 		"global _start\n",
 		"_start:",
-		"\tcall main",
-		"\n",
+		"\tcall main\n",
 	);
 	
 	$class->visit_all(@{$program->{body}});
@@ -258,11 +270,94 @@ sub visit_sub {
 	$sub->{returns};
 }
 
+sub visit_loop {
+	my $class = shift;
+	my ($loop) = @_;
+	
+	my ($start, $end) = generate_labels('loop');
+	
+	$class->dec; $class->expel("$start:"); $class->inc;
+	$class->visit($loop->{expr});
+	$class->expel(
+		'cmp ' . register('ax') . ', 0',
+		"je $end",
+	);
+	
+	$class->visit($loop->{body});
+	
+	$class->expel("jmp $start");
+	
+	$class->dec; $class->expel("$end:"); $class->inc;
+}
+
 sub visit_block {
 	my $class = shift;
 	my ($block) = @_;
 	
 	map {$class->visit($_)} @{$block->{statements}}
+}
+
+sub visit_assign {
+	my $class = shift;
+	my ($assign) = @_;
+	
+	$class->visit($assign->{value});
+	
+	my $var = $class->{scope}->get($assign->{name}->{value});
+	
+	print "; $assign->{name}->{value} @ $var->{offset}\n";
+	
+	$class->expel('mov ' . register('bp', 1, $var->{offset}) . ', ' . register('ax'));
+}
+
+sub visit_comparison {
+	my $class = shift;
+	my ($comparison) = @_;
+	
+	given($comparison->{op}->{name}) {
+		when (/LESS|GREATER/) {
+			$class->visit($comparison->{left});
+			$class->expel('push ' . register('ax'));
+			$class->visit($comparison->{right});
+			$class->expel('pop ' . register('cx'));
+			$class->expel('cmp ' . register('cx') . ', ' . register('ax'));
+			$class->expel('mov ' . register('ax') . ', 0');
+			
+			when('LESS') {
+				$class->expel('setl ' . register('al'));
+			}
+			
+			when('GREATER') {
+				$class->expel('setg ' . register('al'));
+			}
+		}
+
+		default { die "Unknown term: $comparison->{op}->{name}" }
+	}
+}
+
+sub visit_term {
+	my $class = shift;
+	my ($term) = @_;
+	
+	given($term->{op}->{name}) {
+		when ('PLUS') {
+			$class->visit($term->{left});
+			$class->expel('push ' . register('ax'));
+			$class->visit($term->{right});
+			$class->expel('pop ' . register('cx'));
+			$class->expel('add ' . register('ax') . ', ' . register('cx'));
+		}
+		when ('MINUS') {
+			$class->visit($term->{right});
+			$class->expel('push ' . register('ax'));
+			$class->visit($term->{left});
+			$class->expel('pop ' . register('cx'));
+			$class->expel('sub ' . register('ax') . ', ' . register('cx'));
+		}
+		
+		default { die "Unknown term: $term->{op}->{name}" }
+	}
 }
 
 sub visit_my {
@@ -387,7 +482,7 @@ sub visit_index {
 
 	$class->expel('pop ' . register('si')); # si = index
 	$class->expel('pop ' . register('bx')); # bx = array
-	$class->expel('add ' . register('bx') . ', rsi');
+	$class->expel('add ' . register('bx') . ', ' . register('si'));
 	
 	$class->expel('xor ' . register('ax') . ', ' . register('ax'));
 	$class->expel('mov ' . register('al') . ', ' . register('bx', 1));

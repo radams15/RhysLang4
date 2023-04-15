@@ -1,4 +1,4 @@
-asm ('%include "stdlib.nasm"');
+asm ('%include "stdlib/stdlib.dos.x86_16.nasm"');
 
 sub putc(char: int) : void;
 sub exit(code: int) : void;
@@ -10,31 +10,29 @@ sub open(file: str, mode: int) : int;
 sub write(fd: int, char: ptr, len: int) : void;
 
 sub puts(data: str) : void {
-	write(1, cstr(data), strlen(data));
+	my i = 1;
+	my len = strlen(data);
+	
+	while(i < len) {
+		putc(data[i]);
+		i = i + 1;
+	}
 }
 
-sub hello(name: str): int {
-	my age = 5;
-	
-	return age;
+sub crlf() : void {
+	putc(10);
+	putc(13);
 }
 
 sub main(): void {
-	my name = 'rhys\n';
+	my name = 'rhys';
 	my name2 = 'adams';
 	
-	my out = open(cstr('out.txt'), 110);
-	write(out, cstr(name), strlen(name));
-	close(out);
-	
-	my letter3 = name2[2];
-	
-	putc(letter3);
-	
 	puts(name);
+	crlf();
+	crlf();
 	puts(name2);
-	puts("\n");
-	putc(10);
+	crlf();
 	
-	exit(strlen(name2));
+	exit(1);
 }

@@ -224,7 +224,8 @@ sub while_statement {
 	my $body = $class->statement;
 
 	return {
-		type => 'WHILE',
+		type => 'LOOP',
+		expr => $expr,
 		body => $body,
 	};
 }
@@ -320,8 +321,8 @@ sub equality {
 		my $op = $class->previous;
 		my $right = $class->comparison;
 		$expr = {
-			type => 'BINARY',
-			expr => $expr,
+			type => 'EQUALITY',
+			left => $expr,
 			op => $op,
 			right => $right,
 		};
@@ -340,8 +341,8 @@ sub comparison {
 		my $right = $class->term;
 		
 		$expr = {
-			type => 'BINARY',
-			expr => $expr,
+			type => 'COMPARISON',
+			left => $expr,
 			op => $op,
 			right => $right,
 		}
@@ -360,8 +361,8 @@ sub term {
 		my $right = $class->factor;
 		
 		$expr = {
-			type => 'BINARY',
-			expr => $expr,
+			type => 'TERM',
+			left => $expr,
 			op => $op,
 			right => $right,
 		}
@@ -375,13 +376,13 @@ sub factor {
 
 	my $expr = $class->unary;
 
-	while($class->match(qw/SLASH STAR/)) {
+	while($class->match(qw/DIVIDE MULTIPLY/)) {
 		my $op = $class->previous;
 		my $right = $class->unary;
 		
 		$expr = {
-			type => 'BINARY',
-			expr => $expr,
+			type => 'FACTOR',
+			left => $expr,
 			op => $op,
 			right => $right,
 		}

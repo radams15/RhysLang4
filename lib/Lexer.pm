@@ -84,8 +84,12 @@ sub scan_token {
 		when ('.') { $class->add_token('DOT') }
 		when ('-') { $class->add_token('MINUS') }
 		when ('+') { $class->add_token('PLUS') }
+		when ('*') { $class->add_token('MULTIPLY') }
+		when ('/') { $class->add_token('DIVIDE') }
 		when (';') { $class->add_token('SEMICOLON') }
 		when (':') { $class->add_token('COLON') }
+		
+		when ('#') { $class->advance until($class->peek eq "\n" or $class->at_end) }
 
 		when ('!') { $class->add_token($class->match('=')? 'BANG_EQUALS' : 'BANG') }
 		when ('=') { $class->add_token($class->match('=')? 'EQUALS_EQUALS' : 'EQUALS') }
