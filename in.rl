@@ -1,4 +1,4 @@
-asm ('%include "stdlib/stdlib.dos.x86_16.nasm"');
+asm ('%include "stdlib/stdlib.linux.x86_64.nasm"');
 
 sub putc(char: int) : void;
 sub exit(code: int) : void;

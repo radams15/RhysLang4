@@ -12,3 +12,6 @@ assemble_linux:
 
 run:
 	./out
+
+rundos:
+	flatpak run com.dosbox_x.DOSBox-X -set cputype=286 ./out.com

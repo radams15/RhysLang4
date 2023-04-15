@@ -10,7 +10,7 @@ use Data::Dumper;
 
 use Scope;
 
-use Registers_x86_16;
+use Registers_x86_64;
 
 sub register {
 	my ($name, $address, $offset) = @_;
@@ -118,6 +118,8 @@ sub sizeof {
 			my $sub = $class->{scope}->get($data->{callee}->{name}->{value});
 			return sizeof_type($sub->{def}->{returns}->{value});
 		}
+		
+		when ('COMPARISON') { return sizeof_type('INT') }
 		
 		default { die "Unknown sizeof type: " . $data->{type} }
 	}
@@ -310,6 +312,54 @@ sub visit_assign {
 	$class->expel('mov ' . register('bp', 1, $var->{offset}) . ', ' . register('ax'));
 }
 
+
+sub get_flag {
+	my $class = shift;
+	my ($name) = @_;
+	
+	my $mask;
+	given (uc $name) {
+		when('ZF') { $mask = 0x0040 }
+		
+		when('CF') { $mask = 0x0001 }
+		
+		default { die "Unknown flag: $name" }
+	}
+	
+	$class->expel(
+		'pushf',
+		'pop ' . register('ax'),
+		'xor ' . register('ax') . ", $mask",
+	); # Flags in ax
+}
+
+sub cmp {
+	my $class = shift;
+	my ($a, $b, $op) = @_;
+	
+	$class->expel(
+		'push ' . register('cx'),
+		"cmp $a, $b"
+	);
+	
+	given ($op) {
+		when('LESS') { # setl - zf=0 cf=1
+			$class->get_flag('ZF');
+			$class->expel(
+				'not ' . register('ax'), # now zf must be 1
+				'mov ' . register('cx') . ', ' . register('ax'),
+				'and ' . register('ax') . ', ' . register('cx'),
+				
+			);
+			$class->get_flag('CF');
+		}
+		
+		default { die "Unknown cmp op: $op" }
+	}
+	
+	$class->expel('pop ' . register('ax'));
+}
+
 sub visit_comparison {
 	my $class = shift;
 	my ($comparison) = @_;
@@ -320,11 +370,16 @@ sub visit_comparison {
 			$class->expel('push ' . register('ax'));
 			$class->visit($comparison->{right});
 			$class->expel('pop ' . register('cx'));
-			$class->expel('cmp ' . register('cx') . ', ' . register('ax'));
-			$class->expel('mov ' . register('ax') . ', 0');
+			$class->expel('xor ' . register('ax') . ', ' . register('ax'));
 			
 			when('LESS') {
-				$class->expel('setl ' . register('al'));
+				$class->cmp(
+					register('cx'),
+					register('ax'),
+					'LESS',
+				);
+				#$class->expel('xor ' . register('al') . ', 0b');
+				#$class->expel('setl ' . register('al'));
 			}
 			
 			when('GREATER') {
