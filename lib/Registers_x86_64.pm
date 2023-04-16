@@ -1,4 +1,4 @@
-package Registers;
+package Registers_x86_64;
 
 my %DATASIZES = (
 	INT => 8,

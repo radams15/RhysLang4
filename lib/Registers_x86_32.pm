@@ -1,4 +1,4 @@
-package Registers;
+package Registers_x86_32;
 
 use Exporter 'import';
 
