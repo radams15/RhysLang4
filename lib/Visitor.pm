@@ -36,6 +36,11 @@ sub typeof {
 	my ($data) = @_;
 	
 	if(ref $data eq 'HASH') {
+		given($data->{datatype}) {
+			when ('STRING') { return "STR" }
+			when ('NUMBER') { return "INT" }
+		}
+		
 		given($data->{type}) {
 			when ('VARIABLE') {
 				my $var = $class->{scope}->get($data->{name}->{value});
@@ -112,6 +117,7 @@ sub new {
 	my $class = shift;
 	my $registers = shift;
 	my $datasizes = shift;
+	my ($preface) = @_;
 
 	my $global_scope = Scope->new;
 
@@ -123,6 +129,7 @@ sub new {
 		subs => {},
 		registers => $registers,
 		datasizes => $datasizes,
+		preface => $preface,
 		
 		global_scope => $global_scope,
 	}, $class;
@@ -184,6 +191,8 @@ sub visit_program {
 	my $class = shift;
 	my ($program) = @_;
 	
+	$class->expel($class->{preface}) if $class->{preface};
+	
 	$class->expel(
 		'%macro PROLOGUE 0',
 		'push ' . $class->register('bp'),
@@ -204,6 +213,12 @@ sub visit_program {
 		"\tcall main\n",
 	);
 	
+	$class->{global_scope}->set('_heap', {
+		type => 'GLOBAL',
+		name => '_heap',
+		datatype => 'PTR',
+	});
+	
 	$class->visit_all(@{$program->{body}});
 	
 	$class->expel("\nsection .data:");
@@ -211,6 +226,9 @@ sub visit_program {
 	for(@{$class->{strings}}) {
 		$class->expel($_);
 	}
+	
+	$class->dec;
+	$class->expel('_heap:');
 }
 
 sub visit_sub {
@@ -238,16 +256,20 @@ sub visit_sub {
 	$class->{stack_offset} = -$class->sizeof_type('PTR');
 	
 	$class->inc;
+	$class->expel("; Args: " . join(', ', ${$sub->{params}}->keys));
 	$class->expel('PROLOGUE');
 	
 	my $used_regs=0;
 	my ($register, $offset, $arg_size);
-	while(my ($name, $type) = each %{$sub->{params}}) {
-		$register = $class->{call_registers}[$used_regs];
+	
+	my @call_regs = reverse(@{$class->{call_registers}}[0..$sub->{arity}-1]);
+	my $param_iterator = ${$sub->{params}}->iterator;
+	while(my ($name, $type) = $param_iterator->()) {
+		$register = $call_regs[$used_regs];
 
 		$arg_size = $class->sizeof_type($type);
 		$offset = $class->{stack_offset};
-		$class->expel("push $register");
+		$class->expel("push $register ; $name @ bp+$offset");
 		$class->{scope}->set($name, {
 			type => 'LOCAL',
 			offset => $offset,
@@ -294,6 +316,36 @@ sub visit_loop {
 	$class->dec; $class->expel("$end:"); $class->inc;
 }
 
+sub visit_if {
+	my $class = shift;
+	my ($if) = @_;
+	
+	my ($start, $end) = generate_labels('if');
+	
+	$class->visit($if->{expr});
+	
+	$class->expel(
+		'cmp ' . $class->register('ax') . ', 0',
+		"je $start",
+	);
+	
+	$class->expel('; TRUE:');
+	$class->visit($if->{true});
+	
+	$class->expel('; END TRUE');
+	
+	$class->dec; $class->expel("$start:"); $class->inc;
+	
+	$class->visit($if->{false}) if defined $if->{false};
+	
+	$class->expel("jmp $end");
+	
+	$class->dec; $class->expel("$end:"); $class->inc;
+	
+	"INT";
+}
+
+
 sub visit_block {
 	my $class = shift;
 	my ($block) = @_;
@@ -318,7 +370,7 @@ sub visit_assign {
 sub get_flag {
 	my $class = shift;
 	my ($name) = @_;
-	
+		
 	my $mask;
 	given ($name) {
 		when('ZF') { $mask = 0x0040 }
@@ -326,6 +378,8 @@ sub get_flag {
 		when('CF') { $mask = 0x0001 }
 		
 		when('SF') { $mask = 0x0080 }
+		
+		when('OF') { $mask = 0x0800 }
 		
 		default { die "Unknown flag: $name" }
 	}
@@ -341,24 +395,49 @@ sub cmp {
 	my $class = shift;
 	my ($a, $b, $op) = @_;
 	
+	my ($start, $end) = &generate_labels('cmp');
+	
 	$class->expel(
-		'push ' . $class->register('cx'),
+		#'push ' . $class->register('cx'),
 		"cmp $a, $b",
 	);
 	
+	my $jump_instr;
+	given ($op) {
+		when ('LESS') { $jump_instr = 'jl' }
+		when ('GREATER') { $jump_instr = 'jg' }
+		when ('EQUALS') { $jump_instr = 'je' }
+		
+		default { die "Unknown cmp op: $op" }
+	}
+	
+	$class->expel(
+		"$jump_instr $start",
+		"mov $a, 0",
+		"jmp $end",
+	);
+	
+	$class->dec; $class->expel("$start:"); $class->inc;
+	$class->expel(
+		"mov $a, 1",
+		"jmp $end",
+	);
+	
+	$class->dec; $class->expel("$end:"); $class->inc;
+	
+=pod
 	given ($op) { # https://c9x.me/x86/html/file_module_x86_id_288.html
-		when('LESS') { # setl - zf=0 cf=1
-			$class->get_flag('ZF');
-			$class->expel(
-				'not ax', # now zf must be 1
-				'mov cx, ax', # NOT ZF -> CX
-			);
-			$class->get_flag('CF');
+		when('LESS') { # setl - SF != OF
+			#$class->expel('setl al'); goto end;
+			$class->get_flag('SF');
+			$class->expel('mov cx, ax'); # SF -> CX
+			$class->get_flag('OF'); # OF -> AX
 			
-			$class->expel('and ax, cx'); # NOT ZF AND CF must be 1
+			$class->expel('xor ax, cx', 'not rax'); # SF != OF == 0
 		}
 		
-		when('GREATER') { # setl - zf=0 sf=0
+		when('GREATER') { # setg - zf=0 sf=0
+			#$class->expel('setg al'); goto end;
 			$class->get_flag('ZF');
 			$class->expel(
 				'mov cx, ax', # ZF -> CX
@@ -371,10 +450,18 @@ sub cmp {
 			);
 		}
 		
+		when('EQUALS') { # sete - zf=1
+			#$class->expel('sete al'); goto end;
+			$class->get_flag('ZF'); # ZF -> AX
+		}
+		
 		default { die "Unknown cmp op: $op" }
 	}
 	
+end:
+	
 	$class->expel('pop ' . $class->register('cx'));
+=cut
 }
 
 sub visit_comparison {
@@ -383,9 +470,9 @@ sub visit_comparison {
 	
 	given($comparison->{op}->{name}) {
 		when (/LESS|GREATER/) {
-			$class->visit($comparison->{left});
-			$class->expel('push ' . $class->register('ax'));
 			$class->visit($comparison->{right});
+			$class->expel('push ' . $class->register('ax'));
+			$class->visit($comparison->{left});
 			$class->expel('pop ' . $class->register('cx'));
 			
 			when('LESS') {
@@ -406,6 +493,32 @@ sub visit_comparison {
 		}
 
 		default { die "Unknown term: $comparison->{op}->{name}" }
+	}
+}
+
+sub visit_equality {
+	my $class = shift;
+	my ($equality) = @_;
+	
+	given($equality->{op}->{name}) {
+		when (/BANG_EQUALS|EQUALS/) {
+			$class->visit($equality->{left});
+			$class->expel('push ' . $class->register('ax'));
+			$class->visit($equality->{right});
+			$class->expel('pop ' . $class->register('cx'));
+			
+			$class->cmp(
+				$class->register('ax'),
+				$class->register('cx'),
+				'EQUALS',
+			);
+			
+			when('BANG_EQUALS') {
+				$class->expel('not ' . register('ax')); # invert if !=
+			}
+		}
+
+		default { die "Unknown term: $equality->{op}->{name}" }
 	}
 }
 
@@ -437,20 +550,68 @@ sub visit_my {
 	my $class = shift;
 	my ($my) = @_;
 	
-	$class->visit($my->{initialiser});
-	$class->expel('push '. $class->register('ax'));
-	
-	my $datatype = $class->typeof($my->{initialiser}->{value});
-	
-	$class->{scope}->set_new($my->{name}->{value}, {
-		type => 'LOCAL',
-		offset => $class->{stack_offset},
-		datatype => $datatype,
-	});
-	
-	$class->{stack_offset} -= $class->sizeof($my->{initialiser});
-	
-	$datatype;
+	if($class->{in_sub}) {
+		$class->visit($my->{initialiser});
+		$class->expel('push '. $class->register('ax'));
+		
+		my $datatype = $class->typeof($my->{initialiser}->{value});
+		
+		$class->{scope}->set_new($my->{name}->{value}, {
+			type => 'LOCAL',
+			offset => $class->{stack_offset},
+			datatype => $datatype,
+		});
+		
+		$class->{stack_offset} -= $class->sizeof($my->{initialiser});
+		
+		return $datatype;
+	} else {
+		my $datatype;
+		
+		given($my->{initialiser}->{type}) {
+			when('LITERAL') {
+				my $literal = $my->{initialiser};
+				my $value = $literal->{value};
+				
+				my $name = $my->{name}->{value};
+				
+				$datatype = $class->typeof($literal);
+				
+				$class->{scope}->set_new($my->{name}->{value}, {
+					type => 'GLOBAL',
+					name => $name,
+					datatype => $datatype,
+				});
+				
+				if($datatype eq 'STR') {
+					$class->get_str_ref($literal->{value}, $name);
+				} else {
+					push @{$class->{strings}}, "$name: equ $value";
+				}
+			}
+			
+			when('VARIABLE') {
+				my $variable = $my->{initialiser};
+				my $name = $my->{name}->{value};
+				
+				my $value = $variable->{name}->{value};
+												
+				$datatype = $class->typeof($variable);
+				
+				$class->{scope}->set_new($my->{name}->{value}, {
+					type => 'GLOBAL',
+					name => $name,
+					datatype => $datatype,
+				});
+				
+				push @{$class->{strings}}, "$name: equ $value";
+			}
+			
+			default { die 'Globals must be literal or const variable!' }
+		}
+
+		return $datatype;
+	}
 }
 
 sub visit_return {
@@ -471,26 +632,33 @@ sub visit_expression {
 
 sub get_str_ref {
 	my $class = shift;
-	my ($val) = @_;
+	my ($val, $id) = @_;
 	
-	my $id = 'str_' . (scalar @{$class->{strings}} + 1);
+	$id = ('str_' . (scalar @{$class->{strings}} + 1)) if not defined $id;
 	
-	my $len = length($val) + 1; # +1 for NULL-termination.
+	my $len = length($val);
 	
 	my @str_vals = ();
-	for(split /\\(\w)/, $val) {		
-		if($_ eq 'n') {
-			push @str_vals, ord "\n";
-			$len--; # Length 1 less as removed '\\'.
-		} else {
-			push @str_vals, "'$_'";
+	for(split /\\(\w)/, $val) {
+		given ($_) {
+			when ('n') {
+				push @str_vals, ord "\n";
+				$len--; # Length 1 less as removed '\\'.
+			}
+			
+			when ('r') {
+				push @str_vals, ord "\r";
+				$len--; # Length 1 less as removed '\\'.
+			}
+			
+			default { push @str_vals, "'$_'"; }
 		}
 	}
 		
 	my $str_data = join ', ', ($len, @str_vals, 0);
 	push @{$class->{strings}}, "$id: db $str_data";
 	
-	"$id";
+	$id;
 }
 
 sub visit_literal {
@@ -499,8 +667,8 @@ sub visit_literal {
 	
 	my $reg = $class->register('ax');
 	
-	my $type = $class->typeof($literal->{value});
-	
+	my $type = $class->typeof($literal);
+		
 	given ($type) {
 		when ('STR') {
 			$class->expel("mov $reg, " . $class->get_str_ref($literal->{value}))
@@ -575,7 +743,7 @@ sub visit_call {
 	}
 	
 	
-	my @reversed_registers = reverse( @{$class->{call_registers}}[0..$num_args-1] );
+	my @reversed_registers = ( @{$class->{call_registers}}[0..$num_args-1] );
 	for my $register(@reversed_registers) {		
 		$class->expel("pop $register");
 	}

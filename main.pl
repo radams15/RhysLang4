@@ -35,6 +35,12 @@ GetOptions(
 
 my ($register_func, $datasize_func);
 
+my $preface;
+
+if(uc $os eq 'DOS') {
+	$preface .= "org 100h\n";
+}
+
 given ($arch) {
 	when ('x86_64') {
 		($register_func, $datasize_func) = (Registers_x86_64::registers, Registers_x86_64::datasizes);
@@ -70,6 +76,6 @@ my $tokens = $lex->scan_tokens;
 my $parser = Parser->new($tokens);
 my $program = $parser->parse;
 
-my $visitor = Visitor->new($register_func, $datasize_func);
+my $visitor = Visitor->new($register_func, $datasize_func, $preface);
 
 $visitor->visit($program);

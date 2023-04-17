@@ -2,4 +2,7 @@ peda-*
 .gdb_history
 out.nasm
 out
+*.com
 *.o
+copy.sh
+test.txt

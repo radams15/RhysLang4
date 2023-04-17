@@ -4,6 +4,7 @@ use warnings;
 use strict;
 
 use Devel::StackTrace;
+use Hash::Ordered;
 
 use Data::Dumper;
 
@@ -209,6 +210,7 @@ sub if_statement {
 	
 	return {
 		type => 'IF',
+		expr => $expr,
 		true => $true,
 		false => $false, 
 	};
@@ -252,14 +254,14 @@ sub sub_def {
 	my $name = $class->consume('IDENTIFIER', 'Sub requires name');
 	$class->consume('LEFT_PAREN', "Sub requires '('"); 
 
-	my %params;
+	my $params = Hash::Ordered->new;
 	unless ($class->check('RIGHT_PAREN')) {
 		do {
 			my $name = $class->consume('IDENTIFIER', 'Function declaration requires parameters');
 			$class->consume('COLON', 'Function parameter requires type');
 			my $type = $class->consume('IDENTIFIER', 'Function parameter requires type');
 
-			$params{$name->{value}} = $type->{value};
+			$params->set($name->{value} => $type->{value});
 		} while ($class->match('COMMA'));
 	}
 
@@ -278,9 +280,10 @@ sub sub_def {
 	return {
 		type => 'SUB',
 		name => $name,
-		params => \%params,
+		params => \$params,
 		returns => $type,
 		block => $block,
+		arity => scalar($params->keys),
 	};
 }
 
@@ -317,7 +320,7 @@ sub equality {
 
 	my $expr = $class->comparison;
 	
-	while($class->match(qw/BANG_EQUAL EQUAL_EQUAL/)) {
+	while($class->match(qw/BANG_EQUALS EQUALS_EQUALS/)) {
 		my $op = $class->previous;
 		my $right = $class->comparison;
 		$expr = {
@@ -336,7 +339,7 @@ sub comparison {
 
 	my $expr = $class->term;
 
-	while($class->match(qw/GREATER GREATER_EQUAL LESS LESS_EQUAL/)) {
+	while($class->match(qw/GREATER GREATER_EQUALS LESS LESS_EQUALS/)) {
 		my $op = $class->previous;
 		my $right = $class->term;
 		
@@ -501,6 +504,7 @@ sub primary {
 		return {
 			type => 'LITERAL',
 			value => $class->previous->{literal},
+			datatype => $class->previous->{name},
 		};
 	} elsif($class->match('IDENTIFIER')) {
 		return {
