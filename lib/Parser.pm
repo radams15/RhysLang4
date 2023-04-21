@@ -136,9 +136,18 @@ sub var_declaration {
 	my $name = $class->consume('IDENTIFIER', 'Variable must have identifier');
 
 	my $initialiser;
-
+	my $datatype;
+	
+	if($class->match('COLON')) {
+		$datatype = $class->consume('IDENTIFIER', "Declarations with ':' must have a type");
+	}
+	
 	if($class->match('EQUALS')) {
 		$initialiser = $class->expression;
+	}
+		
+	unless(defined $datatype || defined $initialiser) {
+		error 'Declarations require either a type declaration or an intialiser statement';
 	}
 	
 	$class->consume('SEMICOLON', "Declaration must end with ';'");
@@ -147,6 +156,7 @@ sub var_declaration {
 		type => 'MY',
 		name => $name,
 		initialiser => $initialiser,
+		datatype => $datatype,
 	};
 }
 

@@ -1,9 +1,8 @@
 %include stdlib
 
 sub main() : void {
-	my ptr = 0;
-	ptr = alloc(10);
-	ptr = alloc(10);
+	my ptr: ptr = alloc(0);
+	
 	ptr = alloc(10);
 	
 	puts('hello world!\n');

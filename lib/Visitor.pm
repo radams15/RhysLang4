@@ -55,9 +55,14 @@ sub typeof {
 				my $var = $class->{scope}->get($data->{name}->{value});
 				return $var->{datatype};
 			}
+			
+			when ('CALL') {
+				my $var = $class->{scope}->get($data->{callee}->{name}->{value});
+				return $var->{def}->{returns}->{value};
+			}
 		}
 	}
-	
+		
 	return 'INT' if($data =~ /\d+(?:\.\d+)?/);
 	
 	return 'STR';
@@ -419,7 +424,6 @@ sub cmp {
 	my ($start, $end) = &generate_labels('cmp');
 	
 	$class->expel(
-		#'push ' . $class->register('cx'),
 		"cmp $a, $b",
 	);
 	
@@ -534,10 +538,25 @@ sub visit_my {
 	my ($my) = @_;
 	
 	if($class->{in_sub}) {
-		$class->visit($my->{initialiser});
+		if(defined $my->{initialiser}) {
+			$class->visit($my->{initialiser});
+		} else {
+			$class->expel('xor ' . $class->register('ax') . ', ' . $class->register('ax'));
+		}
+		
 		$class->expel('push '. $class->register('ax'));
 		
-		my $datatype = $class->typeof($my->{initialiser}->{value});
+		my $datatype;
+				
+		if(defined $my->{datatype}) {
+			$datatype = $my->{datatype}->{value};
+		} elsif (defined $my->{initialiser}) {
+			$datatype = $class->typeof($my->{initialiser});
+		} else {
+			die "Declarations require either a declared datatype or an initialiser.";
+		}
+		
+		print "; Name: $my->{name}->{value}, Datatype: $datatype\n";
 		
 		$class->{scope}->set_new($my->{name}->{value}, {
 			type => 'LOCAL',
@@ -545,7 +564,7 @@ sub visit_my {
 			datatype => $datatype,
 		});
 		
-		$class->{stack_offset} -= $class->sizeof($my->{initialiser});
+		$class->{stack_offset} -= $class->sizeof_type($datatype);
 		
 		return $datatype;
 	} else {
@@ -679,7 +698,6 @@ sub visit_variable {
 		}
 		
 		when ('GLOBAL') {
-			print ";TYPE: $value->{datatype}\n"; 
 			if($value->{datatype} eq 'PTR') {
 				$class->expel("mov ". $class->register('ax') .", [$value->{name}]");
 			} else {
