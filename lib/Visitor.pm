@@ -10,6 +10,8 @@ use Data::Dumper;
 
 use Scope;
 
+my $HEAP_SIZE = 512; # bytes
+
 sub register {
 	my $class = shift;
 	
@@ -26,6 +28,13 @@ sub register {
 	$out .= ']' if $address;
 	
 	$out;
+}
+
+sub wordsize {
+	my $class = shift;
+	my ($name) = @_;
+	
+	$class->{datasizes}->{NAMES}->{uc $name};
 }
 
 my @CALL_REGISTERS = qw/di si dx cx/;
@@ -213,22 +222,23 @@ sub visit_program {
 		"\tcall main\n",
 	);
 	
-	$class->{global_scope}->set('_heap', {
+	$class->{global_scope}->set('_heap_top', {
 		type => 'GLOBAL',
-		name => '_heap',
+		name => '_heap_top',
 		datatype => 'PTR',
 	});
 	
 	$class->visit_all(@{$program->{body}});
 	
-	$class->expel("\nsection .data:");
+	$class->expel("\nsection .data");
 	$class->inc;
 	for(@{$class->{strings}}) {
 		$class->expel($_);
 	}
 	
 	$class->dec;
-	$class->expel('_heap:');
+	$class->expel("_heap: times $HEAP_SIZE db 0");
+	$class->expel("_heap_top: ".$class->wordsize('PTR')." _heap");
 }
 
 sub visit_sub {
@@ -361,9 +371,20 @@ sub visit_assign {
 	
 	my $var = $class->{scope}->get($assign->{name}->{value});
 	
-	print "; $assign->{name}->{value} @ $var->{offset}\n";
+	given($var->{type}) {
 	
-	$class->expel('mov ' . $class->register('bp', 1, $var->{offset}) . ', ' . $class->register('ax'));
+		when('LOCAL') {
+			print "; $assign->{name}->{value} @ $var->{offset}\n";
+			
+			$class->expel('mov ' . $class->register('bp', 1, $var->{offset}) . ', ' . $class->register('ax'));
+		}
+		
+		when('GLOBAL') {
+			print "; $assign->{name} @ $var->{name}\n";
+			
+			$class->expel('mov [' . $var->{name} . '], ' . $class->register('ax'));
+		}
+	}
 }
 
 
@@ -424,44 +445,6 @@ sub cmp {
 	);
 	
 	$class->dec; $class->expel("$end:"); $class->inc;
-	
-=pod
-	given ($op) { # https://c9x.me/x86/html/file_module_x86_id_288.html
-		when('LESS') { # setl - SF != OF
-			#$class->expel('setl al'); goto end;
-			$class->get_flag('SF');
-			$class->expel('mov cx, ax'); # SF -> CX
-			$class->get_flag('OF'); # OF -> AX
-			
-			$class->expel('xor ax, cx', 'not rax'); # SF != OF == 0
-		}
-		
-		when('GREATER') { # setg - zf=0 sf=0
-			#$class->expel('setg al'); goto end;
-			$class->get_flag('ZF');
-			$class->expel(
-				'mov cx, ax', # ZF -> CX
-			);
-			$class->get_flag('SF'); # SF -> AX
-			
-			$class->expel(
-				'and ax, cx', # ZF AND SF must be 0
-				'not ax' # must be 1
-			);
-		}
-		
-		when('EQUALS') { # sete - zf=1
-			#$class->expel('sete al'); goto end;
-			$class->get_flag('ZF'); # ZF -> AX
-		}
-		
-		default { die "Unknown cmp op: $op" }
-	}
-	
-end:
-	
-	$class->expel('pop ' . $class->register('cx'));
-=cut
 }
 
 sub visit_comparison {
@@ -586,7 +569,7 @@ sub visit_my {
 				if($datatype eq 'STR') {
 					$class->get_str_ref($literal->{value}, $name);
 				} else {
-					push @{$class->{strings}}, "$name: equ $value";
+					push @{$class->{strings}}, "$name: dw $value";
 				}
 			}
 			
@@ -604,7 +587,7 @@ sub visit_my {
 					datatype => $datatype,
 				});
 				
-				push @{$class->{strings}}, "$name: equ $value";
+				push @{$class->{strings}}, "$name: dw $value";
 			}
 			
 			default { die 'Globals must be literal or const variable!' }
@@ -696,7 +679,12 @@ sub visit_variable {
 		}
 		
 		when ('GLOBAL') {
-			$class->expel("mov ". $class->register('ax') .", $value->{name}");
+			print ";TYPE: $value->{datatype}\n"; 
+			if($value->{datatype} eq 'PTR') {
+				$class->expel("mov ". $class->register('ax') .", [$value->{name}]");
+			} else {
+				$class->expel("mov ". $class->register('ax') .", $value->{name}");
+			}
 		}
 		
 		default {

@@ -3,6 +3,10 @@ package Registers_x86_64;
 my %DATASIZES = (
 	INT => 8,
 	PTR => 8,
+	NAMES => {
+		CHAR => 'db',
+		PTR => 'dq',
+	},
 );
 
 my %REGISTERS = (

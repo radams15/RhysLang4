@@ -7,6 +7,10 @@ our @EXPORT_OK = qw/ %DATASIZES %REGISTERS /;
 our %DATASIZES = (
 	INT => 2,
 	PTR => 2,
+	NAMES => {
+		CHAR => 'db',
+		PTR => 'dw',
+	},
 );
 
 our %REGISTERS = (
