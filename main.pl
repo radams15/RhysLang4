@@ -7,6 +7,7 @@ use v5.10.1;
 use experimental 'switch';
 
 use Getopt::Long;
+use Data::Dumper;
 
 use lib './lib';
 
@@ -73,8 +74,12 @@ if (scalar @files == 0){
 my $lex = Lexer->new($data);
 my $tokens = $lex->scan_tokens;
 
+#print join("\n", map {$_->{name}} @$tokens), "\n";
+
 my $parser = Parser->new($tokens);
 my $program = $parser->parse;
+
+#print Dumper $program;
 
 my $visitor = Visitor->new($register_func, $datasize_func, $preface);
 

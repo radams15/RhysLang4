@@ -163,13 +163,16 @@ sub var_declaration {
 sub statement {
 	my $class = shift;
 	
-	return $class->if_statement if($class->match('IF'));
-	return $class->while_statement if($class->match('WHILE'));
-	return $class->sub_def if($class->match('SUB'));
-	return $class->return_statement if($class->match('RETURN'));
-	return $class->block if($class->match('LEFT_BRACE'));
+	return $class->statement(static=>1) if($class->match('STATIC'));
+	
+	return $class->if_statement(@_) if($class->match('IF'));
+	return $class->while_statement(@_) if($class->match('WHILE'));
+	return $class->sub_def(@_) if($class->match('SUB'));
+	return $class->struct_def(@_) if($class->match('STRUCT'));
+	return $class->return_statement(@_) if($class->match('RETURN'));
+	return $class->block(@_) if($class->match('LEFT_BRACE'));
 
-	return $class->expression_statement;	
+	return $class->expression_statement(@_);	
 }
 
 sub expression_statement {
@@ -258,8 +261,35 @@ sub block {
 	};
 }
 
+sub struct_def {
+	my $class = shift;
+	
+	my $name = $class->consume('IDENTIFIER', 'Struct requires name');
+	$class->consume('LEFT_BRACE', "Struct requires '{'");
+	
+	my (@methods, @attributes);
+	until($class->match('RIGHT_BRACE')) {
+		my $decl = $class->declaration;
+		
+		if($decl->{type} eq 'MY') {
+			push @attributes, $decl;
+		} elsif ($decl->{type} eq 'SUB') {
+			push @methods, $decl;
+		} else {
+			die "Cannot put $decl->{type} directly into struct";
+		}
+	}
+	
+	return {
+		type => 'STRUCT',
+		methods => \@methods,
+		attributes => \@attributes,
+	};
+}
+
 sub sub_def {
 	my $class = shift;
+	my %args = @_;
 
 	my $name = $class->consume('IDENTIFIER', 'Sub requires name');
 	$class->consume('LEFT_PAREN', "Sub requires '('"); 

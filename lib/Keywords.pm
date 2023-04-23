@@ -12,6 +12,8 @@ my @keywords = qw(
 	not
 	return
 	asm
+	static
+	struct
 );
 
 
