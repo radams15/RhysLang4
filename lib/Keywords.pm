@@ -14,6 +14,7 @@ my @keywords = qw(
 	asm
 	static
 	struct
+	sizeof
 );
 
 

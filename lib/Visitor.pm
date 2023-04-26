@@ -72,10 +72,16 @@ sub sizeof_type {
 	my $class = shift;
 	my ($type) = @_;
 	
-	given ($type) {
-		when (/INT|STR|PTR/i) { $class->{datasizes}->{'INT'} }
-		
-		default { die "Unknown type: $type" }
+	if($type =~ m/INT|STR|PTR/i) {
+		return $class->{datasizes}->{'INT'};
+	} elsif(my $var = $class->{scope}->get($type)) {
+		my $size = 0;
+		for(@{$var->{def}->{attributes}}) {
+			$size += $class->sizeof($_);
+		}
+		return $size;
+	} else {
+		die "Unknown type: $type";
 	}
 }
 
@@ -116,6 +122,11 @@ sub sizeof {
 			}
 		}
 		
+		when ('MY') {
+			my $type = $data->{datatype}->{value};
+			return $class->sizeof_type($type);
+		}
+		
 		when ('CALL') {
 			my $sub = $class->{scope}->get($data->{callee}->{name}->{value});
 			return $class->sizeof_type($sub->{def}->{returns}->{value});
@@ -138,6 +149,7 @@ sub new {
 	my $this = bless {
 		level => 0,
 		in_sub => 0,
+		in_struct => 0,
 		scope => $global_scope,
 		strings => [],
 		subs => {},
@@ -244,6 +256,50 @@ sub visit_program {
 	$class->dec;
 	$class->expel("_heap: times $HEAP_SIZE db 0");
 	$class->expel("_heap_top: ".$class->wordsize('PTR')." _heap");
+}
+
+sub method_hash {
+	my ($struct_name, $meth_name, $params) = @_;
+		
+	$struct_name.'___'.$meth_name; #.'___'.join('$', $$params->values);
+}
+
+sub visit_struct {
+	my $class = shift;
+	my ($struct) = @_;
+	
+	my %indexes;
+	my $current_index = 0;
+	for my $attr (@{$struct->{attributes}}) {
+		my $size = $class->sizeof_type($attr->{datatype}->{value});
+		$indexes{$attr->{name}->{value}} = $current_index;
+		$current_index += $size;
+	}
+		
+	$struct->{indexes} = \%indexes;
+	
+	$class->{global_scope}->set($struct->{name}->{value}, {
+		type => 'GLOBAL',
+		name => $struct->{name}->{value},
+		datatype => 'STRUCT',
+		def => $struct,
+	});
+	
+	my $prev_struct = $class->{in_struct};
+	$class->{in_struct} = $struct;
+	
+	for my $meth (@{$struct->{methods}}) {
+		unless($meth->{static}) {
+			$meth->{arity}++;
+			${$meth->{params}}->unshift(this => $struct->{name}->{value}); # Unshift is like push put to front.
+		}
+		
+		$meth->{name}->{value} = &method_hash($struct->{name}->{value}, $meth->{name}->{value}, $meth->{params});
+		
+		$class->visit($meth);
+	}
+	
+	$class->{in_struct} = $prev_struct;
 }
 
 sub visit_sub {
@@ -377,7 +433,6 @@ sub visit_assign {
 	my $var = $class->{scope}->get($assign->{name}->{value});
 	
 	given($var->{type}) {
-	
 		when('LOCAL') {
 			print "; $assign->{name}->{value} @ $var->{offset}\n";
 			
@@ -390,6 +445,59 @@ sub visit_assign {
 			$class->expel('mov [' . $var->{name} . '], ' . $class->register('ax'));
 		}
 	}
+}
+
+sub visit_get {
+	my $class = shift;
+	my ($get) = @_;
+	
+	my $value = $get->{name}->{value};
+	my $from = $get->{expr}->{name}->{value};
+	
+	my $struct_type;
+	if($from eq 'this') {
+		$struct_type = $class->{in_struct};
+	} else {
+		$struct_type = $class->{scope}->get(
+			$class->{scope}->get($from)->{datatype}
+		)->{def};
+	}
+	
+	my $offset = $struct_type->{indexes}->{$value};
+	
+	print "; Get $value from $from (Struct: $struct_type->{name}->{value}, Offset: $offset)\n";
+	
+	$class->expel('mov '.$class->register('ax').', '.$class->register('bp', 1, $offset));
+	$class->expel('mov '.$class->register('ax').', '.$class->register('ax', 1, $offset));
+}
+
+sub visit_set {
+	my $class = shift;
+	my ($set) = @_;
+	
+	my $value = $set->{name}->{value};
+	my $from = $set->{expr}->{name}->{value};
+	
+	my $struct_type;
+	if($from eq 'this') {
+		$struct_type = $class->{in_struct};
+	} else {
+		$struct_type = $class->{scope}->get(
+			$class->{scope}->get($from)->{datatype}
+		)->{def};
+	}
+	
+	my $offset = $struct_type->{indexes}->{$value};
+	
+	print "; set $value from $from (Struct: $struct_type->{name}->{value}, Offset: $offset)\n";
+	
+	$class->visit($set->{value});
+	$class->expel('push '.$class->register('ax')); # bx => struct
+	
+	$class->visit($set->{expr});
+	$class->expel('pop '.$class->register('dx')); # dx => assigned value
+
+	$class->expel('mov '.$class->register('ax', 1, $offset).', '.$class->register('dx')); # ax => attribute
 }
 
 
@@ -735,9 +843,23 @@ sub visit_index {
 	$class->expel('mov ' . $class->register('al') . ', ' . $class->register('bx', 1));
 }
 
+sub visit_sizeof {
+	my $class = shift;
+	my ($sizeof) = @_;
+	
+	my $size = $class->sizeof_type($sizeof->{value}->{value});
+	$class->expel('mov ' . $class->register('ax') . ", $size");
+}
+
 sub visit_call {
 	my $class = shift;
 	my ($call) = @_;
+	
+	if(my $struct = $class->{scope}->get($call->{callee}->{name}->{value})) {
+		if($struct->{datatype} eq 'STRUCT') {
+			$call->{callee}->{name}->{value} = &method_hash($call->{callee}->{name}->{value}, 'new');
+		}
+	}
 	
 	my @args = @{$call->{arguments}};
 	my $num_args = scalar @args;

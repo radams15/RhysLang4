@@ -282,6 +282,7 @@ sub struct_def {
 	
 	return {
 		type => 'STRUCT',
+		name => $name,
 		methods => \@methods,
 		attributes => \@attributes,
 	};
@@ -290,7 +291,7 @@ sub struct_def {
 sub sub_def {
 	my $class = shift;
 	my %args = @_;
-
+	
 	my $name = $class->consume('IDENTIFIER', 'Sub requires name');
 	$class->consume('LEFT_PAREN', "Sub requires '('"); 
 
@@ -324,6 +325,7 @@ sub sub_def {
 		returns => $type,
 		block => $block,
 		arity => scalar($params->keys),
+		static => $args{static},
 	};
 }
 
@@ -341,6 +343,15 @@ sub assignment {
 	if($class->match('EQUALS')) {
 		my $equals = $class->previous;
 		my $value = $class->assignment;
+		
+		if($expr->{type} eq 'GET') {
+			return {
+				type => 'SET',
+				name => $expr->{name},
+				expr => $expr->{expr},
+				value => $value,
+			};
+		}
 		
 		error "Invalid assignment target" unless $expr->{type} eq 'VARIABLE';
 		
@@ -453,7 +464,7 @@ sub unary {
 sub index {
 	my $class = shift;
 	
-	my $expr = $class->asm;
+	my $expr = $class->sizeof;
 	
 	if($class->match('LEFT_BRACKET')) {
 		my $index_expr = $class->expression;
@@ -467,6 +478,22 @@ sub index {
 	}
 	
 	$expr;
+}
+
+sub sizeof {
+	my $class = shift;
+
+	if($class->match('SIZEOF')) {
+		$class->consume('LEFT_PAREN');
+		my $value = $class->consume('IDENTIFIER', 'Sizeof requires a single identifier argument');
+		$class->consume('RIGHT_PAREN');
+		return {
+			type => 'SIZEOF',
+			value => $value,
+		};
+	}
+
+	$class->asm;
 }
 
 sub asm {
@@ -493,6 +520,14 @@ sub call {
 	while (1) {
 		if($class->match('LEFT_PAREN')) {
 			$expr = $class->finish_call($expr);
+		} elsif($class->match('DOT')) {
+			my $name = $class->consume('IDENTIFIER', "Expect identifier after '.'");
+			
+			$expr = {
+				type => 'GET',
+				name => $name,
+				expr => $expr,
+			}
 		} else {
 			last;
 		}

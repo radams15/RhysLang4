@@ -1,28 +1,30 @@
-#%include stdlib
+%include stdlib
 
 struct File {
+	my name: str;
 	my fd: int;
+		
+	sub new(new_fd: int) : File {
+		this.fd = new_fd;
+	}
 	
-	static sub open(name: str, mode: int) : int {
+	static sub open(name: str, mode: int) : File {
 		my fd = fopen(name, mode);
-		my out = alloc(sizeof(File));
 		
-		#out.fd = fd;
-		
-		return out;
+		return File(fd);
 	}
 	
 	sub write(to_write: str) : int {
-		
+		return 4;
 	}
 }
 
 sub main() : void {
-	my ptr: ptr = alloc(0);
+	my file: File = alloc(sizeof(File));
+	file.name = 'rhys adams';
 	
-	ptr = alloc(10);
-	
-	puts('hello world!\n');
+	#puts('hello world!\n');
+	puts(file.name);
 	
 	exit(0);
 }
