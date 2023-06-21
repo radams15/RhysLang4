@@ -458,17 +458,25 @@ sub visit_get {
 	if($from eq 'this') {
 		$struct_type = $class->{in_struct};
 	} else {
+	    print "; From: $from\n";
 		$struct_type = $class->{scope}->get(
-			$class->{scope}->get($from)->{datatype}
+			$class->{scope}->get($from)->{name}
 		)->{def};
 	}
 	
-	my $offset = $struct_type->{indexes}->{$value};
+	my $is_method = grep {$_->{name}->{value} =~ /___$value$/g} @{$struct_type->{methods}};
+	print "; $value is method: $is_method\n";
 	
-	print "; Get $value from $from (Struct: $struct_type->{name}->{value}, Offset: $offset)\n";
-	
-	$class->expel('mov '.$class->register('ax').', '.$class->register('bp', 1, $offset));
-	$class->expel('mov '.$class->register('ax').', '.$class->register('ax', 1, $offset));
+	if($is_method) {
+	    $class->expel('mov '.$class->register('ax').', '.$from.'___'.$value);
+	} else {
+	    my $offset = $struct_type->{indexes}->{$value};
+	    
+	    print "; Get $value from $from (Struct: $struct_type->{name}->{value}, Offset: $offset)\n";
+	    
+	    $class->expel('mov '.$class->register('ax').', '.$class->register('bp', 1, $offset));
+	    $class->expel('mov '.$class->register('ax').', '.$class->register('ax', 1, $offset));
+	}
 }
 
 sub visit_set {
