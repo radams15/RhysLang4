@@ -523,10 +523,18 @@ sub call {
 		} elsif($class->match('DOT')) {
 			my $name = $class->consume('IDENTIFIER', "Expect identifier after '.'");
 			
-			$expr = {
-				type => 'GET',
-				name => $name,
-				expr => $expr,
+			# TODO: If match left paren, do finish_call and turn CALL to CALL_METHOD with struct ref.
+			
+			if($class->match('LEFT_PAREN')) {
+				$expr = $class->finish_call($expr);
+				$expr->{name} = $name;
+				$expr->{type} = 'METHOD_CALL';
+			} else {
+				$expr = {
+					type => 'GET',
+					name => $name,
+					expr => $expr,
+				}
 			}
 		} else {
 			last;

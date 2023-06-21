@@ -23,11 +23,12 @@ struct File {
 }
 
 sub main() : void {
-	my file = File.open("test.txt", 2);
+	my fd = fopen("test.txt", 2);
+	my file = File.new(fd);
 	
 	my i = 10;
 	while(i>0) {
-	    file.write(file, "Hello world!\n");
+	    file.write("Hello world!\n");
 	    i = i-1;
 	}
 	#fclose(file);
