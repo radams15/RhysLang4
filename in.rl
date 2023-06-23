@@ -1,7 +1,6 @@
 %include stdlib
 
 struct File {
-	my name: str;
 	my fd: int;
 	
 	static sub new(new_fd: int) : File {
@@ -17,24 +16,27 @@ struct File {
 		return File.new(fd);
 	}
 	
-	sub write(to_write: str) : int {
+	sub write(this: File, to_write: str) : int {
 		return fwrite(this.fd, to_write);
+	}
+	
+	sub close() : void {
+		fclose(this.fd);
 	}
 }
 
 sub main() : void {
-	my fd = fopen("test.txt", 2);
-	my file = File.new(fd);
+	my file = File.open("test.txt", 2);
 	
 	my i = 10;
 	while(i>0) {
 	    file.write("Hello world!\n");
 	    i = i-1;
 	}
-	#fclose(file);
+
+	file.close();
 	
-	#puts('hello world!\n');
-	#puts(file.name);
+	puts('Done!\n');
 	
 	exit(0);
 }

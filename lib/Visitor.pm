@@ -58,6 +58,13 @@ sub typeof {
 			
 			when ('CALL') {
 				my $var = $class->{scope}->get($data->{callee}->{name}->{value});
+				printf "; %s returns: %s\n", $data->{callee}->{name}->{value}, $var->{def}->{returns}->{value};
+				return $var->{def}->{returns}->{value};
+			}
+			
+			when ('METHOD_CALL') {
+				my $var = $class->{scope}->get(&method_hash($data->{callee}->{name}->{value}, $data->{name}->{value}));
+				printf "; %s returns: %s\n", $data->{name}->{value}, $var->{def}->{returns}->{value};
 				return $var->{def}->{returns}->{value};
 			}
 		}
@@ -261,7 +268,7 @@ sub visit_program {
 sub method_hash {
 	my ($struct_name, $meth_name, $params) = @_;
 		
-	$struct_name.'___'.$meth_name; #.'___'.join('$', $$params->values);
+	$struct_name.'___'.$meth_name; 
 }
 
 sub visit_struct {
@@ -330,10 +337,13 @@ sub visit_sub {
 	$class->expel("; Args: " . join(', ', ${$sub->{params}}->keys));
 	$class->expel('PROLOGUE');
 	
+	my $arity = scalar ${$sub->{params}}->keys;
+	
 	my $used_regs=0;
 	my ($register, $offset, $arg_size);
 	
-	my @call_regs = reverse(@{$class->{call_registers}}[0..$sub->{arity}-1]);
+	my @call_regs = reverse(@{$class->{call_registers}}[0..$arity-1]);
+	print "; Call registers: ", join(', ', @call_regs), "\n";
 	my $param_iterator = ${$sub->{params}}->iterator;
 	while(my ($name, $type) = $param_iterator->()) {
 		$register = $call_regs[$used_regs];
@@ -447,15 +457,6 @@ sub visit_assign {
 	}
 }
 
-sub visit_method_call {
-	my $class = shift;
-	my ($method) = @_;
-	
-	my ($method, $callee) = ($method->{name}->{value}, $method->{callee}->{name}->{value});
-	
-	printf "; Call method %s from %s\n", $method, $callee;
-}
-
 sub visit_get {
 	my $class = shift;
 	my ($get) = @_;
@@ -473,12 +474,13 @@ sub visit_get {
 		)->{def};
 	}
 
-	my $offset = $struct_type->{indexes}->{$value};
+	my $attr_offset = $struct_type->{indexes}->{$value};
 	
-	print "; Get $value from $from (Struct: $struct_type->{name}->{value}, Offset: $offset)\n";
+	print "; Get $value from $from (Struct: $struct_type->{name}->{value}, Offset: $attr_offset)\n";
 	
-	$class->expel('mov '.$class->register('ax').', '.$class->register('bp', 1, $offset));
-	$class->expel('mov '.$class->register('ax').', '.$class->register('ax', 1, $offset));
+	#$class->expel('mov '.$class->register('ax').', '.$class->register('bp', 1, $offset));
+	$class->visit($get->{expr}); # Get struct ptr into ax
+	$class->expel('mov '.$class->register('ax').', '.$class->register('ax', 1, $attr_offset));
 }
 
 sub visit_set {
@@ -861,16 +863,53 @@ sub visit_sizeof {
 	$class->expel('mov ' . $class->register('ax') . ", $size");
 }
 
-sub visit_call {
+sub visit_method_call {
 	my $class = shift;
-	my ($call) = @_;
+	my ($method) = @_;
 	
-	if(my $struct = $class->{scope}->get($call->{callee}->{name}->{value})) {
-		if($struct->{datatype} eq 'STRUCT') {
-			$call->{callee}->{name}->{value} = &method_hash($call->{callee}->{name}->{value}, 'new');
+	my ($name, $from) = ($method->{name}->{value}, $method->{callee}->{name}->{value});
+	my $static = 1;
+	
+	if(my $struct = $class->{scope}->get($from)) {
+		if($struct->{datatype} ne 'STRUCT') {
+			print "; $from is of type: $struct->{datatype}";
+			$from = $struct->{datatype};
+			$static = 0;
 		}
 	}
 	
+	printf "; Call method %s from %s\n", $name, $from;
+	
+	my $struct_type = $class->{scope}->get($from)->{def};
+	my ($method_name) = grep {$_->{name}->{value} =~ /___$name/} @{$struct_type->{methods}};
+	
+	my $fullname = $method_name->{name}->{value};
+	print "; Call $from.$name\n";
+	
+	my @args = @{$method->{arguments}};
+	unless($static) {
+		unshift @args, {
+			type => 'VARIABLE',
+			name => $method->{callee}->{name},
+		};
+	}
+	
+	$class->visit_call({
+		type => 'CALL',
+		arguments => \@args,
+		callee => {
+			type => 'ASM',
+			str => {
+				value => 'mov '.$class->register('ax').", $fullname",
+			},
+		}
+	});
+}
+
+sub visit_call {
+	my $class = shift;
+	my ($call) = @_;
+
 	my @args = @{$call->{arguments}};
 	my $num_args = scalar @args;
 	
@@ -882,7 +921,7 @@ sub visit_call {
 	
 	
 	my @reversed_registers = ( @{$class->{call_registers}}[0..$num_args-1] );
-	for my $register(@reversed_registers) {		
+	for my $register(@reversed_registers) {
 		$class->expel("pop $register");
 	}
 	

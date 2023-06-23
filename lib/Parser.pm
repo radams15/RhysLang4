@@ -516,15 +516,13 @@ sub call {
 	my $class = shift;
 	
 	my $expr = $class->primary; # Left value
-		
+	
 	while (1) {
 		if($class->match('LEFT_PAREN')) {
 			$expr = $class->finish_call($expr);
 		} elsif($class->match('DOT')) {
 			my $name = $class->consume('IDENTIFIER', "Expect identifier after '.'");
-			
-			# TODO: If match left paren, do finish_call and turn CALL to CALL_METHOD with struct ref.
-			
+						
 			if($class->match('LEFT_PAREN')) {
 				$expr = $class->finish_call($expr);
 				$expr->{name} = $name;
@@ -556,7 +554,7 @@ sub finish_call {
 	}
 	
 	my $paren = $class->consume('RIGHT_PAREN', "Expect ')' after subroutine call");
-	
+		
 	return {
 		type => 'CALL',
 		callee => $callee,
