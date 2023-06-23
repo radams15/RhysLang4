@@ -23,3 +23,5 @@ sub alloc(size: int) : ptr {
 	
 	return out;
 }
+
+%include file
