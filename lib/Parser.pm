@@ -549,7 +549,6 @@ sub call {
 	while (1) {
 		if($class->match('LEFT_PAREN')) {
 			$expr = $class->finish_call($expr);
-			#print Dumper $expr;
 		} elsif($class->match('DOT')) {
 			my $name = $class->consume('IDENTIFIER', "Expect identifier after '.'");
 						
