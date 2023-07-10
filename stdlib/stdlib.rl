@@ -17,7 +17,7 @@ sub puts(data: str) : void {
 	putc(10); # \n
 }
 
-sub alloc(size: int) : ptr {
+sub malloc(size: int) : ptr {
 	my out = _heap_top;
 	_heap_top = _heap_top + size;
 	

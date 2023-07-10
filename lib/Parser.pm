@@ -464,7 +464,7 @@ sub unary {
 sub index {
 	my $class = shift;
 	
-	my $expr = $class->sizeof;
+	my $expr = $class->alloc;
 	
 	if($class->match('LEFT_BRACKET')) {
 		my $index_expr = $class->expression;
@@ -479,6 +479,35 @@ sub index {
 	
 	$expr;
 }
+
+sub alloc {
+	my $class = shift;
+
+	if($class->match('ALLOC')) {
+		my $value = $class->consume('IDENTIFIER', 'Alloc requires a single struct name');
+		return {
+		    type => 'CALL',
+		    callee => {
+		        name => Token->new(
+		            'malloc',
+		            'malloc',
+		            'malloc',
+		            0, 0
+		        ),
+		        type => 'VARIABLE',
+		    },
+		    arguments => [
+		        {
+			        type => 'SIZEOF',
+			        value => $value,
+		        },
+		    ],
+	    };
+	}
+
+	$class->sizeof;
+}
+
 
 sub sizeof {
 	my $class = shift;
@@ -520,6 +549,7 @@ sub call {
 	while (1) {
 		if($class->match('LEFT_PAREN')) {
 			$expr = $class->finish_call($expr);
+			#print Dumper $expr;
 		} elsif($class->match('DOT')) {
 			my $name = $class->consume('IDENTIFIER', "Expect identifier after '.'");
 						

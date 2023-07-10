@@ -1,6 +1,6 @@
 package Keywords;
 
-my @keywords = qw(
+my @keywords = qw/
 	my
 	for
 	while
@@ -15,7 +15,8 @@ my @keywords = qw(
 	static
 	struct
 	sizeof
-);
+	alloc
+/;
 
 
 sub keywords {

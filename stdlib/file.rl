@@ -2,7 +2,7 @@ struct File {
 	my fd: int;
 	
 	static sub new(new_fd: int) : File {
-	    my out: File = alloc(sizeof(File));
+	    my out: File = alloc File;
 		out.fd = new_fd;
 		
 		return out;
