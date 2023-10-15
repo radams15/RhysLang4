@@ -20,6 +20,8 @@ use Registers_x86_16;
 use Registers_x86_32;
 use Registers_x86_64;
 
+use Marpa::R2;
+
 my $os = 'linux';
 my $arch = 'x86_64';
 
@@ -71,16 +73,22 @@ if (scalar @files == 0){
 	}
 }
 
-my $lex = Lexer->new($data);
-my $tokens = $lex->scan_tokens;
+open FH, '<', 'grammar.marpa';
+my $dsl = join '', <FH>;
+close FH;
 
-#print join("\n", map {$_->{name}} @$tokens), "\n";
+my $grammar = Marpa::R2::Scanless::G->new( { source => \$dsl } );
 
-my $parser = Parser->new($tokens);
-my $program = $parser->parse;
-
-#print Dumper $program;
-
-my $visitor = Visitor->new($register_func, $datasize_func, $preface);
-
-$visitor->visit($program);
+# my $lex = Lexer->new($data); 
+# my $tokens = $lex->scan_tokens; 
+#  
+# #print join("\n", map {$_->{name}} @$tokens), "\n"; 
+#  
+# my $parser = Parser->new($tokens); 
+# my $program = $parser->parse; 
+#  
+# #print Dumper $program; 
+#  
+# my $visitor = Visitor->new($register_func, $datasize_func, $preface); 
+#  
+# $visitor->visit($program); 

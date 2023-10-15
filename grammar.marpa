@@ -1,0 +1,30 @@
+:default ::= action => [name,values]
+lexeme default = latm => 1
+ 
+Program ::= Declaration*
+ 
+Declaration ::= VarDecl
+    | Statement
+
+Statement ::= ExprStmt
+
+ExprStmt ::= Expression ';'
+
+VarDecl ::= 'var' IDENTIFIER ';'
+VarDecl ::= 'var' IDENTIFIER '=' Expression ';'
+
+Expression ::= Assignment
+
+Assignment ::= IDENTIFIER '=' assignment
+    | Primary
+
+Primary ::= NUMBER
+
+NUMBER ~ DIGITS
+DIGITS ~ [\d]+
+ALPHA ~ [a-zA-Z_]
+ALPHANUMERIC ~ [a-zA-Z0-9_]
+IDENTIFIER ~ ALPHA ALPHANUMERIC*
+
+:discard ~ whitespace
+whitespace ~ [\s]+
