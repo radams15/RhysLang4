@@ -1,0 +1,198 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+my %OPS = (
+    	PUSH => [0x01, ''],
+    	CLEAR => [0x02, ''],
+    	DROP => [0x03, ''],
+    	LDVAL => [0x04, 'w'],
+    	LDADDR => [0x05, 'w'],
+    	LDLREF => [0x06, 'w'],
+    	LDGLOB => [0x07, 'w'],
+    	LDLOCL => [0x08, 'w'],
+    	STGLOB => [0x09, 'w'],
+    	STLOCL => [0x0a, 'w'],
+    	STINDR => [0x0b, ''],
+    	STINDB => [0x0c, ''],
+    	INCGLOB => [0x0d, 'w'],
+    	INCLOCL => [0x0e, 'w'],
+    	INCR => [0x0f, 'w'],
+    	STACK => [0x10, 'w'],
+    	UNSTACK => [0x11, 'w'],
+    	LOCLVEC => [0x12, ''],
+    	GLOBVEC => [0x13, 'w'],
+    	INDEX => [0x14, ''],
+    	DEREF => [0x15, ''],
+    	INDXB => [0x16, ''],
+    	DREFB => [0x17, ''],
+    	CALL => [0x18, 'w'],
+    	CALR => [0x19, ''],
+    	JUMP => [0x1a, 'w'],
+    	RJUMP => [0x1b, 'r'],
+    	JMPFALSE => [0x1c, 'w'],
+    	JMPTRUE => [0x1d, 'w'],
+    	FOR => [0x1e, 'w'],
+    	FORDOWN => [0x1f, 'w'],
+    	MKFRAME => [0x20, ''],
+    	DELFRAME => [0x21, ''],
+    	RET => [0x22, ''],
+    	HALT => [0x23, 'w'],
+    	NEG => [0x24, ''],
+    	INV => [0x25, ''],
+    	LOGNOT => [0x26, ''],
+    	ADD => [0x27, ''],
+    	SUB => [0x28, ''],
+    	MUL => [0x29, ''],
+    	DIV => [0x2a, ''],
+    	MOD => [0x2b, ''],
+    	AND => [0x2c, ''],
+    	OR => [0x2d, ''],
+    	XOR => [0x2e, ''],
+    	SHL => [0x2f, ''],
+    	SHR => [0x30, ''],
+    	EQ => [0x31, ''],
+    	NE => [0x32, ''],
+    	LT => [0x33, ''],
+    	GT => [0x34, ''],
+    	LE => [0x35, ''],
+    	GE => [0x36, ''],
+    	UMUL => [0x37, ''],
+    	UDIV => [0x38, ''],
+    	ULT => [0x39, ''],
+    	UGT => [0x3a, ''],
+    	ULE => [0x3b, ''],
+    	UGE => [0x3c, ''],
+    	SKIP => [0x47, 'w'],
+    	CALL => [0x80, 'w']
+);
+
+sub debug {
+    printf STDERR @_;
+}
+
+my $p = 0;
+
+my %strings;
+
+my %MACROS = (
+    CALL2 => sub {
+        my ($num, @args) = @_;
+
+        my @out;
+
+        my $ret = $p + (3*scalar(@args)) + 9;
+
+        debug "Ret +%02x\n", (3*scalar(@args)) + 9;
+
+        for(@args) {
+            push @out, ['LDADDR', $_], ['PUSH'];
+        }
+
+        push @out, ['LDADDR', $ret], ['PUSH'];
+
+        push @out, ['CALL', $num];
+
+        return @out;
+    },
+
+    STR => sub {
+        my ($name, @args) = @_;
+
+        my $str = join ' ', @args;
+        $str =~ s/\\n/\n/g;
+
+        $strings{$name} = $p+2;
+
+        &gen('RJUMP', length($str)+1);
+        $p += length($str)+1;
+
+        print pack "a*C", $str, 0;
+
+        return ();
+    }
+);
+
+sub print_ops {
+    for my $op (sort {hex($OPS{$a}->[0]) <=> hex($OPS{$b}->[0])} keys %OPS) {
+        my ($opcode, $arg) = @{$OPS{$op}};
+        print "$op\{@{[sprintf '0x%02x', $opcode]}\}($arg)\n";
+    }
+}
+
+if(scalar @ARGV == 0) {
+    &print_ops;
+    exit 0;
+}
+
+open OUT, '>out.bin';
+binmode OUT;
+select OUT;
+
+print pack 'a6', "T3X0";
+
+sub parse {
+    my ($in) = @_;
+
+    if($strings{$in}) {
+        return $strings{$in};
+    }
+
+    return $p if($in eq '.');
+
+    return hex($in) if($in =~ m/0x.*/);
+
+    return int($in);
+}
+
+sub gen {
+    my ($op, @args) = @_;
+    my ($opcode, $op_args) = @{$OPS{$op} or die "Invalid opcode: $op\n"};
+
+    die "Invalid number of arguments for opcode $op (Got @{[scalar(@args)]}, needed @{[length($op_args)]})\n"
+        if(length($op_args) != scalar(@args));
+
+    my $start = $p;
+
+    print pack 'C', $opcode;
+
+    $p++;
+
+    my $i = 0;
+    for my $arg (split //, $op_args) {
+        next unless $arg;
+        if($arg eq 'w') { # 16-bit word
+            print pack 'S', &parse($args[$i]);
+            $p += 2;
+        } elsif ($arg eq 'r') { # 8-bit byte
+            print pack 'C', &parse($args[$i]);
+            $p++;
+        } else {
+            die "Invalid argument specifier: $arg\n";
+        }
+        $i++;
+    }
+
+    debug "%02x => $op\{%02x\}(@{[join ',', @args]})\n", $start, $opcode;
+}
+
+for(<>) {
+    chomp;
+    s/;.*//g; # Remove comments
+    next unless $_;
+
+    my ($op, @args) = split / /;
+    @args = grep {$_ ne ''} @args;
+
+    if($MACROS{$op}) {
+        for($MACROS{$op}->(@args)) {
+            &gen(@$_);
+        }
+        next;
+    }
+
+    &gen($op, @args);
+}
+
+close OUT;
