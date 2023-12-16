@@ -3,6 +3,8 @@
 use warnings;
 use strict;
 
+use Data::Dumper;
+
 my %OPS = (
     	PUSH => [0x01, ''],
     	CLEAR => [0x02, ''],
@@ -65,7 +67,7 @@ my %OPS = (
     	ULE => [0x3b, ''],
     	UGE => [0x3c, ''],
     	SKIP => [0x47, 'w'],
-    	CALL => [0x80, 'w']
+    	SCALL => [0x80, 'w']
 );
 
 sub debug {
@@ -75,16 +77,19 @@ sub debug {
 my $p = 0;
 
 my %strings;
+my %consts;
+my %labels;
 
-my %MACROS = (
-    CALL2 => sub {
-        my ($num, @args) = @_;
+open OUT, '>out.bin';
+binmode OUT;
+select OUT;
+
+sub call2 {
+        my ($type, $num, @args) = @_;
 
         my @out;
 
         my $ret = $p + (3*scalar(@args)) + 9;
-
-        debug "Ret +%02x\n", (3*scalar(@args)) + 9;
 
         for(@args) {
             push @out, ['LDADDR', $_], ['PUSH'];
@@ -92,10 +97,27 @@ my %MACROS = (
 
         push @out, ['LDADDR', $ret], ['PUSH'];
 
-        push @out, ['CALL', $num];
+        push @out, [$type, $num];
 
         return @out;
-    },
+}
+
+sub calls {
+        my $type = shift;
+        
+        return (
+            ['LDADDR', '.+5'],
+            ['PUSH'],
+            [$type, @_]
+        );
+}
+
+my %MACROS = (
+    CALL2 => sub {&call2('CALL', @_)},
+    CALLS => sub {&calls('CALL', @_)},
+    SCALL2 => sub {&call2('SCALL', @_)},
+    SCALLS => sub {&calls('SCALL', @_)},
+
 
     STR => sub {
         my ($name, @args) = @_;
@@ -105,10 +127,21 @@ my %MACROS = (
 
         $strings{$name} = $p+2;
 
-        &gen('RJUMP', length($str)+1);
+        &gen('RJUMP', length($str)+1); # Jump over the string
         $p += length($str)+1;
+        debug "RJUMP %02x\n", length($str)+1;
 
         print pack "a*C", $str, 0;
+
+        return ();
+    },
+
+    CONST => sub {
+        my ($name, @args) = @_;
+
+        my $val = join ' ', @args;
+
+        $consts{$name} = $val;
 
         return ();
     }
@@ -126,24 +159,40 @@ if(scalar @ARGV == 0) {
     exit 0;
 }
 
-open OUT, '>out.bin';
-binmode OUT;
-select OUT;
-
-print pack 'a6', "T3X0";
-
-sub parse {
+sub interp {
     my ($in) = @_;
+
+    if($labels{$in}) {
+        return $labels{$in};
+    }
 
     if($strings{$in}) {
         return $strings{$in};
     }
 
+    if($consts{$in}) {
+        return $consts{$in};
+    }
+
     return $p if($in eq '.');
 
     return hex($in) if($in =~ m/0x.*/);
+    
+    return int($in) if($in =~ /\d+/g);
 
-    return int($in);
+    return 0;
+}
+
+sub parse {
+    my ($in) = @_;
+
+    if($in =~ /(.*)(\+|\-|\*|\/)(.*)/g) {
+        my ($a, $b) = map {interp $_} ($1, $3);
+
+        return eval "$a + $b";
+    }
+
+    return &interp($in);
 }
 
 sub gen {
@@ -177,22 +226,38 @@ sub gen {
     debug "%02x => $op\{%02x\}(@{[join ',', @args]})\n", $start, $opcode;
 }
 
-for(<>) {
-    chomp;
-    s/;.*//g; # Remove comments
-    next unless $_;
+my @lines = <>;
 
-    my ($op, @args) = split / /;
-    @args = grep {$_ ne ''} @args;
+for my $i(0..1) {
+    seek OUT, 0, 0;
+    print pack 'a6', "T3X0";
+    $p=0;
+    %strings=();
+    %consts=();
+    
+    debug "Pass $i\n";
+    
+    for(@lines) {
+        chomp;
+        s/;.*//g; # Remove comments
+        next unless $_;
+        
+        if(/(.*):/) {
+            $labels{$1} = $p;
+        } else {
+            my ($op, @args) = split / /;
+            @args = grep {$_ ne ''} @args;
 
-    if($MACROS{$op}) {
-        for($MACROS{$op}->(@args)) {
-            &gen(@$_);
+            if($MACROS{$op}) {
+                for($MACROS{$op}->(@args)) {
+                    &gen(@$_);
+                }
+                next;
+            }
+
+            &gen($op, @args);
         }
-        next;
     }
-
-    &gen($op, @args);
 }
 
 close OUT;

@@ -21,7 +21,7 @@ func itoa(n int) string {
 	return itoa(n/10) + itoa(n%10)
 }
 
-func error(msg string) {
+func Error(msg string) {
 	log("\n" + itoa(line) + ":" + itoa(col) + ": " + msg + "\n")
 	exit(1)
 }
@@ -47,7 +47,7 @@ func find(names []string, name string) int {
 
 func expectChar(ch int) {
 	if c != ch {
-		error("expected '" + char(ch) + "' not '" + char(c) + "'")
+		Error("expected '" + char(ch) + "' not '" + char(c) + "'")
 	}
 	nextChar()
 }
@@ -111,7 +111,7 @@ func next() {
 	if c == '\'' {
 		nextChar()
 		if c == '\n' {
-			error("newline not allowed in character literal")
+			Error("newline not allowed in character literal")
 		}
 		if c == '\\' {
 			// Escape character
@@ -127,7 +127,7 @@ func next() {
 			} else if c == 'n' {
 				tokenInt = '\n'
 			} else {
-				error("unexpected escape '\\" + char(c) + "'")
+				Error("unexpected escape '\\" + char(c) + "'")
 			}
 			nextChar()
 		} else {
@@ -145,7 +145,7 @@ func next() {
 		tokenStr = ""
 		for c >= 0 && c != '"' {
 			if c == '\n' {
-				error("newline not allowed in string")
+				Error("newline not allowed in string")
 			}
 			if c == '\\' {
 				// Escape character
@@ -161,7 +161,7 @@ func next() {
 				} else if c == 'n' {
 					c = '\n'
 				} else {
-					error("unexpected escape \"\\" + char(c) + "\"")
+					Error("unexpected escape \"\\" + char(c) + "\"")
 				}
 			}
 			tokenStr = tokenStr + char(c)
@@ -231,7 +231,7 @@ func next() {
 		return
 	}
 
-	error("unexpected '" + char(c) + "'")
+	Error("unexpected '" + char(c) + "'")
 }
 
 // Escape given string; use "delim" as quote character.

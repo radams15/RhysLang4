@@ -1,7 +1,7 @@
 package main
 
 func genProgramStart() {
-	print("global _start\n")
+	/*print("global _start\n")
 	print("section .text\n")
 	print("\n")
 
@@ -254,15 +254,16 @@ func genProgramStart() {
 	print("mov rax, [rbp+24]\n")
 	print("pop rbp\n")
 	print("ret 24\n")
-	print("\n")
+	print("\n")*/
 }
 
 func genConst(name string, value int) {
-	print(name + " equ " + itoa(value) + "\n")
+	print("CONST " + name + " " + itoa(value) + "\n")
 }
 
 func genIntLit(n int) {
-	print("push qword " + itoa(n) + "\n")
+    print("LDADDR " + itoa(n) + "\n")
+	print("PUSH " + "\n")
 }
 
 func genStrLit(s string) {
@@ -273,9 +274,11 @@ func genStrLit(s string) {
 		index = len(strs)
 		strs = append(strs, s)
 	}
-	// Push string struct: length and then address (by label)
-	print("push qword " + itoa(len(s)) + "\n")
-	print("push qword str" + itoa(index) + "\n")
+	
+	genIntLit(len(s))
+
+	print("LDADDR str" + itoa(index) + "\n")
+	print("PUSH\n")
 }
 
 func typeName(typ int) string {
@@ -314,7 +317,8 @@ func localOffset(index int) int {
 
 func genFetchInstrs(typ int, addr string) {
 	if typ == typeInt {
-		print("push qword [" + addr + "]\n")
+		print("LDADDR " + addr + "\n")
+		print("DEREF\n")
 	} else if typ == typeString {
 		print("push qword [" + addr + "+8]\n")
 		print("push qword [" + addr + "]\n")
@@ -328,7 +332,7 @@ func genFetchInstrs(typ int, addr string) {
 func genLocalFetch(index int) int {
 	offset := localOffset(index)
 	typ := localTypes[index]
-	genFetchInstrs(typ, "rbp+"+itoa(offset))
+	genFetchInstrs(typ, itoa(offset))
 	return typ
 }
 
@@ -363,7 +367,7 @@ func genIdentifier(name string) int {
 		sigIndex := funcSigIndexes[funcIndex]
 		return funcSigs[sigIndex] // result type
 	}
-	error("identifier " + escape(name, "\"") + " not defined")
+	Error("identifier " + escape(name, "\"") + " not defined")
 	return 0
 }
 
@@ -401,7 +405,7 @@ func genAssign(name string) {
 		genGlobalAssign(globalIndex)
 		return
 	}
-	error("identifier " + escape(name, "\"") + " not defined (or not assignable)")
+	Error("identifier " + escape(name, "\"") + " not defined (or not assignable)")
 }
 
 func varType(name string) int {
@@ -413,7 +417,7 @@ func varType(name string) int {
 	if globalIndex >= 0 {
 		return globalTypes[globalIndex]
 	}
-	error("identifier " + escape(name, "\"") + " not defined")
+	Error("identifier " + escape(name, "\"") + " not defined")
 	return 0
 }
 
@@ -497,7 +501,7 @@ func localsSize() int {
 func genFuncEnd() {
 	size := localsSize()
 	if size > localSpace {
-		error(curFunc + "'s locals too big (" + itoa(size) + " > " + itoa(localSpace) + ")\n")
+		Error(curFunc + "'s locals too big (" + itoa(size) + " > " + itoa(localSpace) + ")\n")
 	}
 	print("mov rsp, rbp\n")
 	print("pop rbp\n")
@@ -511,18 +515,18 @@ func genFuncEnd() {
 
 func genDataSections() {
 	print("\n")
-	print("section .data\n")
-	print("_strOutOfMem: db `out of memory\\n`\n")
+	print("; section .data\n")
+	print("STRING _strOutOfMem out of memory\\n\n")
 
 	// String constants
 	i := 0
 	for i < len(strs) {
-		print("str" + itoa(i) + ": db " + escape(strs[i], "`") + "\n")
+		print("STRING str" + itoa(i) + " " + escape(strs[i], "") + "\n")
 		i = i + 1
 	}
 
 	// Global variables
-	print("align 8\n")
+	// print("align 8\n")
 	i = 0
 	for i < len(globals) {
 		typ := globalTypes[i]
@@ -537,16 +541,18 @@ func genDataSections() {
 	}
 
 	// "Heap" (used for strings and slice appends)
-	print("\n")
-	print("section .bss\n")
-	print("_heapPtr: resq 1\n")
-	print("_heap: resb " + itoa(heapSize) + "\n")
-	print("_heapEnd:\n")
+	/*
+		print("\n")
+		print("section .bss\n")
+		print("_heapPtr: resq 1\n")
+		print("_heap: resb " + itoa(heapSize) + "\n")
+		print("_heapEnd:\n")
+	*/
 }
 
 func genUnary(op int, typ int) {
 	if typ != typeInt {
-		error("unary operator not allowed on type " + typeName(typ))
+		Error("unary operator not allowed on type " + typeName(typ))
 	}
 	print("pop rax\n")
 	if op == tMinus {
@@ -577,7 +583,7 @@ func genBinaryString(op int) int {
 		print("push rax\n")
 		return typeInt
 	} else {
-		error("operator " + tokenName(op) + " not allowed on strings")
+		Error("operator " + tokenName(op) + " not allowed on strings")
 		return 0
 	}
 }
@@ -633,7 +639,7 @@ func genBinaryInt(op int) int {
 
 func genBinary(op int, typ1 int, typ2 int) int {
 	if typ1 != typ2 {
-		error("binary operands must be the same type")
+		Error("binary operands must be the same type")
 	}
 	if typ1 == typeString {
 		return genBinaryString(op)
@@ -713,7 +719,7 @@ func genSliceFetch(typ int) int {
 		print("push qword [rbx+rax*8]\n")
 		return typeString
 	} else {
-		error("invalid slice type " + typeName(typ))
+		Error("invalid slice type " + typeName(typ))
 		return 0
 	}
 }

@@ -6,3 +6,7 @@ out
 *.o
 copy.sh
 test.txt
+*.bin
+*.casm
+tcvm
+out.txt

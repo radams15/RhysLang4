@@ -4,7 +4,7 @@ package main
 
 func expect(expected int, msg string) {
 	if token != expected {
-		error("expected " + msg + " not " + tokenName(token))
+		Error("expected " + msg + " not " + tokenName(token))
 	}
 	next()
 }
@@ -19,7 +19,7 @@ func Literal() int {
 		next()
 		return typeString
 	} else {
-		error("expected integer or string literal")
+		Error("expected integer or string literal")
 		return 0
 	}
 }
@@ -36,7 +36,7 @@ func Operand() int {
 		identifier("identifier")
 		return genIdentifier(name)
 	} else {
-		error("expected literal or identifier")
+		Error("expected literal or identifier")
 		return 0
 	}
 }
@@ -66,7 +66,7 @@ func Arguments() int {
 		} else if arg1Type == typeSliceStr {
 			funcName = "_appendString"
 		} else {
-			error("can't append to " + typeName(arg1Type))
+			Error("can't append to " + typeName(arg1Type))
 		}
 	} else if funcName == "len" {
 		if arg1Type == typeString {
@@ -74,7 +74,7 @@ func Arguments() int {
 		} else if arg1Type == typeSliceInt || arg1Type == typeSliceStr {
 			funcName = "_lenSlice"
 		} else {
-			error("can't get length of " + typeName(arg1Type))
+			Error("can't get length of " + typeName(arg1Type))
 		}
 	}
 	return genCall(funcName)
@@ -83,7 +83,7 @@ func Arguments() int {
 func indexExpr() {
 	typ := Expression()
 	if typ != typeInt {
-		error("slice index must be int")
+		Error("slice index must be int")
 	}
 }
 
@@ -95,7 +95,7 @@ func PrimaryExpr() int {
 		next()
 		if token == tColon {
 			if typ != typeSliceInt && typ != typeSliceStr {
-				error("slice expression requires slice type")
+				Error("slice expression requires slice type")
 			}
 			next()
 			indexExpr()
@@ -197,7 +197,7 @@ func Type() int {
 		} else if name == "string" {
 			return typeSliceStr
 		} else {
-			error("only []int and []string are supported")
+			Error("only []int and []string are supported")
 		}
 	}
 	name := tokenStr
@@ -207,7 +207,7 @@ func Type() int {
 	} else if name == "string" {
 		return typeString
 	} else {
-		error("only int and string are supported")
+		Error("only int and string are supported")
 	}
 	return typeVoid
 }
@@ -223,12 +223,12 @@ func VarSpec() {
 	identifier("variable identifier")
 	typ := Type()
 	if curFunc != "" {
-		error("\"var\" not supported inside functions")
+		Error("\"var\" not supported inside functions")
 	}
 	globals = append(globals, varName)
 	globalTypes = append(globalTypes, typ)
 	if token == tAssign {
-		error("assignment not supported for top-level var")
+		Error("assignment not supported for top-level var")
 	}
 }
 
@@ -249,7 +249,7 @@ func ConstSpec() {
 	identifier("variable identifier")
 	typ := Type()
 	if typ != typeInt {
-		error("constants must be typed int")
+		Error("constants must be typed int")
 	}
 	expect(tAssign, "=")
 	value := tokenInt
@@ -313,7 +313,7 @@ func SimpleStmt() {
 		lhsType := varType(identName)
 		rhsType := Expression()
 		if lhsType != rhsType {
-			error("can't assign " + typeName(rhsType) + " to " +
+			Error("can't assign " + typeName(rhsType) + " to " +
 				typeName(lhsType))
 		}
 		genAssign(identName)
@@ -334,7 +334,7 @@ func SimpleStmt() {
 		Expression()
 		genSliceAssign(identName)
 	} else {
-		error("expected assignment or call not " + tokenName(token))
+		Error("expected assignment or call not " + tokenName(token))
 	}
 }
 
@@ -440,7 +440,7 @@ func TopLevelDecl() {
 	} else if token == tFunc {
 		FunctionDecl()
 	} else {
-		error("expected \"var\", \"const\", or \"func\"")
+		Error("expected \"var\", \"const\", or \"func\"")
 	}
 }
 
