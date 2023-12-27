@@ -134,6 +134,10 @@ my %MACROS = (
         #&gen('RJUMP', length($str)+1); # Jump over the string
         #$p += length($str)+1;
         $strings{$name} = $p;
+        
+        debug "$name @ %02x\n", $p;
+        
+        $p += length($str)+1;
 
         print pack "a*C", $str, 0;
 
@@ -172,6 +176,7 @@ sub interp {
     }
 
     if($strings{$in}) {
+        debug "%s => %s\n", $in, $strings{$in};
         return $strings{$in};
     }
 
