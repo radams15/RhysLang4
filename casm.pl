@@ -6,6 +6,7 @@ use strict;
 use Data::Dumper;
 
 my %OPS = (
+        NOOP => [0x00, ''],
     	PUSH => [0x01, ''],
     	CLEAR => [0x02, ''],
     	DROP => [0x03, ''],
@@ -95,7 +96,11 @@ sub call2 {
             push @out, ['LDADDR', $_], ['PUSH'];
         }
 
-        push @out, ['LDADDR', $ret], ['PUSH'];
+        if($type eq 'SCALL') {
+            push @out, ['LDADDR', $ret], ['PUSH'];
+        } else {
+            push @out, ['NOOP'], ['NOOP'], ['NOOP']
+        }
 
         push @out, [$type, $num];
 
@@ -125,11 +130,10 @@ my %MACROS = (
         my $str = join ' ', @args;
         $str =~ s/\\n/\n/g;
 
-        $strings{$name} = $p+2;
-
-        &gen('RJUMP', length($str)+1); # Jump over the string
-        $p += length($str)+1;
-        debug "RJUMP %02x\n", length($str)+1;
+        #$strings{$name} = $p+2;
+        #&gen('RJUMP', length($str)+1); # Jump over the string
+        #$p += length($str)+1;
+        $strings{$name} = $p;
 
         print pack "a*C", $str, 0;
 
@@ -150,7 +154,7 @@ my %MACROS = (
 sub print_ops {
     for my $op (sort {hex($OPS{$a}->[0]) <=> hex($OPS{$b}->[0])} keys %OPS) {
         my ($opcode, $arg) = @{$OPS{$op}};
-        print "$op\{@{[sprintf '0x%02x', $opcode]}\}($arg)\n";
+        debug "$op\{@{[sprintf '0x%02x', $opcode]}\}($arg)\n";
     }
 }
 
@@ -158,6 +162,7 @@ if(scalar @ARGV == 0) {
     &print_ops;
     exit 0;
 }
+
 
 sub interp {
     my ($in) = @_;
@@ -189,7 +194,7 @@ sub parse {
     if($in =~ /(.*)(\+|\-|\*|\/)(.*)/g) {
         my ($a, $b) = map {interp $_} ($1, $3);
 
-        return eval "$a + $b";
+        return eval "$a $2 $b";
     }
 
     return &interp($in);
@@ -232,8 +237,6 @@ for my $i(0..1) {
     seek OUT, 0, 0;
     print pack 'a6', "T3X0";
     $p=0;
-    %strings=();
-    %consts=();
     
     debug "Pass $i\n";
     
