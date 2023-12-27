@@ -71,6 +71,11 @@ my %OPS = (
     	SCALL => [0x80, 'w']
 );
 
+my %ALIASES = (
+    ENTER => 'MKFRAME',
+    LEAVE => 'DELFRAME'
+);
+
 sub debug {
     printf STDERR @_;
 }
@@ -103,6 +108,8 @@ sub call2 {
         }
 
         push @out, [$type, $num];
+        
+        push @out, ['DROP'], ['DROP'], ['DROP'];
 
         return @out;
 }
@@ -207,7 +214,15 @@ sub parse {
 
 sub gen {
     my ($op, @args) = @_;
-    my ($opcode, $op_args) = @{$OPS{$op} or die "Invalid opcode: $op\n"};
+    
+    my ($opcode, $op_args);
+    if($OPS{$op}) {
+        ($opcode, $op_args) = @{$OPS{$op}};
+    } elsif ($OPS{$ALIASES{$op}}) {
+        ($opcode, $op_args) = @{$OPS{$ALIASES{$op}}};
+    } else {
+        die "Invalid opcode: $op\n"
+    }
 
     die "Invalid number of arguments for opcode $op (Got @{[scalar(@args)]}, needed @{[length($op_args)]})\n"
         if(length($op_args) != scalar(@args));

@@ -17,6 +17,12 @@
 #undef DEBUG
 #endif
 
+#if DEBUG
+#define debug(...) printf(__VA_ARGS__)
+#else
+#define debug(...) ()
+#endif
+
 /*
  * Define EXTRA to enable t3x.trunc and t3x.break.
  */
@@ -264,17 +270,17 @@ void run(void) {
 	case OP_DEREF: A = w(A); break;
 	case OP_INDXB: A = A + pop() & 0xffff; break;
 	case OP_DREFB: A = M[A]; break;
-	case OP_CALL: push(I+2); I = a()-1; break;
+	case OP_CALL: push(I+2); I = a()-1; debug("Call ret => %02x\n", I); break;
 	case OP_CALR: push(I); I = A-1; break;
 	case OP_SKIP:
 	case OP_JUMP: I = a()-1; break;
-	case OP_RJUMP: printf("I += %02x\n", M[I+1]+1); I += M[I+1]+1; break;
+	case OP_RJUMP: I += M[I+1]+1; break;
 	case OP_JMPFALSE: if (0 == A) I = a()-1; else I += 2; break;
 	case OP_JMPTRUE: if (0 != A) I = a()-1; else I += 2; break;
 	case OP_FOR: if (S(pop()) >= S(A)) I = a()-1; else I += 2; break;
 	case OP_FORDOWN: if (S(pop()) <= S(A)) I = a()-1; else I += 2; break;
-	case OP_MKFRAME: push(F); F = P; break;
-	case OP_DELFRAME: F = pop(); break;
+	case OP_MKFRAME: push(F); debug("Mkframe: %04x => %04x\n", F, P); F = P; break;
+	case OP_DELFRAME: debug("Delframe: %02x => %04x\n", P, w(P)); F = pop(); break;
 	case OP_RET: I = pop(); break;
 	case OP_HALT: exit(a()); break;
 	case OP_NEG: A = -A & 0xffff; break;
@@ -302,7 +308,7 @@ void run(void) {
 	case OP_UGT: A = pop() > A? 0xffff: 0; break;
 	case OP_ULE: A = pop() <= A? 0xffff: 0; break;
 	case OP_UGE: A = pop() >= A? 0xffff: 0; break;
-	case OP_SCALL: A = libcall(M[I+1]); I = pop(); break;
+	case OP_SCALL: debug("Stack @ %04x\n", P); A = libcall(M[I+1]); I = pop(); debug("Stack @ %04x\n", P); break;
 	default:
 	    fprintf(stderr, "invalid opcode: %x\n", M[I]);
 	    exit(1);
