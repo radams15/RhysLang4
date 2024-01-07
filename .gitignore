@@ -10,3 +10,5 @@ test.txt
 *.casm
 tcvm
 out.txt
+cmake-build-debug
+vm/vm
