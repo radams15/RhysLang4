@@ -219,25 +219,30 @@ sub visit_all {
 	map {$class->visit($_)} @_;
 }
 
+sub prologue {
+	my $class = shift;
+	
+	$class->expel(
+		'push ' . $class->register('bp'),
+		'mov ' . $class->register('bp') . ', ' . $class->register('sp'),
+	);
+}
+
+sub epilogue {
+	my $class = shift;
+	
+	$class->expel(
+		'mov ' . $class->register('sp') . ', ' . $class->register('bp'),
+		'pop ' . $class->register('bp'),
+	);
+}
+
 
 sub visit_program {
 	my $class = shift;
 	my ($program) = @_;
 	
 	$class->expel($class->{preface}) if $class->{preface};
-	
-	$class->expel(
-		'%macro PROLOGUE 0',
-		'push ' . $class->register('bp'),
-		'mov ' . $class->register('bp') . ', ' . $class->register('sp'),
-		'%endmacro', '',
-
-		'%macro EPILOGUE 0',
-		'mov ' . $class->register('sp') . ', ' . $class->register('bp'),
-		'pop ' . $class->register('bp'),
-		'ret',
-		'%endmacro', ''
-	);
 	
 	$class->expel(
 		"section .text\n",
@@ -335,7 +340,7 @@ sub visit_sub {
 	
 	$class->inc;
 	$class->expel("; Args: " . join(', ', ${$sub->{params}}->keys));
-	$class->expel('PROLOGUE');
+    $class->prologue;
 	
 	my $arity = scalar ${$sub->{params}}->keys;
 	
@@ -366,7 +371,7 @@ sub visit_sub {
 	$class->dec;
 	$class->expel(".end_$sub_name:");
 	$class->inc;
-	$class->expel('EPILOGUE');
+	$class->epilogue;
 	
 	$class->{scope} = $class->{scope}->{parent};
 	$class->{in_sub} = $old_sub;

@@ -1,17 +1,24 @@
-%include stdlib
+asm ('
+write:
+	push bp
+	mov bp, sp
+	
+	push rdx
+	push rsi ; arg 1
+	push rdi ; arg 2
+	mov rax, 1 ; write
+	mov rdi, [rbp-8] ; fh
+	mov rsi, [rbp-16] ; message
+	mov rdx, [rbp-24] ; length
+	syscall
+	
+	mov sp, bp
+	pop bp
+	ret
+');
+
+sub write(fd: int, char: ptr, len: int) : void;
 
 sub main() : void {
-	my file = File.open("test.txt", 2);
-	
-	my i = 10;
-	while(i>0) {
-	    file.write("Hello world!\n");
-	    i = i-1;
-	}
-
-	file.close();
-	
-	puts('Done!\n');
-	
-	exit(0);
+    write(1, 'hello world\n', 14);
 }
