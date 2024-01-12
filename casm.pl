@@ -179,15 +179,17 @@ sub interp {
     my ($in) = @_;
 
     if($labels{$in}) {
+        #debug "%s => %s\n", $in, $labels{$in};
         return $labels{$in};
     }
 
     if($strings{$in}) {
-        debug "%s => %s\n", $in, $strings{$in};
+        #debug "%s => %s\n", $in, $strings{$in};
         return $strings{$in};
     }
 
     if($consts{$in}) {
+        #debug "%s => %s\n", $in, $consts{$in};
         return $consts{$in};
     }
 
@@ -253,12 +255,12 @@ sub gen {
 
 my @lines = <>;
 
-for my $i(0..1) {
+for my $i(1..2) {
     seek OUT, 0, 0;
     print pack 'a6', "T3X0";
     $p=0;
     
-    debug "Pass $i\n";
+    debug "\n**********\nPass $i\n**********\n\n";
     
     for(@lines) {
         chomp;
@@ -266,6 +268,7 @@ for my $i(0..1) {
         next unless $_;
         
         if(/(.*):/) {
+            debug "%s: (%02x)\n", $1, $p;
             $labels{$1} = $p;
         } else {
             my ($op, @args) = split / /;
