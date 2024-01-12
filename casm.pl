@@ -73,7 +73,7 @@ my %OPS = (
 
 my %ALIASES = (
     ENTER => 'MKFRAME',
-    LEAVE => 'DELFRAME'
+    LEAVE => 'DELFRAME',
 );
 
 sub debug {
@@ -193,9 +193,9 @@ sub interp {
 
     return $p if($in eq '.');
 
-    return hex($in) if($in =~ m/0x.*/);
+    return hex($in) if($in =~ m/%0x[0-9a-f]+$/);
     
-    return int($in) if($in =~ /\d+/g);
+    return int($in) if($in =~ m/^\d+$/g);
 
     return 0;
 }
@@ -218,7 +218,7 @@ sub gen {
     my ($opcode, $op_args);
     if($OPS{$op}) {
         ($opcode, $op_args) = @{$OPS{$op}};
-    } elsif ($OPS{$ALIASES{$op}}) {
+    } elsif ($ALIASES{$op}) {
         ($opcode, $op_args) = @{$OPS{$ALIASES{$op}}};
     } else {
         die "Invalid opcode: $op\n"

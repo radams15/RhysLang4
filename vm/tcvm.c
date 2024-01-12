@@ -270,7 +270,7 @@ void run(void) {
 	case OP_DEREF: A = w(A); break;
 	case OP_INDXB: A = A + pop() & 0xffff; break;
 	case OP_DREFB: A = M[A]; break;
-	case OP_CALL: push(I+2); I = a()-1; debug("Call ret => %02x\n", I); break;
+	case OP_CALL: push(I+2); I = a()-1; debug("Call ret => %02x\n", I); if(I == -1) {fprintf(stderr, "Error, null jump. Exiting...\n"); exit(1); } break;
 	case OP_CALR: push(I); I = A-1; break;
 	case OP_SKIP:
 	case OP_JUMP: I = a()-1; break;

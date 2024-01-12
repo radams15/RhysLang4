@@ -2,7 +2,7 @@ all: assemble run
 
 compile:
 	go build
-	./RhysLang < tests/hello.go
+	./RhysLang < tests/hello.go > out.casm
 
 tcvm:
 	c99 vm/tcvm.c -DDEBUG=1 -o tcvm

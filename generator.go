@@ -255,6 +255,12 @@ func genProgramStart() {
 	print("pop rbp\n")
 	print("ret 24\n")
 	print("\n")*/
+	
+	print(`print:
+ENTER
+;SCALL2 11 str0 10 0 0
+LEAVE
+RET`);
 }
 
 func genConst(name string, value int) {
@@ -445,7 +451,7 @@ func genSliceAssign(name string) {
 }
 
 func genCall(name string) int {
-	print("call " + name + "\n")
+	print("CALL " + name + "\n")
 	index := find(funcs, name)
 	sigIndex := funcSigIndexes[index]
 	resultType := funcSigs[sigIndex]
@@ -465,9 +471,7 @@ func genCall(name string) int {
 func genFuncStart(name string) {
 	print("\n")
 	print(name + ":\n")
-	print("push rbp\n")
-	print("mov rbp, rsp\n")
-	print("sub rsp, " + itoa(localSpace) + "\n") // space for locals
+	print("ENTER\n")
 }
 
 // Return size (in bytes) of current function's arguments.
@@ -503,25 +507,24 @@ func genFuncEnd() {
 	if size > localSpace {
 		Error(curFunc + "'s locals too big (" + itoa(size) + " > " + itoa(localSpace) + ")\n")
 	}
-	print("mov rsp, rbp\n")
-	print("pop rbp\n")
+	print("LEAVE\n")
 	size = argsSize()
 	if size > 0 {
 		print("ret " + itoa(size) + "\n")
 	} else {
-		print("ret\n")
+		print("RET\n")
 	}
 }
 
 func genDataSections() {
 	print("\n")
 	print("; section .data\n")
-	print("STRING _strOutOfMem out of memory\\n\n")
+	print("STR _strOutOfMem out of memory\\n\n")
 
 	// String constants
 	i := 0
 	for i < len(strs) {
-		print("STRING str" + itoa(i) + " " + escape(strs[i], "") + "\n")
+		print("STR str" + itoa(i) + " " + escape(strs[i], "") + "\n")
 		i = i + 1
 	}
 
@@ -567,16 +570,16 @@ func genUnary(op int, typ int) {
 
 func genBinaryString(op int) int {
 	if op == tPlus {
-		print("call _strAdd\n")
+		print("CALL _strAdd\n")
 		print("push rbx\n")
 		print("push rax\n")
 		return typeString
 	} else if op == tEq {
-		print("call _strEq\n")
+		print("CALL _strEq\n")
 		print("push rax\n")
 		return typeInt
 	} else if op == tNotEq {
-		print("call _strEq\n")
+		print("CALL _strEq\n")
 		print("cmp rax, 0\n")
 		print("mov rax, 0\n")
 		print("setz al\n")
