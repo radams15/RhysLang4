@@ -3,7 +3,8 @@ package main
 func genProgramStart() {
     print(`start:
 CALL main
-HALT 0
+PUSH ; push return value
+HALT
 `);
 
 	print(`print:
@@ -29,7 +30,7 @@ func genStrLit(s string) {
 	// Add string to strs and strAddrs tables
 	index := find(strs, s)
 	if index < 0 {
-		// Haven't seen this string constant before, add a new one
+		// Haven't seen this string constant before, add arg1 new one
 		index = len(strs)
 		strs = append(strs, s)
 	}
@@ -406,7 +407,7 @@ func genBinary(op int, typ1 int, typ2 int) int {
 
 func genReturn(typ int) {
 	if typ == typeInt {
-		print("pop rax\n")
+		print("POP\n")
 	} else if typ == typeString {
 		print("pop rax\n")
 		print("pop rbx\n")

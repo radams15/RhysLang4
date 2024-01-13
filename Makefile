@@ -5,7 +5,7 @@ compile:
 	./RhysLang < tests/hello.go > out.casm
 
 tcvm:
-	c99 vm/tcvm.c -DDEBUG=1 -o tcvm
+	c99 -I vm vm/tcvm.c vm/builtins.c -DDEBUG=1 -o tcvm
 
 assemble:
 	./casm.pl out.casm

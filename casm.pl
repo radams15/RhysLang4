@@ -41,7 +41,7 @@ my %OPS = (
     	MKFRAME => [0x20, ''],
     	DELFRAME => [0x21, ''],
     	RET => [0x22, ''],
-    	HALT => [0x23, 'w'],
+    	HALT => [0x23, ''],
     	NEG => [0x24, ''],
     	INV => [0x25, ''],
     	LOGNOT => [0x26, ''],
@@ -67,8 +67,9 @@ my %OPS = (
     	UGT => [0x3a, ''],
     	ULE => [0x3b, ''],
     	UGE => [0x3c, ''],
-    	SKIP => [0x47, 'w'],
-    	SCALL => [0x80, 'w']
+    	SKIP => [0x3d, 'w'],
+    	POP => [0x3e, ''],
+    	SCALL => [0x3f, 'w']
 );
 
 my %ALIASES = (

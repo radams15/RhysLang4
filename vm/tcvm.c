@@ -1,6 +1,6 @@
 /*
  * Ad-hoc 16-bit Tcode/0 virtual machine
- * Nils M Holm, 2017,2022,2023
+ * Nils mem Holm, 2017,2022,2023
  * Public domain / 0BSD license
  */
 
@@ -13,6 +13,9 @@
 #include <unistd.h>
 #endif
 
+#include "types.h"
+#include "builtins.h"
+
 #ifndef DEBUG
 #undef DEBUG
 #endif
@@ -20,7 +23,7 @@
 #if DEBUG
 #define debug(...) printf(__VA_ARGS__)
 #else
-#define debug(...) ()
+#define debug(...)
 #endif
 
 /*
@@ -36,11 +39,8 @@
 
 #define MEMSIZE	0xfffe
 
-#define byte	unsigned char
-#define cell	unsigned int
-
-byte	*M;
-cell	Red;
+byte	*mem;
+cell	program_length;
 
 char	**Args;
 int	Narg;
@@ -69,45 +69,47 @@ void load(char *s) {
 	setmode(fd, O_BINARY);
 #endif
 	read(fd, b, 6);
-	if (memcmp(b, "T3X0", 4)) fail("not a tcvm program");
-	M = malloc(MEMSIZE);
-	if (NULL == M) fail("not enough memory");
-	Red = read(fd, M, MEMSIZE);
+	if (memcmp(b, "T3X0", 4)) fail("not arg1 tcvm program");
+    mem = malloc(MEMSIZE);
+	if (NULL == mem) fail("not enough memory");
+    program_length = read(fd, mem, MEMSIZE);
 	close(fd);
 }
 
-cell	A, F, I, P;
+cell	acc, frame, I, sp;
 
-cell w(cell a) { return  M[a+0] | (M[a+1] << 8); }
+cell get_word(cell a) {
+    return mem[a + 0] | (mem[a + 1] << 8);
+}
 
-void Sw(cell a, cell w) {
-	M[a+0] =  w        & 255;
-	M[a+1] = (w >> 8)  & 255;
+void set_word(cell a, cell w) {
+    mem[a + 0] = w & 255;
+    mem[a + 1] = (w >> 8) & 255;
 }
 
 void push(cell x) {
-	P -= 2;
-	Sw(P, x);
+    sp -= 2;
+	set_word(sp, x);
 }
 
 cell pop(void) {
-	P += 2;
-	return w(P-2);
+    sp += 2;
+	return get_word(sp - 2);
 }
 #ifdef __TURBOC__                                                               
- int S(cell x) { return x; }                                                    
+ int trunc16(cell x) { return x; }
 #else                                                                           
- int S(cell x) { return x > 32767? x-65536: x; }
+ int trunc16(cell x) { return x > 32767 ? x - 65536 : x; }
 #endif
 
-#define a()	w(I+1)
-#define a2()	w(I+3)
+#define arg1()	get_word(I+1)
+#define arg2() get_word(I+3)
 
 cell memscan(cell p, cell c, cell k) {
 	cell	i;
 
 	for (i=0; i<k; i++)
-		if (M[p+i] == c)
+		if (mem[p + i] == c)
 			return i;
 	return 0xffff;
 }
@@ -125,192 +127,114 @@ int getarg(int n, char *s, int k) {
 	return m;
 }
 
-cell t3xopen(char *s, int mode) {
-	int	r;
-
-	if (1 == mode)
-		r = creat(s, 0644);
-	else if (3 == mode)
-		r = open(s, O_WRONLY);
-	else
-		r = open(s, w(P+2));
-#ifdef __TURBOC__
-	if (r > 0) setmode(r, O_BINARY);
-#endif
-	if (3 == mode) lseek(r, 0L, SEEK_END);
-	return r;
-}
-
-cell t3xseek(cell fd, cell where, cell how) {
-	long	w;
-	int	h;
-
-	switch (how) {
-		case 0:	w = where; h = SEEK_SET; break;
-		case 1: w = where; h = SEEK_CUR; break;
-		case 2: w = where; w = -w; h = SEEK_END; break;
-		case 3: w = where; w = -w; h = SEEK_CUR; break;
-		default: return 0xffff;
-	}
-	return lseek(fd, w, h) < 0? 0xffff: 0;
-}
-
-cell t3xtrunc(cell fd) {
-#ifndef EXTRA
-	fail("t3x.trunc not implemented");
-	return 0;
-#else
- #ifdef unix
-	return ftruncate(fd, lseek(fd, 0, SEEK_CUR));
- #endif
- #ifdef __TURBOC__
-	return write(fd, "", 0);
- #endif
-#endif
-}
-
-char	*Sem;
-
-void handle_break(int dummy) {
-	Sem[0] = Sem[1] = -1;
-#ifdef EXTRA
- #ifdef unix
-	signal(SIGINT, handle_break);
- #endif
-#endif
-}
-
-cell t3xbreak(cell sem) {
-#ifndef EXTRA
-	fail("t3x.break not implemented");
-#else
- #ifdef unix
-	if (0 == sem) {
-		signal(SIGINT, SIG_DFL);
-	}
-	else if (1 == sem) {
-		/* ignore */
-	}
-	else {
-		Sem = (char *) &M[sem];
-		Sem[0] = Sem[1] = 0;
-		signal(SIGINT, handle_break);
-	}
- #endif
- #ifdef __TURBOC__
-	fail("t3x.break not implemented");
- #endif
-#endif
-	return 0;
-}
-
 cell libcall(cell n) {
-	cell	r;
+    cell	r;
 
 #ifdef DEBUG
-	printf("LIBCALL(%d): P+6=%x P+4=%x P+2=%x ret=%x\n", n, w(P+6), w(P+4), w(P+2), w(P));
+    printf("LIBCALL(%d): sp+6=%x sp+4=%x sp+2=%x ret=%x\n", n, get_word(sp+6), get_word(sp+4), get_word(sp+2), get_word(sp));
 #endif
-	switch (n) {
-	case  0: r = 2; break;
-	case  1: strcpy((char *) &M[w(P+2)], "\n"); r = w(P+2); break;
-	case  2: r = memcmp(&M[w(P+6)], &M[w(P+4)], w(P+2)); break;
-	case  3: memmove(&M[w(P+6)], &M[w(P+4)], w(P+2)); r = 0; break;
-	case  4: memset(&M[w(P+6)], w(P+4), w(P+2)); r = 0; break;
-	case  5: r = memscan(w(P+6), w(P+4), w(P+2)); break;
-	case  6: r = getarg(w(P+6), (char *) &M[w(P+4)], w(P+2)); break;
-	case  7: r = creat((char *) &M[w(P+2)], 0644); break;
-	case  8: r = t3xopen((char *) &M[w(P+4)], w(P+2)); break;
-	case  9: r = close(w(P+2)); break;
-	case 10: r = read(w(P+6), &M[w(P+4)], w(P+2)); break;
-	case 11: r = write(w(P+6), &M[w(P+4)], w(P+2)); break;
-	case 12: r = t3xseek(w(P+6), w(P+4), w(P+2)); break;
-	case 13: r = rename((char *) &M[w(P+4)], (char *)&M[w(P+2)]); break;
-	case 14: r = remove((char *) &M[w(P+2)]); break;
-	case 15: r = t3xtrunc(w(P+2)); break;
-	case 16: r = t3xbreak(w(P+2)); break;
-	default: fail("bad library call"); r = 0; break;
-	}
-	return r & 0xffff;
+    switch (n) {
+        case  0: r = 2; break;
+        case  1: strcpy((char *) &mem[get_word(sp + 2)], "\n"); r = get_word(sp + 2); break;
+        case  2: r = memcmp(&mem[get_word(sp + 6)], &mem[get_word(sp + 4)], get_word(sp + 2)); break;
+        case  3: memmove(&mem[get_word(sp + 6)], &mem[get_word(sp + 4)], get_word(sp + 2)); r = 0; break;
+        case  4: memset(&mem[get_word(sp + 6)], get_word(sp + 4), get_word(sp + 2)); r = 0; break;
+        case  5: r = memscan(get_word(sp + 6), get_word(sp + 4), get_word(sp + 2)); break;
+        case  6: r = getarg(get_word(sp + 6), (char *) &mem[get_word(sp + 4)], get_word(sp + 2)); break;
+        case  7: r = creat((char *) &mem[get_word(sp + 2)], 0644); break;
+        case  8: r = t3xopen((char *) &mem[get_word(sp + 4)], get_word(sp + 2)); break;
+        case  9: r = close(get_word(sp + 2)); break;
+        case 10: r = read(get_word(sp + 6), &mem[get_word(sp + 4)], get_word(sp + 2)); break;
+        case 11: r = write(get_word(sp + 6), &mem[get_word(sp + 4)], get_word(sp + 2)); break;
+        case 12: r = t3xseek(get_word(sp + 6), get_word(sp + 4), get_word(sp + 2)); break;
+        case 13: r = rename((char *) &mem[get_word(sp + 4)], (char *)&mem[get_word(sp + 2)]); break;
+        case 14: r = remove((char *) &mem[get_word(sp + 2)]); break;
+        case 15: r = t3xtrunc(get_word(sp + 2)); break;
+        case 16: r = t3xbreak(get_word(sp + 2)); break;
+        default: fail("bad library call"); r = 0; break;
+    }
+    return r & 0xffff;
 }
 
 void run(void) {
 	cell	t;
 
-	P = MEMSIZE;
-	F = MEMSIZE;
+    sp = MEMSIZE;
+    frame = MEMSIZE;
 	for (I = 0;; I++) {
 #ifdef DEBUG
-	printf("F=%04x P=%04x I=%04x C=%02x a=%04x A=%04x S0=%04x\n",
-		F, P, I, M[I], a(), A, w(P));
+	printf("frame=%04x sp=%04x I=%04x C=%s(%02x) arg1=%04x acc=%04x S0=%04x\n",
+		frame, sp, I, lookup[mem[I]], mem[I], arg1(), acc, get_word(sp));
 #endif
-	if (P < Red) fail("stack overflow");
-	switch (M[I]) {
+	if (sp < program_length) fail("stack overflow");
+	switch (mem[I]) {
 	case OP_NOOP: break;
-	case OP_PUSH: push(A); break;
-	case OP_CLEAR: A = 0; break;
-	case OP_DROP: P += 2; break;
+	case OP_PUSH: push(acc); break;
+	case OP_CLEAR: acc = 0; break;
+	case OP_DROP: sp += 2; break;
 	case OP_LDVAL:
-	case OP_LDADDR: A = a(); I += 2; break;
-	case OP_LDLREF: A = F+a() & 0xffff; I += 2; break;
-	case OP_LDGLOB: A = w(a()); I += 2; break;
-	case OP_LDLOCL: A = w(F+a() & 0xffff); I += 2; break;
-	case OP_STGLOB: Sw(a(), A); I += 2; break;
-	case OP_STLOCL: Sw(F+a() & 0xffff, A); I += 2; break;
-	case OP_STINDR: Sw(pop(), A); break;
-	case OP_STINDB: M[pop()] = (byte) A; break;
-	case OP_INCGLOB: t = a(); Sw(t, w(t)+1 & 0xffff); I += 2; break;
-	case OP_INCLOCL: t = a(); Sw(F+t & 0xffff, w(F+t & 0xffff)+1 & 0xffff);
+	case OP_LDADDR: acc = arg1(); I += 2; break;
+	case OP_LDLREF: acc = frame + arg1() & 0xffff; I += 2; break;
+	case OP_LDGLOB: acc = get_word(arg1()); I += 2; break;
+	case OP_LDLOCL: acc = get_word(frame + arg1() & 0xffff); I += 2; break;
+	case OP_STGLOB: set_word(arg1(), acc); I += 2; break;
+	case OP_STLOCL: set_word(frame + arg1() & 0xffff, acc); I += 2; break;
+	case OP_STINDR: set_word(pop(), acc); break;
+	case OP_STINDB: mem[pop()] = (byte) acc; break;
+	case OP_INCGLOB: t = arg1(); set_word(t, get_word(t) + 1 & 0xffff); I += 2; break;
+	case OP_INCLOCL: t = arg1(); set_word(frame + t & 0xffff, get_word(frame + t & 0xffff) + 1 & 0xffff);
 		   I += 2; break;
-	case OP_INCR: A += S(a()); A &= 0xffff; I += 2; break;
+	case OP_INCR: acc += trunc16(arg1()); acc &= 0xffff; I += 2; break;
 	case OP_STACK:
-	case OP_UNSTACK: P += S(a()); P &= 0xffff; I += 2; break;
-	case OP_LOCLVEC: push(P); break;
-	case OP_GLOBVEC: Sw(a(), P); I += 2; break;
-	case OP_INDEX: A = (A<<1) + pop() & 0xffff; break;
-	case OP_DEREF: A = w(A); break;
-	case OP_INDXB: A = A + pop() & 0xffff; break;
-	case OP_DREFB: A = M[A]; break;
-	case OP_CALL: debug("Call %02x,  ret => %02x\n", a(), I+3); push(I+2); I = a()-1; if(a() == 0) {fprintf(stderr, "Error, null jump. Exiting...\n"); exit(1); } break;
-	case OP_CALR: push(I); I = A-1; break;
+	case OP_UNSTACK: sp += trunc16(arg1()); sp &= 0xffff; I += 2; break;
+	case OP_LOCLVEC: push(sp); break;
+	case OP_GLOBVEC: set_word(arg1(), sp); I += 2; break;
+	case OP_INDEX: acc = (acc << 1) + pop() & 0xffff; break;
+	case OP_DEREF: acc = get_word(acc); break;
+	case OP_INDXB: acc = acc + pop() & 0xffff; break;
+	case OP_DREFB: acc = mem[acc]; break;
+	case OP_CALL: debug("Call %02x,  ret => %02x\n", arg1(), I + 3); push(I + 2); I = arg1() - 1; if(arg1() == 0) {fprintf(stderr, "Error, null jump. Exiting...\n"); exit(1); } break;
+	case OP_CALR: push(I); I = acc - 1; break;
 	case OP_SKIP:
-	case OP_JUMP: I = a()-1; break;
-	case OP_RJUMP: I += M[I+1]+1; break;
-	case OP_JMPFALSE: if (0 == A) I = a()-1; else I += 2; break;
-	case OP_JMPTRUE: if (0 != A) I = a()-1; else I += 2; break;
-	case OP_FOR: if (S(pop()) >= S(A)) I = a()-1; else I += 2; break;
-	case OP_FORDOWN: if (S(pop()) <= S(A)) I = a()-1; else I += 2; break;
-	case OP_MKFRAME: push(F); debug("Mkframe: %04x => %04x\n", F, P); F = P; break;
-	case OP_DELFRAME: debug("Delframe: %02x => %04x\n", P, w(P)); F = pop(); break;
+	case OP_JUMP: I = arg1() - 1; break;
+	case OP_RJUMP: I += mem[I + 1] + 1; break;
+	case OP_JMPFALSE: if (0 == acc) I = arg1() - 1; else I += 2; break;
+	case OP_JMPTRUE: if (0 != acc) I = arg1() - 1; else I += 2; break;
+	case OP_FOR: if (trunc16(pop()) >= trunc16(acc)) I = arg1() - 1; else I += 2; break;
+	case OP_FORDOWN: if (trunc16(pop()) <= trunc16(acc)) I = arg1() - 1; else I += 2; break;
+	case OP_MKFRAME: push(frame); debug("Mkframe: %04x => %04x\n", frame, sp); frame = sp; break;
+	case OP_DELFRAME: debug("Delframe: %02x => %04x\n", sp, get_word(sp)); frame = pop(); break;
 	case OP_RET: I = pop(); break;
-	case OP_HALT: exit(a()); break;
-	case OP_NEG: A = -A & 0xffff; break;
-	case OP_INV: A = ~A & 0xffff; break;
-	case OP_LOGNOT: A = 0==A? 0xffff: 0; break;
-	case OP_ADD: A = pop() + A & 0xffff; break;
-	case OP_SUB: A = pop() - A & 0xffff; break;
-	case OP_MUL: A = S(pop()) * S(A) & 0xffff; break;
-	case OP_DIV: A = S(pop()) / S(A) & 0xffff; break;
-	case OP_MOD: A = pop() % A & 0xffff; break;
-	case OP_AND: A = pop() & A; break;
-	case OP_OR: A = pop() | A; break;
-	case OP_XOR: A = pop() ^ A; break;
-	case OP_SHL: A = (pop() << A) & 0xffff; break;
-	case OP_SHR: A = pop() >> A; break;
-	case OP_EQ: A = pop() == A? 0xffff: 0; break;
-	case OP_NE: A = pop() != A? 0xffff: 0; break;
-	case OP_LT: A = S(pop()) < S(A)? 0xffff: 0; break;
-	case OP_GT: A = S(pop()) > S(A)? 0xffff: 0; break;
-	case OP_LE: A = S(pop()) <= S(A)? 0xffff: 0; break;
-	case OP_GE: A = S(pop()) >= S(A)? 0xffff: 0; break;
-	case OP_UMUL: A = pop() * A & 0xffff; break;
-	case OP_UDIV: A = pop() / A & 0xffff; break;
-	case OP_ULT: A = pop() < A? 0xffff: 0; break;
-	case OP_UGT: A = pop() > A? 0xffff: 0; break;
-	case OP_ULE: A = pop() <= A? 0xffff: 0; break;
-	case OP_UGE: A = pop() >= A? 0xffff: 0; break;
-	case OP_SCALL: debug("Stack @ %04x\n", P); A = libcall(M[I+1]); I = pop(); debug("Stack @ %04x\n", P); break;
+	case OP_HALT: exit(pop()); break;
+	case OP_NEG: acc = -acc & 0xffff; break;
+	case OP_INV: acc = ~acc & 0xffff; break;
+	case OP_LOGNOT: acc = 0 == acc ? 0xffff : 0; break;
+	case OP_ADD: acc = pop() + acc & 0xffff; break;
+	case OP_SUB: acc = pop() - acc & 0xffff; break;
+	case OP_MUL: acc = trunc16(pop()) * trunc16(acc) & 0xffff; break;
+	case OP_DIV: acc = trunc16(pop()) / trunc16(acc) & 0xffff; break;
+	case OP_MOD: acc = pop() % acc & 0xffff; break;
+	case OP_AND: acc = pop() & acc; break;
+	case OP_OR: acc = pop() | acc; break;
+	case OP_XOR: acc = pop() ^ acc; break;
+	case OP_SHL: acc = (pop() << acc) & 0xffff; break;
+	case OP_SHR: acc = pop() >> acc; break;
+	case OP_EQ: acc = pop() == acc ? 0xffff : 0; break;
+	case OP_NE: acc = pop() != acc ? 0xffff : 0; break;
+	case OP_LT: acc = trunc16(pop()) < trunc16(acc) ? 0xffff : 0; break;
+	case OP_GT: acc = trunc16(pop()) > trunc16(acc) ? 0xffff : 0; break;
+	case OP_LE: acc = trunc16(pop()) <= trunc16(acc) ? 0xffff : 0; break;
+	case OP_GE: acc = trunc16(pop()) >= trunc16(acc) ? 0xffff : 0; break;
+	case OP_UMUL: acc = pop() * acc & 0xffff; break;
+	case OP_UDIV: acc = pop() / acc & 0xffff; break;
+	case OP_ULT: acc = pop() < acc ? 0xffff : 0; break;
+	case OP_UGT: acc = pop() > acc ? 0xffff : 0; break;
+	case OP_ULE: acc = pop() <= acc ? 0xffff : 0; break;
+	case OP_UGE: acc = pop() >= acc ? 0xffff : 0; break;
+	case OP_SCALL: debug("Stack @ %04x\n", sp); acc = libcall(mem[I + 1]); I = pop(); debug("Stack @ %04x\n", sp); break;
+	case OP_POP:  acc = pop(); break;
 	default:
-	    fprintf(stderr, "invalid opcode: %x\n", M[I]);
+	    fprintf(stderr, "invalid opcode: %x\n", mem[I]);
 	    exit(1);
 	}
 	//getchar();

@@ -1,4 +1,4 @@
-// Mugo: compiler for a (micro) subset of Go
+// Mugo: compiler for arg1 (micro) subset of Go
 
 package main
 
@@ -12,7 +12,7 @@ var (
 	token          int      // current parser token
 	tokenInt       int      // integer value of current token (if applicable)
 	tokenStr       string   // string value of current token (if applicable)
-	curFunc        string   // current function name, or "" if not in a func
+	curFunc        string   // current function name, or "" if not in arg1 func
 	tokens         []string // token names
 	types          []string // type names
 	typeSizes      []int    // type sizes in bytes

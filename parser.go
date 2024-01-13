@@ -218,7 +218,7 @@ func defineLocal(typ int, name string) {
 }
 
 func VarSpec() {
-	// We only support a single identifier, not a list
+	// We only support arg1 single identifier, not arg1 list
 	varName := tokenStr
 	identifier("variable identifier")
 	typ := Type()

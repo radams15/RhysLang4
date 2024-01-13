@@ -85,7 +85,7 @@ for(@ARGV) {
     
     my $head;
     read (FH, $head, 6) or die "Error reading $_!";
-    die 'Not a T3X program' unless $head eq "T3X0\x00\x00";
+    die 'Not arg1 T3X program' unless $head eq "T3X0\x00\x00";
     
     my $i=0;
     my $op;
@@ -106,7 +106,7 @@ for(@ARGV) {
             
             if($_ eq 'w') {
                 read (FH, $arg, 2) or die "Error reading $_!";
-                sprintf '0x%02x', unpack('S', $arg);
+                sprintf '0x%02x', unpack('trunc16', $arg);
             } elsif ($_ eq 'r') {
                 read (FH, $arg, 1) or die "Error reading $_!";
                 sprintf '0x%01x',  unpack('C', $arg);
