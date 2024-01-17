@@ -9,26 +9,9 @@ use experimental 'switch';
 use Data::Dumper;
 
 use Scope;
+use Asm;
 
 my $HEAP_SIZE = 512; # bytes
-
-sub register {
-	my $class = shift;
-	
-	my ($name, $address, $offset) = @_;
-	
-	my $out = '';
-	
-	$out .= '[' if $address;
-	
-	$out .= $class->{registers}->{uc $name};
-	
-	$out .= "+$offset" if $offset;
-	
-	$out .= ']' if $address;
-	
-	$out;
-}
 
 sub wordsize {
 	my $class = shift;
@@ -145,6 +128,8 @@ sub sizeof {
 	}
 }
 
+my $level = 0;
+
 sub new {
 	my $class = shift;
 	my $registers = shift;
@@ -154,7 +139,6 @@ sub new {
 	my $global_scope = Scope->new;
 
 	my $this = bless {
-		level => 0,
 		in_sub => 0,
 		in_struct => 0,
 		scope => $global_scope,
@@ -168,10 +152,10 @@ sub new {
 	}, $class;
 	
 	$this->{call_registers} = [
-		$this->register('di'),
-		$this->register('si'),
-		$this->register('dx'),
-		$this->register('cx'),
+		reg 'A',
+		reg 'B',
+		reg 'C',
+		reg 'D'
 	];
 	
 	$this->{stack_offset} = -($this->sizeof_type('PTR'));
@@ -180,10 +164,8 @@ sub new {
 }
 
 sub expel {
-	my $class = shift;
-	
 	for(@_) {
-		print '', ("\t" x $class->{level}), $_, "\n";
+		print '', ("\t" x $level), $_, "\n";
 	}
 }
 
@@ -217,6 +199,19 @@ sub visit_all {
 	my $class = shift;
 	
 	map {$class->visit($_)} @_;
+	
+	dump_asm;
+}
+
+sub prologue {
+    &push(reg('BP')),
+    &mov(reg('BP'), reg('SP'));
+}
+
+sub epilogue {
+    &mov(reg('SP'), reg('BP')),
+    &pop(reg('BP')),
+    &ret;
 }
 
 
@@ -224,27 +219,10 @@ sub visit_program {
 	my $class = shift;
 	my ($program) = @_;
 	
-	$class->expel($class->{preface}) if $class->{preface};
+	expel($class->{preface}) if $class->{preface};
 	
-	$class->expel(
-		'%macro PROLOGUE 0',
-		'push ' . $class->register('bp'),
-		'mov ' . $class->register('bp') . ', ' . $class->register('sp'),
-		'%endmacro', '',
-
-		'%macro EPILOGUE 0',
-		'mov ' . $class->register('sp') . ', ' . $class->register('bp'),
-		'pop ' . $class->register('bp'),
-		'ret',
-		'%endmacro', ''
-	);
-	
-	$class->expel(
-		"section .text\n",
-		"global _start\n",
-		"_start:",
-		"\tcall main\n",
-	);
+	&label('_start');
+	&call('main');
 	
 	$class->{global_scope}->set('_heap_top', {
 		type => 'GLOBAL',
@@ -254,15 +232,14 @@ sub visit_program {
 	
 	$class->visit_all(@{$program->{body}});
 	
-	$class->expel("\nsection .data");
 	$class->inc;
 	for(@{$class->{strings}}) {
-		$class->expel($_);
+		expel($_);
 	}
 	
 	$class->dec;
-	$class->expel("_heap: times $HEAP_SIZE db 0");
-	$class->expel("_heap_top: ".$class->wordsize('PTR')." _heap");
+	#expel("_heap: times $HEAP_SIZE db 0");
+	#expel("_heap_top: ".$class->wordsize('PTR')." _heap");
 }
 
 sub method_hash {
@@ -328,14 +305,14 @@ sub visit_sub {
 	my $old_sub = $class->{in_sub};
 	my $old_stack_offset = $class->{stack_offset};
 	
-	$class->expel("$sub_name:");
+	&label($sub_name);
 	$class->{in_sub} = $sub;
 	$class->{scope} = $class->{scope}->child;
 	$class->{stack_offset} = -$class->sizeof_type('PTR');
 	
 	$class->inc;
-	$class->expel("; Args: " . join(', ', ${$sub->{params}}->keys));
-	$class->expel('PROLOGUE');
+	comment("Args: ", ${$sub->{params}}->keys);
+	&prologue;
 	
 	my $arity = scalar ${$sub->{params}}->keys;
 	
@@ -343,14 +320,15 @@ sub visit_sub {
 	my ($register, $offset, $arg_size);
 	
 	my @call_regs = reverse(@{$class->{call_registers}}[0..$arity-1]);
-	print "; Call registers: ", join(', ', @call_regs), "\n";
+	comment("Call registers: ", @call_regs);
 	my $param_iterator = ${$sub->{params}}->iterator;
 	while(my ($name, $type) = $param_iterator->()) {
 		$register = $call_regs[$used_regs];
 
 		$arg_size = $class->sizeof_type($type);
 		$offset = $class->{stack_offset};
-		$class->expel("push $register ; $name @ bp+$offset");
+		&comment("$name @ bp+$offset");
+		&push(reg $register);
 		$class->{scope}->set($name, {
 			type => 'LOCAL',
 			offset => $offset,
@@ -364,9 +342,9 @@ sub visit_sub {
 	$class->visit($sub->{block});
 		
 	$class->dec;
-	$class->expel(".end_$sub_name:");
+	&label(".end_$sub_name");
 	$class->inc;
-	$class->expel('EPILOGUE');
+	&epilogue;
 	
 	$class->{scope} = $class->{scope}->{parent};
 	$class->{in_sub} = $old_sub;
@@ -383,18 +361,18 @@ sub visit_loop {
 	
 	my ($start, $end) = generate_labels('loop');
 	
-	$class->dec; $class->expel("$start:"); $class->inc;
+	$class->dec; expel("$start:"); $class->inc;
 	$class->visit($loop->{expr});
-	$class->expel(
-		'cmp ' . $class->register('ax') . ', 0',
+	expel(
+		'cmp ' . register('ax') . ', 0',
 		"je $end",
 	);
 	
 	$class->visit($loop->{body});
 	
-	$class->expel("jmp $start");
+	expel("jmp $start");
 	
-	$class->dec; $class->expel("$end:"); $class->inc;
+	$class->dec; expel("$end:"); $class->inc;
 }
 
 sub visit_if {
@@ -405,23 +383,23 @@ sub visit_if {
 	
 	$class->visit($if->{expr});
 	
-	$class->expel(
-		'cmp ' . $class->register('ax') . ', 0',
+	expel(
+		'cmp ' . register('ax') . ', 0',
 		"je $start",
 	);
 	
-	$class->expel('; TRUE:');
+	expel('; TRUE:');
 	$class->visit($if->{true});
 	
-	$class->expel('; END TRUE');
+	expel('; END TRUE');
 	
-	$class->dec; $class->expel("$start:"); $class->inc;
+	$class->dec; expel("$start:"); $class->inc;
 	
 	$class->visit($if->{false}) if defined $if->{false};
 	
-	$class->expel("jmp $end");
+	expel("jmp $end");
 	
-	$class->dec; $class->expel("$end:"); $class->inc;
+	$class->dec; expel("$end:"); $class->inc;
 	
 	"INT";
 }
@@ -446,13 +424,13 @@ sub visit_assign {
 		when('LOCAL') {
 			print "; $assign->{name}->{value} @ $var->{offset}\n";
 			
-			$class->expel('mov ' . $class->register('bp', 1, $var->{offset}) . ', ' . $class->register('ax'));
+			expel('mov ' . register('bp', 1, $var->{offset}) . ', ' . register('ax'));
 		}
 		
 		when('GLOBAL') {
 			print "; $assign->{name} @ $var->{name}\n";
 			
-			$class->expel('mov [' . $var->{name} . '], ' . $class->register('ax'));
+			expel('mov [' . $var->{name} . '], ' . register('ax'));
 		}
 	}
 }
@@ -478,9 +456,9 @@ sub visit_get {
 	
 	print "; Get $value from $from (Struct: $struct_type->{name}->{value}, Offset: $attr_offset)\n";
 	
-	#$class->expel('mov '.$class->register('ax').', '.$class->register('bp', 1, $offset));
+	#expel('mov '.register('ax').', '.register('bp', 1, $offset));
 	$class->visit($get->{expr}); # Get struct ptr into ax
-	$class->expel('mov '.$class->register('ax').', '.$class->register('ax', 1, $attr_offset));
+	expel('mov '.register('ax').', '.register('ax', 1, $attr_offset));
 }
 
 sub visit_set {
@@ -504,12 +482,12 @@ sub visit_set {
 	print "; set $value from $from (Struct: $struct_type->{name}->{value}, Offset: $offset)\n";
 	
 	$class->visit($set->{value});
-	$class->expel('push '.$class->register('ax')); # bx => struct
+	expel('push '.register('ax')); # bx => struct
 	
 	$class->visit($set->{expr});
-	$class->expel('pop '.$class->register('dx')); # dx => assigned value
+	expel('pop '.register('dx')); # dx => assigned value
 
-	$class->expel('mov '.$class->register('ax', 1, $offset).', '.$class->register('dx')); # ax => attribute
+	expel('mov '.register('ax', 1, $offset).', '.register('dx')); # ax => attribute
 }
 
 
@@ -530,7 +508,7 @@ sub get_flag {
 		default { die "Unknown flag: $name" }
 	}
 	
-	$class->expel(
+	expel(
 		'pushf',
 		'pop ax',
 		"xor ax, $mask",
@@ -543,7 +521,7 @@ sub cmp {
 	
 	my ($start, $end) = &generate_labels('cmp');
 	
-	$class->expel(
+	expel(
 		"cmp $a, $b",
 	);
 	
@@ -556,19 +534,19 @@ sub cmp {
 		default { die "Unknown cmp op: $op" }
 	}
 	
-	$class->expel(
+	expel(
 		"$jump_instr $start",
 		"mov $a, 0",
 		"jmp $end",
 	);
 	
-	$class->dec; $class->expel("$start:"); $class->inc;
-	$class->expel(
+	$class->dec; expel("$start:"); $class->inc;
+	expel(
 		"mov $a, 1",
 		"jmp $end",
 	);
 	
-	$class->dec; $class->expel("$end:"); $class->inc;
+	$class->dec; expel("$end:"); $class->inc;
 }
 
 sub visit_comparison {
@@ -578,22 +556,22 @@ sub visit_comparison {
 	given($comparison->{op}->{name}) {
 		when (/LESS|GREATER/) {
 			$class->visit($comparison->{right});
-			$class->expel('push ' . $class->register('ax'));
+			expel('push ' . register('ax'));
 			$class->visit($comparison->{left});
-			$class->expel('pop ' . $class->register('cx'));
+			expel('pop ' . register('cx'));
 			
 			when('LESS') {
 				$class->cmp(
-					$class->register('ax'),
-					$class->register('cx'),
+					register('ax'),
+					register('cx'),
 					'LESS',
 				);
 			}
 			
 			when('GREATER') {
 				$class->cmp(
-					$class->register('ax'),
-					$class->register('cx'),
+					register('ax'),
+					register('cx'),
 					'GREATER',
 				);
 			}
@@ -610,18 +588,18 @@ sub visit_equality {
 	given($equality->{op}->{name}) {
 		when (/BANG_EQUALS|EQUALS/) {
 			$class->visit($equality->{left});
-			$class->expel('push ' . $class->register('ax'));
+			expel('push ' . register('ax'));
 			$class->visit($equality->{right});
-			$class->expel('pop ' . $class->register('cx'));
+			expel('pop ' . register('cx'));
 			
 			$class->cmp(
-				$class->register('ax'),
-				$class->register('cx'),
+				register('ax'),
+				register('cx'),
 				'EQUALS',
 			);
 			
 			when('BANG_EQUALS') {
-				$class->expel('not ' . register('ax')); # invert if !=
+				expel('not ' . register('ax')); # invert if !=
 			}
 		}
 
@@ -636,17 +614,17 @@ sub visit_term {
 	given($term->{op}->{name}) {
 		when ('PLUS') {
 			$class->visit($term->{left});
-			$class->expel('push ' . $class->register('ax'));
+			&push(reg 'A');
 			$class->visit($term->{right});
-			$class->expel('pop ' . $class->register('cx'));
-			$class->expel('add ' . $class->register('ax') . ', ' . $class->register('cx'));
+			&pop(reg 'C');
+			&add(reg('A'), reg('A'), reg('C'));
 		}
 		when ('MINUS') {
 			$class->visit($term->{right});
-			$class->expel('push ' . $class->register('ax'));
+			&push(reg 'A');
 			$class->visit($term->{left});
-			$class->expel('pop ' . $class->register('cx'));
-			$class->expel('sub ' . $class->register('ax') . ', ' . $class->register('cx'));
+			&pop(reg 'C');
+			&sub(reg('A'), reg('A'), reg('C'));
 		}
 		
 		default { die "Unknown term: $term->{op}->{name}" }
@@ -661,10 +639,10 @@ sub visit_my {
 		if(defined $my->{initialiser}) {
 			$class->visit($my->{initialiser});
 		} else {
-			$class->expel('xor ' . $class->register('ax') . ', ' . $class->register('ax'));
+			expel('xor ' . register('ax') . ', ' . register('ax'));
 		}
 		
-		$class->expel('push '. $class->register('ax'));
+		expel('push '. register('ax'));
 		
 		my $datatype;
 				
@@ -742,7 +720,7 @@ sub visit_return {
 	
 	$class->visit($return->{value});
 	
-	$class->expel("jmp .end_$class->{in_sub}->{name}->{value}");
+	&br('.end_'.$class->{in_sub}->{name}->{value});
 }
 
 sub visit_expression {
@@ -787,17 +765,15 @@ sub visit_literal {
 	my $class = shift;
 	my ($literal) = @_;
 	
-	my $reg = $class->register('ax');
-	
 	my $type = $class->typeof($literal);
 		
 	given ($type) {
 		when ('STR') {
-			$class->expel("mov $reg, " . $class->get_str_ref($literal->{value}))
+		    &mov(reg('A'), $class->get_str_ref($literal->{value}));
 		}
 		
 		when ('INT') {
-			$class->expel("mov $reg, $literal->{value}")
+		    &mov(reg('A'), $literal->{value});
 		}
 	}
 }
@@ -814,14 +790,14 @@ sub visit_variable {
 	
 	given($value->{type}) {
 		when ('LOCAL') {
-			$class->expel("mov ". $class->register('ax') .", " . $class->register('bp', 1, $value->{offset}));
+			expel("mov ". register('ax') .", " . register('bp', 1, $value->{offset}));
 		}
 		
 		when ('GLOBAL') {
 			if($value->{datatype} eq 'PTR') {
-				$class->expel("mov ". $class->register('ax') .", [$value->{name}]");
+				expel("mov ". register('ax') .", [$value->{name}]");
 			} else {
-				$class->expel("mov ". $class->register('ax') .", $value->{name}");
+				expel("mov ". register('ax') .", $value->{name}");
 			}
 		}
 		
@@ -839,20 +815,20 @@ sub visit_index {
 	
 	my $type = $class->visit($index->{value});
 	
-	$class->expel('push ' . $class->register('ax'));
+	expel('push ' . register('ax'));
 
 	$class->visit($index->{index});
 	if($type eq 'STR') {
-		$class->expel('inc ' . $class->register('ax')); # Go over the string length.
+		expel('inc ' . register('ax')); # Go over the string length.
 	}
-	$class->expel('push ' . $class->register('ax'));
+	expel('push ' . register('ax'));
 
-	$class->expel('pop ' . $class->register('si')); # si = index
-	$class->expel('pop ' . $class->register('bx')); # bx = array
-	$class->expel('add ' . $class->register('bx') . ', ' . $class->register('si'));
+	expel('pop ' . register('si')); # si = index
+	expel('pop ' . register('bx')); # bx = array
+	expel('add ' . register('bx') . ', ' . register('si'));
 	
-	$class->expel('xor ' . $class->register('ax') . ', ' . $class->register('ax'));
-	$class->expel('mov ' . $class->register('al') . ', ' . $class->register('bx', 1));
+	expel('xor ' . register('ax') . ', ' . register('ax'));
+	expel('mov ' . register('al') . ', ' . register('bx', 1));
 }
 
 sub visit_sizeof {
@@ -860,7 +836,7 @@ sub visit_sizeof {
 	my ($sizeof) = @_;
 	
 	my $size = $class->sizeof_type($sizeof->{value}->{value});
-	$class->expel('mov ' . $class->register('ax') . ", $size");
+	expel('mov ' . register('ax') . ", $size");
 }
 
 sub visit_method_call {
@@ -900,7 +876,7 @@ sub visit_method_call {
 		callee => {
 			type => 'ASM',
 			str => {
-				value => 'mov '.$class->register('ax').", $fullname",
+				value => 'mov '.register('ax').", $fullname",
 			},
 		}
 	});
@@ -916,24 +892,24 @@ sub visit_call {
 	for my $arg (@args) {
 		$class->visit($arg);
 		
-		$class->expel("push " . $class->register('ax'));
+		expel("push " . register('ax'));
 	}
 	
 	
 	my @reversed_registers = ( @{$class->{call_registers}}[0..$num_args-1] );
 	for my $register(@reversed_registers) {
-		$class->expel("pop $register");
+		expel("pop $register");
 	}
 	
 	$class->visit($call->{callee});
-	$class->expel("call " . $class->register('ax'));
+	expel("call " . register('ax'));
 }
 
 sub visit_asm {
 	my $class = shift;
 	my ($asm) = @_;
 	
-	$class->expel($asm->{str}->{value});
+	expel($asm->{str}->{value});
 }
 
 1;
