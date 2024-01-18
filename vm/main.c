@@ -119,18 +119,14 @@ uint16_t read_word(FILE* fh) {
     return a | (b<<8);
 }
 
-int main(int argc, char** argv) {
-    const char* file = "../out.rba";
-
+uint8_t load_ops(const char* file, Op_t** ops_ptr) {
     FILE* fh = fopen(file, "r");
     if(fh == NULL) {
         fprintf(stderr, "Failed to open file '%s'\n", file);
         return 1;
     }
 
-
     uint16_t size = read_word(fh);
-    printf("Size: %d\n", size);
 
     uint16_t* raw = malloc(size * sizeof(uint16_t));
 
@@ -146,27 +142,43 @@ int main(int argc, char** argv) {
             in_op--;
         }
     }
+    fclose(fh);
 
-    printf("Num Ops: %d\n", n_ops);
-
-    Op_t* prog = malloc(n_ops * sizeof(Op_t));
+    Op_t* ops = malloc(n_ops * sizeof(Op_t));
 
     uint16_t p = 0;
     uint16_t i = 0;
     while(p < size) {
-        parse_op(&raw[p], &prog[i]);
+        parse_op(&raw[p], &ops[i]);
 
-        p += prog[i].n_args + 1;
+        p += ops[i].n_args + 1;
         i++;
     }
 
     free(raw);
 
-    for(i=0 ; i<n_ops ; i++) {
+    *ops_ptr = ops;
+
+    return 0;
+}
+
+void interp(Op_t* prog) {
+    for(uint16_t i=0 ; i<20 ; i++) {
         printf("Op: %04x\n", prog[i].code);
     }
+}
 
-    free(prog);
+int main(int argc, char** argv) {
+    const char* file = "../out.rba";
 
-    fclose(fh);
+    Op_t* ops;
+
+    if(load_ops(file, &ops) != 0) {
+        fprintf(stderr, "Failed to load program\n");
+        return 1;
+    }
+
+    interp(ops);
+
+    free(ops);
 }
