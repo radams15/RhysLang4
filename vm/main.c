@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef enum Opcode {
     OP_HALT = 0x0,
@@ -183,7 +184,7 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr) {
 }
 
 // Gets the value in the argument, ignoring references
-#define arg_raw(arg) ((arg)->type == ARG_REG ? &regs[(arg)->type] : &(arg)->val)
+#define arg_raw(arg) ((arg)->type == ARG_REG ? &regs[(arg)->val] : &(arg)->val)
 
 // Gets the value in the argument, returning memory pointers for references
 #define arg_val(arg) ((arg)->addr? &mem[*arg_raw(arg)] : arg_raw(arg))
@@ -192,8 +193,8 @@ int interp(Op_t* prog) {
     uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     uint16_t* ip = &regs[REG_IP];
 
-    uint16_t mem_size = 3200;
-    uint16_t* mem = malloc(mem_size * sizeof(uint16_t));
+    uint16_t mem_size = pow(2, 8);
+    uint16_t* mem = calloc(mem_size, sizeof(uint16_t));
 
     regs[REG_SP] = mem_size;
     regs[REG_BP] = mem_size;
@@ -254,9 +255,15 @@ int interp(Op_t* prog) {
             }
         }
 
+        //printf("IP: %04x\n", *ip);
+
         (*ip)++;
     }
 end:
+
+    for(int i=0 ; i<10 ; i++) {
+        printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
+    }
 
     free(mem);
 

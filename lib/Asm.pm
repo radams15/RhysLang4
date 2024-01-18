@@ -10,7 +10,7 @@ use Exporter 'import';
 use List::Util qw/ sum /;
 
 our @EXPORT_OK = qw//;
-our @EXPORT = qw/ reg label comment halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and push pop call ret dump_asm /;
+our @EXPORT = qw/ reg label comment halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and stackat push pop call ret dump_asm /;
 
 my %REGISTERS = (
     A => 'r0',
@@ -19,6 +19,10 @@ my %REGISTERS = (
     D => 'r3',
     E => 'r4',
     F => 'r5',
+    G => 'r6',
+    H => 'r7',
+    I => 'r8',
+    J => 'r9',
     IP => 'r10',
     SP => 'r11',
     BP => 'r12',
@@ -83,7 +87,7 @@ sub comment {
 sub triad {
     my ($instr, $a, $b, $c) = @_;
     
-    die "Invalid triad $instr" unless $a and $b and $c;
+    die "Invalid triad $instr" unless defined $a and defined $b and defined $c;
     
     push @code, [$instr, $a, $b, $c];
     $p += 4;
@@ -209,13 +213,23 @@ sub and {
     &not($a, $a);
 }
 
+sub stackat {
+    my ($a, $b) = @_;
+    
+    &comment('stackat ', $b, ' to ', $a);
+    
+    &mov(reg('J'), reg('bp'));
+    &sub(reg('J'), reg('J'), $b);
+    &mov($a, reg('J'));
+}
+
 sub push {
     my ($a) = @_;
     
     &comment('push', $a);
     
-    &mov(reg('sp', 1), $a);
     &sub(reg('sp'), reg('sp'), '1');
+    &mov(reg('sp', 1), $a);
 }
 
 sub pop {
@@ -223,8 +237,8 @@ sub pop {
     
     &comment('pop', $a);
     
-    &add(reg('sp'), reg('sp'), '1');
     &mov($a, reg('sp', 1));
+    &add(reg('sp'), reg('sp'), '1');
 }
 
 sub call {
