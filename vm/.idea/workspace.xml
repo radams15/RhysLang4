@@ -20,22 +20,20 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="73fe459d-5ee4-421b-9dc5-564b5cecc3fd" name="Changes" comment="">
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vm.iml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/builtins.c" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/builtins.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/types.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vm.pl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/../Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../casm.pl" beforeDir="false" afterPath="$PROJECT_DIR$/../casm.pl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../cdisasm.pl" beforeDir="false" afterPath="$PROJECT_DIR$/../cdisasm.pl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../generator.go" beforeDir="false" afterPath="$PROJECT_DIR$/../generator.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lexer.go" beforeDir="false" afterPath="$PROJECT_DIR$/../lexer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mugo.go" beforeDir="false" afterPath="$PROJECT_DIR$/../mugo.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../parser.go" beforeDir="false" afterPath="$PROJECT_DIR$/../parser.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tcvm.c" beforeDir="false" afterPath="$PROJECT_DIR$/tcvm.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tcvm.c.bak" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../lib/Asm.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Asm.pm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../lib/Visitor.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Visitor.pm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +55,7 @@
   <component name="ProjectColorInfo"><![CDATA[{
   "associatedIndex": 1
 }]]></component>
-  <component name="ProjectId" id="2audFPgtV4HXNFKwTnQzFy2xF21" />
+  <component name="ProjectId" id="2b8FzYFpXmFL8hTTwcVJ4F2XoN6" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
@@ -67,14 +65,16 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "CMake Application.vm.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "last_opened_file_path": "/home/rhys/scripts/RhysLang4/vm",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -89,7 +89,7 @@
         <option name="CLION.EXTERNAL.BUILD" enabled="true" />
       </method>
     </configuration>
-    <configuration name="vm" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="VM" TARGET_NAME="vm" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="VM" RUN_TARGET_NAME="vm">
+    <configuration name="vm" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="VM" TARGET_NAME="vm" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="VM" RUN_TARGET_NAME="vm">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -98,12 +98,12 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="73fe459d-5ee4-421b-9dc5-564b5cecc3fd" name="Changes" comment="" />
-      <created>1705172294467</created>
+      <changelist id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="" />
+      <created>1705589062277</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1705172294467</updated>
-      <workItem from="1705172295853" duration="381000" />
+      <updated>1705589062277</updated>
+      <workItem from="1705589064039" duration="1726000" />
     </task>
     <servers />
   </component>
@@ -114,5 +114,8 @@
     <isAutomaticCheckingOnLaunch value="false" />
     <isAutomaticFoundErrors value="true" />
     <isAutomaticReloadCMake value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
 </project>

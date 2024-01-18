@@ -200,6 +200,8 @@ sub visit_all {
 	
 	map {$class->visit($_)} @_;
 	
+	halt;
+	
 	dump_asm;
 }
 

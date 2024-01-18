@@ -17,16 +17,39 @@ my %REGISTERS = (
     D => 'r3',
     E => 'r4',
     F => 'r5',
-    SP => '%sp',
-    BP => '%bp',
-    RET => '%ret',
-    TMP => '%tmp',
-    IP => '%ip',
+    IP => 'r10',
+    SP => 'r11',
+    BP => 'r11',
+    RET => 'r12',
+    TMP => 'r13',
+);
+
+my %OPS = (
+    HALT => 0x0,
+    MOVE => 0x1,
+    ADD => 0x2,
+    SUB => 0x2,
+    MUL => 0x4,
+    DIV => 0x5,
+    SHR => 0x6,
+    SHL => 0x7,
+    NAND => 0x8,
+    XOR => 0x9,
+    BR => 0xa,
+    BRZ => 0xb,
+    BRNZ => 0xc,
+    IN => 0xd,
+    OUT => 0xe
 );
 
 my %labels;
 my $p = 0;
 my @code;
+
+sub debug {
+    printf STDERR @_;
+    print STDERR "\n";
+}
 
 sub reg {
     my $name = shift;
@@ -51,7 +74,7 @@ sub label {
 }
 
 sub comment {
-    push @code, ['; ' . join(' ', @_)];
+    #push @code, ['; ' . join(' ', @_)];
 }
 
 
@@ -66,14 +89,14 @@ sub triad {
 
 
 sub halt {
-    push @code, "halt";
+    push @code, ['halt'];
     $p += 1;
 }
 
 sub mov {
     my ($a, $b) = @_;
     
-    push @code, ['mov', $a, $b];
+    push @code, ['move', $a, $b];
     $p += 3;
 }
 
@@ -190,7 +213,7 @@ sub push {
     &comment('push', $a);
     
     &mov(reg('sp', 1), $a);
-    &sub(reg('sp'), reg('sp'), '$1');
+    &sub(reg('sp'), reg('sp'), '1');
 }
 
 sub pop {
@@ -198,7 +221,7 @@ sub pop {
     
     &comment('pop', $a);
     
-    &add(reg('sp'), reg('sp'), '$1');
+    &add(reg('sp'), reg('sp'), '1');
     &mov($a, reg('sp', 1));
 }
 
@@ -219,31 +242,108 @@ sub ret {
 
 ## Dumping ##
 
+sub emit_short {
+    my ($val) = @_;
+    
+    debug 'Emit %016b', $val;
+    
+    print pack('v', $val);
+}
+
+sub emit_reg {
+    my ($val, $ref) = @_;
+    
+    $val |= 1 << 15;
+    
+    if($ref) {
+        $val |= 1 << 14;
+    } else {
+        $val &= ~(1 << 14);
+    }
+    
+    &emit_short($val);
+}
+
+sub emit_int {
+    my ($val, $ref) = @_;
+    
+    $val &= ~(1 << 15);
+    
+    if($ref) {
+        $val |= 1 << 14;
+    } else {
+        $val &= ~(1 << 14);
+    }
+    
+    &emit_short($val);
+}
+
+sub emit {
+    my ($hash) = @_;
+    
+    for (@_) {
+        my %hash = %$_;
+        
+        if($hash{type} eq 'r') {
+            &emit_reg($hash{val});
+        } elsif ($hash{type} eq 'i') {
+            &emit_int($hash{val});
+        } elsif ($hash{type} eq 'o') {
+            &emit_short($hash{val});
+        } else {
+            die "Unknown type: '$hash{type}'";
+        }
+    }
+}
+
+sub parse_elem {
+    my ($arg) = @_;
+    
+    if(defined $labels{$arg}) {
+        return {type => 'i', val => $labels{$arg}};
+    } elsif ($arg =~ /^\d+$/g) {
+        return {type => 'i', val => $arg};
+    } elsif ($arg =~ /^r(\d+)$/g) {
+        return {type => 'r', val => $1};
+    } else {
+       die "Unknown value: '$arg'";
+    }
+}
+
 sub parse {
     my ($name, @args) = @_;
     
     return @_ if $name =~ /^;/;
     
-    my @out;
+    my $opcode = $OPS{uc $name};
+    
+    die "Unknown op: '$name'" unless defined $opcode;
+    
+    my @out = ({type => 'o', val => $opcode});
+    
+    debug "\n@_";
+    
     for my $arg (@args) {
-        if(defined $labels{$arg}) {
-            CORE::push @out, $labels{$arg};
-        } elsif ($arg =~ /^\d+$/g) {
-            CORE::push @out, "\$$arg";
-        } else {
-           CORE::push @out, $arg;
+        my $ref = 0;
+        if($arg =~ /\((.*)\)/g) {
+            $ref = 1;
+            $arg = $1;
         }
+        
+        my $val = &parse_elem($arg);
+        
+        $val->{'ref'} = $ref;
+        
+        CORE::push @out, $val;
     }
     
-    $name, '    ', join ', ', @out;
+    @out;
 }
 
 
 sub dump_asm {
-    say '****** Code Dump ******';
-    
     for my $line (@code) {
-        say parse @$line;
+        emit parse @$line;
     }
 }
 
