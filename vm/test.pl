@@ -10,9 +10,9 @@ use lib '../lib';
 use Asm;
 
 mov reg('A'), 1;
-mov reg('A', 1), 65;
+in reg('A', 1);
+&xor(reg('A', 1), reg('A', 1), 0x20);
 out reg('A', 1);
-out reg('A');
 
 open FH, '>out.rba';
 select FH;

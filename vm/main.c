@@ -182,7 +182,10 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr) {
     return 0;
 }
 
+// Gets the value in the argument, ignoring references
 #define arg_raw(arg) ((arg)->type == ARG_REG ? &regs[(arg)->type] : &(arg)->val)
+
+// Gets the value in the argument, returning memory pointers for references
 #define arg_val(arg) ((arg)->addr? &mem[*arg_raw(arg)] : arg_raw(arg))
 
 int interp(Op_t* prog) {
@@ -207,32 +210,45 @@ int interp(Op_t* prog) {
                 *arg_val(&op->arg1) = *arg_val(&op->arg2);
                 break;
             case OP_ADD:
+                *arg_val(&op->arg1) = *arg_val(&op->arg2) + *arg_val(&op->arg3);
                 break;
             case OP_SUB:
+                *arg_val(&op->arg1) = *arg_val(&op->arg2) - *arg_val(&op->arg3);
                 break;
             case OP_MUL:
+                *arg_val(&op->arg1) = *arg_val(&op->arg2) * *arg_val(&op->arg3);
                 break;
             case OP_DIV:
+                *arg_val(&op->arg1) = *arg_val(&op->arg2) / *arg_val(&op->arg3);
                 break;
             case OP_SHR:
+                *arg_val(&op->arg1) = *arg_val(&op->arg2) >> *arg_val(&op->arg3);
                 break;
             case OP_SHL:
+                *arg_val(&op->arg1) = *arg_val(&op->arg2) << *arg_val(&op->arg3);
                 break;
             case OP_NAND:
+                *arg_val(&op->arg1) = ! (*arg_val(&op->arg2) & *arg_val(&op->arg3));
                 break;
             case OP_XOR:
+                *arg_val(&op->arg1) = *arg_val(&op->arg2) ^ *arg_val(&op->arg3);
                 break;
             case OP_BR:
+                *ip = *arg_val(&op->arg1);
                 break;
+
+            // TODO conditional branching with flags
             case OP_BRZ:
                 break;
             case OP_BRNZ:
                 break;
+
             case OP_IN:
+                *arg_val(&op->arg1) = getchar();
+                getchar(); // For \n
                 break;
             case OP_OUT: {
-                uint16_t* addr = arg_val(&op->arg1);
-                printf("%d\n", *addr);
+                printf("%c\n", *arg_val(&op->arg1));
 
                 break;
             }
