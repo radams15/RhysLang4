@@ -172,13 +172,13 @@ sub expel {
 sub inc {
 	my $class = shift;
 	
-	$class->{level}++;
+	$level++;
 }
 
 sub dec {
 	my $class = shift;
 	
-	$class->{level}--;
+	$level--;
 }
 
 sub visit {
@@ -411,7 +411,9 @@ sub visit_block {
 	my $class = shift;
 	my ($block) = @_;
 	
-	map {$class->visit($_)} @{$block->{statements}}
+	inc;
+	map {$class->visit($_)} @{$block->{statements}};
+	dec;
 }
 
 sub visit_assign {
@@ -911,7 +913,9 @@ sub visit_asm {
 	my $class = shift;
 	my ($asm) = @_;
 	
-	expel($asm->{str}->{value});
+	my $val = $asm->{str}->{value};
+	
+	eval($val);
 }
 
 1;
