@@ -2,27 +2,47 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define OP_HALT 0x0
-#define OP_MOVE 0x1
-#define OP_ADD 0x2
-#define OP_SUB 0x3
-#define OP_MUL 0x4
-#define OP_DIV 0x5
-#define OP_SHR 0x6
-#define OP_SHL 0x7
-#define OP_NAND 0x8
-#define OP_XOR 0x9
-#define OP_BR 0xa
-#define OP_BRZ 0xb
-#define OP_BRNZ 0xc
-#define OP_IN 0xd
-#define OP_OUT 0xe
+typedef enum Opcode {
+    OP_HALT = 0x0,
+    OP_MOVE = 0x1,
+    OP_ADD = 0x2,
+    OP_SUB = 0x3,
+    OP_MUL = 0x4,
+    OP_DIV = 0x5,
+    OP_SHR = 0x6,
+    OP_SHL = 0x7,
+    OP_NAND = 0x8,
+    OP_XOR = 0x9,
+    OP_BR = 0xa,
+    OP_BRZ = 0xb,
+    OP_BRNZ = 0xc,
+    OP_IN = 0xd,
+    OP_OUT = 0xe
+} Opcode_t;
 
 
 typedef enum ArgType {
     ARG_REG,
     ARG_INT
 } ArgType_t;
+
+typedef enum Register {
+    REG_A = 0,
+    REG_B,
+    REG_C,
+    REG_D,
+    REG_E,
+    REG_F,
+    REG_G,
+    REG_H,
+    REG_I,
+    REG_J,
+    REG_IP,
+    REG_SP,
+    REG_BP,
+    REG_RET,
+    REG_TMP
+} Register_t;
 
 typedef struct Arg {
     uint16_t val;
@@ -31,7 +51,7 @@ typedef struct Arg {
 } Arg_t;
 
 typedef struct Op {
-    uint8_t code;
+    enum Opcode code;
     uint8_t n_args;
     Arg_t arg1;
     Arg_t arg2;
@@ -162,14 +182,74 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr) {
     return 0;
 }
 
-void interp(Op_t* prog) {
-    for(uint16_t i=0 ; i<20 ; i++) {
-        printf("Op: %04x\n", prog[i].code);
+#define arg_raw(arg) ((arg)->type == ARG_REG ? &regs[(arg)->type] : &(arg)->val)
+#define arg_val(arg) ((arg)->addr? &mem[*arg_raw(arg)] : arg_raw(arg))
+
+int interp(Op_t* prog) {
+    uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    uint16_t* ip = &regs[REG_IP];
+
+    uint16_t mem_size = 3200;
+    uint16_t* mem = malloc(mem_size * sizeof(uint16_t));
+
+    regs[REG_SP] = mem_size;
+    regs[REG_BP] = mem_size;
+
+    *ip = 0;
+
+    while(1) {
+        Op_t* op = &prog[*ip];
+
+        switch (op->code) {
+            case OP_HALT:
+                goto end;
+            case OP_MOVE:
+                *arg_val(&op->arg1) = *arg_val(&op->arg2);
+                break;
+            case OP_ADD:
+                break;
+            case OP_SUB:
+                break;
+            case OP_MUL:
+                break;
+            case OP_DIV:
+                break;
+            case OP_SHR:
+                break;
+            case OP_SHL:
+                break;
+            case OP_NAND:
+                break;
+            case OP_XOR:
+                break;
+            case OP_BR:
+                break;
+            case OP_BRZ:
+                break;
+            case OP_BRNZ:
+                break;
+            case OP_IN:
+                break;
+            case OP_OUT: {
+                uint16_t* addr = arg_val(&op->arg1);
+                printf("%d\n", *addr);
+
+                break;
+            }
+        }
+
+        (*ip)++;
     }
+end:
+
+    free(mem);
+
+    return 0;
 }
 
 int main(int argc, char** argv) {
-    const char* file = "../out.rba";
+    //const char* file = "../out.rba";
+    const char* file = "out.rba";
 
     Op_t* ops;
 
