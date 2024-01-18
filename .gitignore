@@ -4,5 +4,6 @@ out.nasm
 out
 *.com
 *.o
+*.rba
 copy.sh
 test.txt
