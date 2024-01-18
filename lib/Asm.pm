@@ -21,9 +21,9 @@ my %REGISTERS = (
     F => 'r5',
     IP => 'r10',
     SP => 'r11',
-    BP => 'r11',
-    RET => 'r12',
-    TMP => 'r13',
+    BP => 'r12',
+    RET => 'r13',
+    TMP => 'r14',
 );
 
 my %OPS = (
@@ -287,11 +287,11 @@ sub emit {
         my %hash = %$_;
         
         if($hash{type} eq 'r') {
-            &emit_reg($hash{val});
+            &emit_reg($hash{val}, $hash{'ref'});
         } elsif ($hash{type} eq 'i') {
-            &emit_int($hash{val});
+            &emit_int($hash{val}, $hash{'ref'});
         } elsif ($hash{type} eq 'o') {
-            &emit_short($hash{val});
+            &emit_short($hash{val}, $hash{'ref'});
         } else {
             die "Unknown type: '$hash{type}'";
         }
