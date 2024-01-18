@@ -7,6 +7,8 @@ use 5.030_000;
 
 use Exporter 'import';
 
+use List::Util qw/ sum /;
+
 our @EXPORT_OK = qw//;
 our @EXPORT = qw/ reg label comment halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and push pop call ret dump_asm /;
 
@@ -28,7 +30,7 @@ my %OPS = (
     HALT => 0x0,
     MOVE => 0x1,
     ADD => 0x2,
-    SUB => 0x2,
+    SUB => 0x3,
     MUL => 0x4,
     DIV => 0x5,
     SHR => 0x6,
@@ -342,6 +344,10 @@ sub parse {
 
 
 sub dump_asm {
+    my $size = sum (map {scalar @$_} @code);
+    debug "Size: %d", $size;
+    emit_short($size);
+    
     for my $line (@code) {
         emit parse @$line;
     }
