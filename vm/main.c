@@ -47,6 +47,7 @@ typedef enum Register {
 
 typedef struct Arg {
     uint16_t val;
+    int8_t offset;
     enum ArgType type;
     uint8_t addr;
 } Arg_t;
@@ -59,13 +60,24 @@ typedef struct Op {
     Arg_t arg3;
 } Op_t;
 
+int8_t get_offset(uint16_t in) {
+    uint8_t negative = (uint8_t) (in >> 13) & 1;
+
+    uint16_t without_reg = in >> 4;
+    uint8_t abs_val = (uint8_t) without_reg;
+
+    return abs_val * (negative? -1 : 1);
+}
+
 int parse_arg(uint16_t in, Arg_t* arg) {
     if((in >> 15) & 1) {
         arg->type = ARG_REG;
-        arg->val = in & ~(1 << 15);
+        arg->val = (uint8_t) (in & ~(1 << 15)) & ~(0b1111 << 4); // Only take first 4 bits
+        arg->offset = get_offset(in);
     } else {
         arg->type = ARG_INT;
         arg->val = in;
+        arg->offset = 0;
     }
 
     if((in >> 14) & 1) {
@@ -261,9 +273,9 @@ int interp(Op_t* prog) {
     }
 end:
 
-    for(int i=0 ; i<10 ; i++) {
+    /*for(int i=0 ; i<10 ; i++) {
         printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
-    }
+    }*/
 
     free(mem);
 

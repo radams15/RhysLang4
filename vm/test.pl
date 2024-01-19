@@ -9,15 +9,19 @@ use lib '../lib';
 
 use Asm;
 
-&push(5);
+&push(65);
+&push(66);
+&push(67);
 
 mov reg('A'), 1;
 in ptr('A');
 &xor(ptr('A'), ptr('A'), 0x20);
 
-&stackat(reg('B'), 1);
+mov(ptr('B'), ptr('bp', -1));
+
 &add(ptr('A'), ptr('A'), ptr('B'));
 
+out(ptr 'B');
 out ptr('A');
 
 open FH, '>out.rba';

@@ -71,8 +71,6 @@ sub reg {
     
     my $out;
     
-    debug "$name offset = $offset";
-    
     die "Unknown register $name" unless defined $REGISTERS{uc $name};
     
     $out .= '(' if($ref);
@@ -274,14 +272,21 @@ sub emit_short {
     
     debug 'Emit %016b', $val;
     
-    print pack('v', $val);
+    print pack('s<', $val);
 }
 
 sub emit_reg {
-    my ($val, $ref) = @_;
-    
+    my ($val, $ref, $offset) = @_;
+
+    # bits 13 = offset sign
+    $val |= ($offset<0? 1 : 0) << 13;
+    # bits 12-2 = offset
+    $val |= abs($offset) << 4;
+ 
+    # bit 15 = register?
     $val |= 1 << 15;
     
+    # bit 14 = reference?
     if($ref) {
         $val |= 1 << 14;
     } else {
@@ -312,7 +317,7 @@ sub emit {
         my %hash = %$_;
         
         if($hash{type} eq 'r') {
-            &emit_reg($hash{val}, $hash{'ref'});
+            &emit_reg($hash{val}, $hash{'ref'}, $hash{offset});
         } elsif ($hash{type} eq 'i') {
             &emit_int($hash{val}, $hash{'ref'});
         } elsif ($hash{type} eq 'o') {
@@ -330,8 +335,9 @@ sub parse_elem {
         return {type => 'i', val => $labels{$arg}};
     } elsif ($arg =~ /^\d+$/g) {
         return {type => 'i', val => $arg};
-    } elsif ($arg =~ /^r(\d+)$/g) {
-        return {type => 'r', val => $1};
+    } elsif ($arg =~ /^r(\d+)(?:\+(\-?\d+))?$/g) {
+        my $offset = $2 // 0;
+        return {type => 'r', val => $1, offset => $offset};
     } else {
        die "Unknown value: '$arg'";
     }
