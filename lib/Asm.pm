@@ -10,7 +10,7 @@ use Exporter 'import';
 use List::Util qw/ sum /;
 
 our @EXPORT_OK = qw//;
-our @EXPORT = qw/ reg ptr label comment halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and stackat push pop call ret dump_asm /;
+our @EXPORT = qw/ reg ptr label comment halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and stackat push pop call ret raw dump_asm /;
 
 my %REGISTERS = (
     A => 'r0',
@@ -49,8 +49,12 @@ my %OPS = (
 );
 
 my %labels;
-my $p = 0;
+
+my $p = 0; # code pointer
+my $dp = 0; # data pointer
+
 my @code;
+my @data;
 
 sub debug {
     printf STDERR @_;
@@ -184,8 +188,6 @@ sub out {
 
 
 
-
-
 ## MACROS ##
 
 
@@ -265,6 +267,18 @@ sub ret {
     &pop(reg('ip'));
 }
 
+sub raw {
+    my ($name, $data, $len) = @_;
+    
+    &comment('Raw: ', $name);
+    
+    CORE::push @data, {data => $data, len => $len, addr => $dp};
+    
+    $labels{$name} = $dp;
+    
+    $dp += $len;
+}
+
 ## Dumping ##
 
 sub emit_short {
@@ -308,6 +322,14 @@ sub emit_int {
     }
     
     &emit_short($val);
+}
+
+sub emit_data {
+    for my $data (@data) {
+        emit_short($data->{len});
+        emit_short($data->{addr});
+        print pack("a$data->{len}", $data->{data});
+    }
 }
 
 sub emit {
@@ -376,8 +398,13 @@ sub parse {
 
 sub dump_asm {
     my $size = sum (map {scalar @$_} @code);
-    debug "Size: %d", $size;
+    my $data_size = sum (map {$_->{len}} @data) // 0;
+    
+    debug "Size: %d, %d", $size, $data_size;
     emit_short($size);
+    emit_short($data_size);
+    
+    emit_data;
     
     for my $line (@code) {
         emit parse @$line;

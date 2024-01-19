@@ -160,6 +160,23 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr) {
     }
 
     uint16_t size = read_word(fh);
+    uint16_t data_size = read_word(fh);
+
+    for(int i=0 ; i<data_size ; i++) {
+        int elem_size = read_word(fh);
+        int addr = read_word(fh);
+        uint8_t* data = malloc(elem_size * sizeof(uint8_t));
+        if(fread(data, sizeof(uint8_t), elem_size, fh) < 1) {
+            fprintf(stderr, "Failed to read data\n");
+            return 1;
+        }
+
+        printf("Data (%d) @ %02x => '%s'\n", elem_size, addr, data);
+
+        free(data);
+        i += elem_size;
+    }
+
 
     uint16_t* raw = malloc(size * sizeof(uint16_t));
 
