@@ -2,6 +2,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
+
+const uint16_t mem_size = 1024;
 
 typedef enum Opcode {
     OP_HALT = 0x0,
@@ -152,7 +155,7 @@ uint16_t read_word(FILE* fh) {
     return a | (b<<8);
 }
 
-uint8_t load_ops(const char* file, Op_t** ops_ptr) {
+uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
     FILE* fh = fopen(file, "r");
     if(fh == NULL) {
         fprintf(stderr, "Failed to open file '%s'\n", file);
@@ -165,15 +168,11 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr) {
     for(int i=0 ; i<data_size ; i++) {
         int elem_size = read_word(fh);
         int addr = read_word(fh);
-        uint8_t* data = malloc(elem_size * sizeof(uint8_t));
-        if(fread(data, sizeof(uint8_t), elem_size, fh) < 1) {
+        if(fread(&mem[addr], sizeof(uint8_t), elem_size, fh) < 1) {
             fprintf(stderr, "Failed to read data\n");
             return 1;
         }
 
-        printf("Data (%d) @ %02x => '%s'\n", elem_size, addr, data);
-
-        free(data);
         i += elem_size;
     }
 
@@ -218,12 +217,9 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr) {
 // Gets the value in the argument, returning memory pointers for references
 #define arg_val(arg) ((arg)->addr? &mem[*(arg_raw(arg) + (arg)->offset)] : arg_raw(arg))
 
-int interp(Op_t* prog) {
+int interp(Op_t* prog, uint16_t* mem) {
     uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     uint16_t* ip = &regs[REG_IP];
-
-    uint16_t mem_size = pow(2, 8);
-    uint16_t* mem = calloc(mem_size, sizeof(uint16_t));
 
     regs[REG_SP] = mem_size;
     regs[REG_BP] = mem_size;
@@ -284,17 +280,13 @@ int interp(Op_t* prog) {
             }
         }
 
-        //printf("IP: %04x\n", *ip);
-
         (*ip)++;
     }
 end:
 
-    for(int i=0 ; i<10 ; i++) {
+    /*for(int i=0 ; i<10 ; i++) {
         printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
-    }
-
-    free(mem);
+    }*/
 
     return 0;
 }
@@ -303,14 +295,18 @@ int main(int argc, char** argv) {
     //const char* file = "../out.rba";
     const char* file = "out.rba";
 
+    uint16_t* mem = calloc(mem_size, sizeof(uint16_t));
+
     Op_t* ops;
 
-    if(load_ops(file, &ops) != 0) {
+    if(load_ops(file, &ops, mem) != 0) {
         fprintf(stderr, "Failed to load program\n");
         return 1;
     }
 
-    interp(ops);
+    interp(ops, mem);
 
     free(ops);
+
+    free(mem);
 }

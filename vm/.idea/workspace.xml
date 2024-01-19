@@ -90,7 +90,7 @@
       <updated>1705589062277</updated>
       <workItem from="1705589064039" duration="1772000" />
       <workItem from="1705591609059" duration="12574000" />
-      <workItem from="1705665293451" duration="6096000" />
+      <workItem from="1705665293451" duration="6730000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -180,5 +180,16 @@
     <MESSAGE value="Test complete with upper-casing program." />
     <MESSAGE value="Can now extract abitrary values from the stack." />
     <option name="LAST_COMMIT_MESSAGE" value="Can now extract abitrary values from the stack." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/main.c</url>
+          <line>276</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

@@ -16,17 +16,16 @@ use Asm;
 raw('hello', 'Hello world!', 13);
 raw('hello1', 'Howdy!', 7);
 
-mov reg('A'), 1;
-in ptr('A');
-&xor(ptr('A'), ptr('A'), 0x20);
+in reg('A');
+&xor(reg('A'), reg('A'), 0x20);
 
-mov(ptr('B'), ptr('bp', -1));
+mov(reg('B'), ptr('bp', -1));
 
-&add(ptr('A'), ptr('A'), ptr('B'));
+&add(reg('A'), reg('A'), reg('B'));
 
 mov(reg('B'), 'hello');
 
-out ptr('A');
+out reg('A');
 out ptr('B');
 
 open FH, '>out.rba';
