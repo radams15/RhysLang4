@@ -71,10 +71,13 @@ sub reg {
     
     my $out;
     
+    debug "$name offset = $offset";
+    
     die "Unknown register $name" unless defined $REGISTERS{uc $name};
     
     $out .= '(' if($ref);
     $out .= $REGISTERS{uc $name} or die "Invalid register: '$name'\n";
+    $out .= "+$offset" if $offset;
     $out .= ')' if($ref);
     
     $out;
@@ -237,7 +240,7 @@ sub push {
     &comment('push', $a);
     
     &sub(reg('sp'), reg('sp'), '1');
-    &mov(reg('sp', 1), $a);
+    &mov(ptr('sp'), $a);
 }
 
 sub pop {
@@ -245,7 +248,7 @@ sub pop {
     
     &comment('pop', $a);
     
-    &mov($a, reg('sp', 1));
+    &mov($a, ptr('sp'));
     &add(reg('sp'), reg('sp'), '1');
 }
 
