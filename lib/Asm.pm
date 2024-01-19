@@ -10,7 +10,7 @@ use Exporter 'import';
 use List::Util qw/ sum /;
 
 our @EXPORT_OK = qw//;
-our @EXPORT = qw/ reg label comment halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and stackat push pop call ret dump_asm /;
+our @EXPORT = qw/ reg ptr label comment halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and stackat push pop call ret dump_asm /;
 
 my %REGISTERS = (
     A => 'r0',
@@ -57,8 +57,16 @@ sub debug {
     print STDERR "\n";
 }
 
+sub ptr {
+    my $name = shift;
+    my $offset = shift // 0;
+    
+    reg($name, $offset, 1);
+}
+
 sub reg {
     my $name = shift;
+    my $offset = shift // 0;
     my $ref = shift // 0;
     
     my $out;

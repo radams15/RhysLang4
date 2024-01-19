@@ -12,13 +12,13 @@ use Asm;
 &push(5);
 
 mov reg('A'), 1;
-in reg('A', 1);
-&xor(reg('A', 1), reg('A', 1), 0x20);
+in ptr('A');
+&xor(ptr('A'), ptr('A'), 0x20);
 
 &stackat(reg('B'), 1);
-&add(reg('A', 1), reg('A', 1), reg('B', 1));
+&add(ptr('A'), ptr('A'), ptr('B'));
 
-out reg('A', 1);
+out ptr('A');
 
 open FH, '>out.rba';
 select FH;
