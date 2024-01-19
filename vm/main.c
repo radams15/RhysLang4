@@ -199,7 +199,7 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr) {
 #define arg_raw(arg) ((arg)->type == ARG_REG ? &regs[(arg)->val] : &(arg)->val)
 
 // Gets the value in the argument, returning memory pointers for references
-#define arg_val(arg) ((arg)->addr? &mem[*arg_raw(arg)] : arg_raw(arg))
+#define arg_val(arg) ((arg)->addr? &mem[*(arg_raw(arg) + (arg)->offset)] : arg_raw(arg))
 
 int interp(Op_t* prog) {
     uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -273,9 +273,9 @@ int interp(Op_t* prog) {
     }
 end:
 
-    /*for(int i=0 ; i<10 ; i++) {
+    for(int i=0 ; i<10 ; i++) {
         printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
-    }*/
+    }
 
     free(mem);
 

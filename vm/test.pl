@@ -9,9 +9,9 @@ use lib '../lib';
 
 use Asm;
 
-&push(65);
-&push(66);
-&push(67);
+&push(1);
+&push(2);
+&push(3);
 
 mov reg('A'), 1;
 in ptr('A');
@@ -21,7 +21,6 @@ mov(ptr('B'), ptr('bp', -1));
 
 &add(ptr('A'), ptr('A'), ptr('B'));
 
-out(ptr 'B');
 out ptr('A');
 
 open FH, '>out.rba';
