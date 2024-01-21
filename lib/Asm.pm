@@ -238,9 +238,8 @@ sub push {
     my ($a) = @_;
     
     &comment('push', $a);
-    
-    &sub(reg('sp'), reg('sp'), '1');
     &mov(ptr('sp'), $a);
+    &sub(reg('sp'), reg('sp'), '1');
 }
 
 sub pop {
@@ -248,9 +247,8 @@ sub pop {
     
     &comment('pop', $a);
     
-
-    &mov($a, ptr('sp'));
     &add(reg('sp'), reg('sp'), '1');
+    &mov($a, ptr('sp'));
 }
 
 sub call {
@@ -259,6 +257,7 @@ sub call {
     &comment('call', $a);
     
     &push(reg('ip'));
+    &add(ptr('bp', 1), ptr('bp', 1), 1);
     &br($a);
 }
 

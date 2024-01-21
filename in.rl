@@ -1,16 +1,13 @@
 asm('
 &label("outc");
-&out(66);
+&out(ptr("bp", 0));
+&pop(reg "A");
 &ret;
 ');
 
-sub outc() : void;
+sub outc(n: int) : void;
 
 sub main() : void {
-    outc();
-    outc();
-    outc();
-    outc();
-    
+    outc(70);
 	return 1+1;
 }

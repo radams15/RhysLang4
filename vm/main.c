@@ -242,7 +242,7 @@ int interp(Op_t* prog, uint16_t* mem) {
     regs[REG_SP] = mem_size;
     regs[REG_BP] = mem_size;
 
-    *ip = 0;
+    *ip = 0; // Entrypoint @ instruction 0
 
     while(1) {
         Op_t* op = &prog[*ip];
@@ -296,6 +296,9 @@ int interp(Op_t* prog, uint16_t* mem) {
             case OP_OUT: {
                 printf("%d\n", *arg_val(&op->arg1));
 
+                for(int i=0 ; i<10 ; i++)
+                    printf("BP+%d = %d = %04x %s\n", i, regs[REG_BP]+i, mem[regs[REG_BP]+i], (regs[REG_BP]+i == regs[REG_SP]? "<= SP" : ""));
+
                 break;
             }
         }
@@ -304,16 +307,15 @@ int interp(Op_t* prog, uint16_t* mem) {
     }
 end:
 
-    for(int i=0 ; i<10 ; i++) {
-        printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
-    }
+    /*for(int i=0 ; i<10 ; i++)
+        printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));*/
 
     return 0;
 }
 
 int main(int argc, char** argv) {
-    //const char* file = "../out.rba";
-    const char* file = "out.rba";
+    const char* file = "../out.rba";
+    //const char* file = "out.rba";
 
     uint16_t* mem = calloc(mem_size, sizeof(uint16_t));
 

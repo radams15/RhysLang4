@@ -152,10 +152,10 @@ sub new {
 	}, $class;
 	
 	$this->{call_registers} = [
-		reg 'A',
-		reg 'B',
-		reg 'C',
-		reg 'D'
+		reg('A'),
+		reg('B'),
+		reg ('C'),
+		reg ('D')
 	];
 	
 	$this->{stack_offset} = -($this->sizeof_type('PTR'));
