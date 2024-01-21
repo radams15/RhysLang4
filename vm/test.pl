@@ -16,8 +16,9 @@ use Asm;
 raw('hello', 'Hello world!', 13);
 raw('hello1', 'Howdy!', 7);
 
-in reg('A');
-&xor(reg('A'), reg('A'), 0x20);
+#in reg('A');
+mov(reg('A'), ord('A'));
+#&xor(reg('A'), reg('A'), 0x20);
 
 mov(reg('B'), ptr('bp', -1));
 
@@ -25,8 +26,14 @@ mov(reg('B'), ptr('bp', -1));
 
 mov(reg('B'), 'hello');
 
-out reg('A');
-out ptr('B');
+#out reg('A');
+#out ptr('B');
+
+out ptr('bp', -1);
+out ptr('bp', -2);
+out ptr('bp', -3);
+
+&halt;
 
 open FH, '>out.rba';
 select FH;

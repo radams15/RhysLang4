@@ -93,7 +93,7 @@ sub label {
 }
 
 sub comment {
-    #push @code, ['; ' . join(' ', @_)];
+    push @code, ['; ' . join(' ', @_)];
 }
 
 
@@ -103,20 +103,20 @@ sub triad {
     die "Invalid triad $instr" unless defined $a and defined $b and defined $c;
     
     push @code, [$instr, $a, $b, $c];
-    $p += 4;
+    $p++;
 }
 
 
 sub halt {
     push @code, ['halt'];
-    $p += 1;
+    $p++;
 }
 
 sub mov {
     my ($a, $b) = @_;
     
     push @code, ['move', $a, $b];
-    $p += 3;
+    $p++;
 }
 
 sub add {
@@ -155,35 +155,35 @@ sub br {
     my ($addr) = @_;
     
     push @code, ['br', $addr];
-    $p += 2;
+    $p++;
 }
 
 sub brz {
     my ($addr) = @_;
     
     push @code, ['brz', $addr];
-    $p += 2;
+    $p++;
 }
 
 sub brnz {
     my ($addr) = @_;
     
     push @code, ['brnz', $addr];
-    $p += 2;
+    $p++;
 }
 
 sub in {
     my ($addr) = @_;
     
     push @code, ['in', $addr];
-    $p += 2;
+    $p++;
 }
 
 sub out {
     my ($addr) = @_;
     
     push @code, ['out', $addr];
-    $p += 2;
+    $p++;
 }
 
 
@@ -248,6 +248,7 @@ sub pop {
     
     &comment('pop', $a);
     
+
     &mov($a, ptr('sp'));
     &add(reg('sp'), reg('sp'), '1');
 }
@@ -338,7 +339,9 @@ sub emit {
     for (@_) {
         my %hash = %$_;
         
-        if($hash{type} eq 'r') {
+        if($hash{type} eq 'c') {
+            debug "Comment: %s", $hash{val};
+        } elsif($hash{type} eq 'r') {
             &emit_reg($hash{val}, $hash{'ref'}, $hash{offset});
         } elsif ($hash{type} eq 'i') {
             &emit_int($hash{val}, $hash{'ref'});
@@ -368,7 +371,7 @@ sub parse_elem {
 sub parse {
     my ($name, @args) = @_;
     
-    return @_ if $name =~ /^;/;
+    return {type => 'c', val => join(' ', @_)} if $name =~ /^;/;
     
     my $opcode = $OPS{uc $name};
     

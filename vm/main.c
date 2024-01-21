@@ -24,6 +24,24 @@ typedef enum Opcode {
     OP_OUT = 0xe
 } Opcode_t;
 
+const char* opstrings[] = {
+        "OP_HALT",
+        "OP_MOVE",
+        "OP_ADD",
+        "OP_SUB",
+        "OP_MUL",
+        "OP_DIV",
+        "OP_SHR",
+        "OP_SHL",
+        "OP_NAND",
+        "OP_XOR",
+        "OP_BR",
+        "OP_BRZ",
+        "OP_BRNZ",
+        "OP_IN",
+        "OP_OUT"
+};
+
 
 typedef enum ArgType {
     ARG_REG,
@@ -215,7 +233,7 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
 #define arg_raw(arg) ((arg)->type == ARG_REG ? &regs[(arg)->val] : &(arg)->val)
 
 // Gets the value in the argument, returning memory pointers for references
-#define arg_val(arg) ((arg)->addr? &mem[*(arg_raw(arg) + (arg)->offset)] : arg_raw(arg))
+#define arg_val(arg) ((arg)->addr? &mem[*arg_raw(arg) + (arg)->offset] : arg_raw(arg))
 
 int interp(Op_t* prog, uint16_t* mem) {
     uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -228,6 +246,8 @@ int interp(Op_t* prog, uint16_t* mem) {
 
     while(1) {
         Op_t* op = &prog[*ip];
+
+        printf("%02x: %s\n", *ip, opstrings[op->code]);
 
         switch (op->code) {
             case OP_HALT:
@@ -260,7 +280,7 @@ int interp(Op_t* prog, uint16_t* mem) {
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) ^ *arg_val(&op->arg3);
                 break;
             case OP_BR:
-                *ip = *arg_val(&op->arg1);
+                *ip = *arg_val(&op->arg1)-1;
                 break;
 
             // TODO conditional branching with flags
@@ -274,7 +294,7 @@ int interp(Op_t* prog, uint16_t* mem) {
                 getchar(); // For \n
                 break;
             case OP_OUT: {
-                printf("%c\n", *arg_val(&op->arg1));
+                printf("%d\n", *arg_val(&op->arg1));
 
                 break;
             }
@@ -284,9 +304,9 @@ int interp(Op_t* prog, uint16_t* mem) {
     }
 end:
 
-    /*for(int i=0 ; i<10 ; i++) {
+    for(int i=0 ; i<10 ; i++) {
         printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
-    }*/
+    }
 
     return 0;
 }

@@ -240,6 +240,7 @@ sub visit_program {
 	}
 	
 	$class->dec;
+    raw('_heap', '', $HEAP_SIZE);
 	#expel("_heap: times $HEAP_SIZE db 0");
 	#expel("_heap_top: ".$class->wordsize('PTR')." _heap");
 }
@@ -799,9 +800,9 @@ sub visit_variable {
 		
 		when ('GLOBAL') {
 			if($value->{datatype} eq 'PTR') {
-				expel("mov ". register('ax') .", [$value->{name}]");
+			    mov reg('a'), ptr($value->{name});
 			} else {
-				expel("mov ". register('ax') .", $value->{name}");
+			    mov reg('a'), $value->{name};
 			}
 		}
 		
@@ -896,17 +897,17 @@ sub visit_call {
 	for my $arg (@args) {
 		$class->visit($arg);
 		
-		expel("push " . register('ax'));
+		&push(reg 'A');
 	}
 	
 	
 	my @reversed_registers = ( @{$class->{call_registers}}[0..$num_args-1] );
 	for my $register(@reversed_registers) {
-		expel("pop $register");
+	    &pop($register);
 	}
 	
 	$class->visit($call->{callee});
-	expel("call " . register('ax'));
+	&call(reg 'A');
 }
 
 sub visit_asm {
