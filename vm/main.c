@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 
-const uint16_t mem_size = 1024;
+const uint16_t mem_size = 64;
 
 typedef enum Opcode {
     OP_HALT = 0x0,
@@ -21,7 +21,11 @@ typedef enum Opcode {
     OP_BRZ = 0xb,
     OP_BRNZ = 0xc,
     OP_IN = 0xd,
-    OP_OUT = 0xe
+    OP_OUT = 0xe,
+    OP_BRKPT = 0xf,
+
+    OP_PUSH = 0x10,
+    OP_POP = 0x11
 } Opcode_t;
 
 const char* opstrings[] = {
@@ -39,7 +43,10 @@ const char* opstrings[] = {
         "OP_BRZ",
         "OP_BRNZ",
         "OP_IN",
-        "OP_OUT"
+        "OP_OUT",
+        "OP_BRKPT",
+        "OP_PUSH",
+        "OP_POP"
 };
 
 
@@ -131,6 +138,8 @@ uint8_t n_args(const uint16_t in) {
         case OP_BRNZ:
         case OP_IN:
         case OP_OUT:
+        case OP_PUSH:
+        case OP_POP:
             return 1;
 
         default:
@@ -235,6 +244,8 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
 // Gets the value in the argument, returning memory pointers for references
 #define arg_val(arg) ((arg)->addr? &mem[*arg_raw(arg) + (arg)->offset] : arg_raw(arg))
 
+#define printstack() for(int i=0 ; i<5 ; i++)printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
+
 int interp(Op_t* prog, uint16_t* mem) {
     uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     uint16_t* ip = &regs[REG_IP];
@@ -283,6 +294,20 @@ int interp(Op_t* prog, uint16_t* mem) {
                 *ip = *arg_val(&op->arg1)-1;
                 break;
 
+            case OP_PUSH:
+                mem[regs[REG_SP]] = *arg_val(&op->arg1);
+                printf("Push %02x\n", mem[regs[REG_SP]]);
+                regs[REG_SP]--; // sub sp, sp, 1
+                //printstack();
+                break;
+
+            case OP_POP:
+                regs[REG_SP]++; // add sp, sp, 1
+                *arg_val(&op->arg1) = mem[regs[REG_SP]];
+                printf("Pop %02x\n", mem[regs[REG_SP]]);
+                //printstack();
+                break;
+
             // TODO conditional branching with flags
             case OP_BRZ:
                 break;
@@ -296,11 +321,15 @@ int interp(Op_t* prog, uint16_t* mem) {
             case OP_OUT: {
                 printf("%d\n", *arg_val(&op->arg1));
 
-                for(int i=0 ; i<10 ; i++)
-                    printf("BP+%d = %d = %04x %s\n", i, regs[REG_BP]+i, mem[regs[REG_BP]+i], (regs[REG_BP]+i == regs[REG_SP]? "<= SP" : ""));
-
                 break;
             }
+
+            case OP_BRKPT:
+                break;
+
+            default:
+                fprintf(stderr, "Invalid opcode: %02x\n", op->code);
+                break;
         }
 
         (*ip)++;
@@ -314,8 +343,8 @@ end:
 }
 
 int main(int argc, char** argv) {
-    const char* file = "../out.rba";
-    //const char* file = "out.rba";
+    //const char* file = "../out.rba";
+    const char* file = "out.rba";
 
     uint16_t* mem = calloc(mem_size, sizeof(uint16_t));
 

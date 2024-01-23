@@ -20,7 +20,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Can now extract abitrary values from the stack.">
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Functions not working properly with return addresses.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.pl" beforeDir="false" afterPath="$PROJECT_DIR$/test.pl" afterDir="false" />
@@ -91,7 +91,8 @@
       <workItem from="1705589064039" duration="1772000" />
       <workItem from="1705591609059" duration="12574000" />
       <workItem from="1705665293451" duration="7618000" />
-      <workItem from="1705863255569" duration="6044000" />
+      <workItem from="1705863255569" duration="6081000" />
+      <workItem from="1706026751991" duration="3575000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -157,7 +158,15 @@
       <option name="project" value="LOCAL" />
       <updated>1705612338355</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Functions not working properly with return addresses.">
+      <option name="closed" value="true" />
+      <created>1705869560206</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1705869560206</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -180,13 +189,7 @@
     <MESSAGE value="VM references working." />
     <MESSAGE value="Test complete with upper-casing program." />
     <MESSAGE value="Can now extract abitrary values from the stack." />
-    <option name="LAST_COMMIT_MESSAGE" value="Can now extract abitrary values from the stack." />
-  </component>
-  <component name="XDebuggerManager">
-    <watches-manager>
-      <configuration name="CMakeRunConfiguration">
-        <watch expression="*mem @ 1024" />
-      </configuration>
-    </watches-manager>
+    <MESSAGE value="Functions not working properly with return addresses." />
+    <option name="LAST_COMMIT_MESSAGE" value="Functions not working properly with return addresses." />
   </component>
 </project>

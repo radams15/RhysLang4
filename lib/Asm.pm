@@ -10,7 +10,7 @@ use Exporter 'import';
 use List::Util qw/ sum /;
 
 our @EXPORT_OK = qw//;
-our @EXPORT = qw/ reg ptr label comment halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and stackat push pop call ret raw dump_asm /;
+our @EXPORT = qw/ reg ptr label comment halt mov add sub mul div shr shl nand xor br brz brnz in out brkpt comp not or and stackat push pop call ret raw dump_asm /;
 
 my %REGISTERS = (
     A => 'r0',
@@ -45,7 +45,11 @@ my %OPS = (
     BRZ => 0xb,
     BRNZ => 0xc,
     IN => 0xd,
-    OUT => 0xe
+    OUT => 0xe,
+    BRKPT => 0xf,
+    
+    PUSH => 0x10,
+    POP => 0x11
 );
 
 my %labels;
@@ -85,15 +89,20 @@ sub reg {
     $out;
 }
 
+sub brkpt {
+    push @code, [$p, 'brkpt'];
+    $p++;
+}
+
 sub label {
     my ($name) = @_;
     
-    &comment("Label: $name = $p");
     $labels{$name} = $p;
+    &comment("Label: $name = $labels{$name}");
 }
 
 sub comment {
-    push @code, ['; ' . join(' ', @_)];
+    push @code, [$p, '; ' . join(' ', @_)];
 }
 
 
@@ -102,20 +111,20 @@ sub triad {
     
     die "Invalid triad $instr" unless defined $a and defined $b and defined $c;
     
-    push @code, [$instr, $a, $b, $c];
+    push @code, [$p, $instr, $a, $b, $c];
     $p++;
 }
 
 
 sub halt {
-    push @code, ['halt'];
+    push @code, [$p, 'halt'];
     $p++;
 }
 
 sub mov {
     my ($a, $b) = @_;
     
-    push @code, ['move', $a, $b];
+    push @code, [$p, 'move', $a, $b];
     $p++;
 }
 
@@ -154,35 +163,35 @@ sub xor {
 sub br {
     my ($addr) = @_;
     
-    push @code, ['br', $addr];
+    push @code, [$p, 'br', $addr];
     $p++;
 }
 
 sub brz {
     my ($addr) = @_;
     
-    push @code, ['brz', $addr];
+    push @code, [$p, 'brz', $addr];
     $p++;
 }
 
 sub brnz {
     my ($addr) = @_;
     
-    push @code, ['brnz', $addr];
+    push @code, [$p, 'brnz', $addr];
     $p++;
 }
 
 sub in {
     my ($addr) = @_;
     
-    push @code, ['in', $addr];
+    push @code, [$p, 'in', $addr];
     $p++;
 }
 
 sub out {
     my ($addr) = @_;
     
-    push @code, ['out', $addr];
+    push @code, [$p, 'out', $addr];
     $p++;
 }
 
@@ -237,18 +246,22 @@ sub stackat {
 sub push {
     my ($a) = @_;
     
-    &comment('push', $a);
-    &mov(ptr('sp'), $a);
-    &sub(reg('sp'), reg('sp'), '1');
+    #&comment('push', $a);
+    #&mov(reg('sp'), $a);
+    #&sub(reg('sp'), reg('sp'), '1');
+    CORE::push @code, [$p, 'push', $a];
+    $p++;
 }
 
 sub pop {
     my ($a) = @_;
     
-    &comment('pop', $a);
+    #&comment('pop', $a);
+    #&add(reg('sp'), reg('sp'), '1');
+    #&mov($a, reg('sp'));
     
-    &add(reg('sp'), reg('sp'), '1');
-    &mov($a, ptr('sp'));
+    CORE::push @code, [$p, 'pop', $a];
+    $p++;
 }
 
 sub call {
@@ -257,7 +270,6 @@ sub call {
     &comment('call', $a);
     
     &push(reg('ip'));
-    &add(ptr('bp', 1), ptr('bp', 1), 1);
     &br($a);
 }
 
@@ -368,9 +380,9 @@ sub parse_elem {
 }
 
 sub parse {
-    my ($name, @args) = @_;
+    my ($ip, $name, @args) = @_;
     
-    return {type => 'c', val => join(' ', @_)} if $name =~ /^;/;
+    return {type => 'c', val => join(' ', $name, @args)} if $name =~ /^;/;
     
     my $opcode = $OPS{uc $name};
     
@@ -378,7 +390,7 @@ sub parse {
     
     my @out = ({type => 'o', val => $opcode});
     
-    debug "\n@_";
+    debug "\n%02x => $name @args", $ip;
     
     for my $arg (@args) {
         my $ref = 0;

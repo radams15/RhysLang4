@@ -10,16 +10,23 @@ use lib '../lib';
 use Asm;
 
 &label('_start');
-&br('main');
+&call('main');
 &halt;
 
 &label("outc");
-&out(ptr('bp', 0));
-&pop(reg 'A');
+&out(ptr('bp', -1));
 &ret;
 
 &label('main');
 &push(66);
+&call('outc');
+&pop(reg 'A');
+
+&push(67);
+&call('outc');
+&pop(reg 'A');
+
+&push(68);
 &call('outc');
 &pop(reg 'A');
 
