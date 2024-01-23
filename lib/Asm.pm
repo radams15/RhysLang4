@@ -269,7 +269,9 @@ sub call {
     
     &comment('call', $a);
     
-    &push(reg('ip'));
+    &mov(reg('J'), reg('ip'));
+    &add(reg('J'), reg('J'), 4); # Increment ip by 4 - I don't know why 4 but it does work.
+    &push(reg('J')); # Push return vector
     &br($a);
 }
 
