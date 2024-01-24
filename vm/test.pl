@@ -14,7 +14,9 @@ use Asm;
 &halt;
 
 &label("outc");
-&out(ptr('bp', -1));
+&enter;
+&out(ptr('bp', +3));
+&leave;
 &ret;
 
 &label('main');

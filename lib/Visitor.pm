@@ -206,13 +206,15 @@ sub visit_all {
 }
 
 sub prologue {
-    &push(reg('BP')),
-    &mov(reg('BP'), reg('SP'));
+    #&push(reg('BP')),
+    #&mov(reg('BP'), reg('SP'));
+    &enter;
 }
 
 sub epilogue {
-    &mov(reg('SP'), reg('BP')),
-    &pop(reg('BP')),
+    #&mov(reg('SP'), reg('BP')),
+    #&pop(reg('BP'))
+    &leave,
     &ret;
 }
 

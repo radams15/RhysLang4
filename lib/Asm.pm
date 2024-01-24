@@ -10,7 +10,7 @@ use Exporter 'import';
 use List::Util qw/ sum /;
 
 our @EXPORT_OK = qw//;
-our @EXPORT = qw/ reg ptr label comment halt mov add sub mul div shr shl nand xor br brz brnz in out brkpt comp not or and stackat push pop call ret raw dump_asm /;
+our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and stackat push pop call ret raw dump_asm /;
 
 my %REGISTERS = (
     A => 'r0',
@@ -49,7 +49,10 @@ my %OPS = (
     BRKPT => 0xf,
     
     PUSH => 0x10,
-    POP => 0x11
+    POP => 0x11,
+    ENTER => 0x12,
+    LEAVE => 0x13,
+    CALL => 0x14
 );
 
 my %labels;
@@ -88,6 +91,23 @@ sub reg {
     
     $out;
 }
+
+sub enter {
+	push @code, [$p, 'enter'];
+	$p++;
+	
+	#&push(reg('BP')),
+    #&mov(reg('BP'), reg('SP'));
+}
+
+sub leave {
+	push @code, [$p, 'leave'];
+	$p++;
+	
+	#&mov(reg('SP'), reg('BP')),
+    #&pop(reg('BP'))
+}
+
 
 sub brkpt {
     push @code, [$p, 'brkpt'];
@@ -267,12 +287,14 @@ sub pop {
 sub call {
     my ($a) = @_;
     
-    &comment('call', $a);
+    #&comment('call', $a);
+    #&mov(reg('J'), reg('ip'));
+    #&add(reg('J'), reg('J'), 4); # Increment ip by 4 - I don't know why 4 but it does work.
+    #&push(reg('J')); # Push return vector
+    #&br($a);
     
-    &mov(reg('J'), reg('ip'));
-    &add(reg('J'), reg('J'), 4); # Increment ip by 4 - I don't know why 4 but it does work.
-    &push(reg('J')); # Push return vector
-    &br($a);
+    CORE::push @code, [$p, 'call', $a];
+    $p++;
 }
 
 sub ret {

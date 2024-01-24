@@ -25,7 +25,10 @@ typedef enum Opcode {
     OP_BRKPT = 0xf,
 
     OP_PUSH = 0x10,
-    OP_POP = 0x11
+    OP_POP = 0x11,
+    OP_ENTER = 0x12,
+    OP_LEAVE = 0x13,
+    OP_CALL = 0x14,
 } Opcode_t;
 
 const char* opstrings[] = {
@@ -46,7 +49,10 @@ const char* opstrings[] = {
         "OP_OUT",
         "OP_BRKPT",
         "OP_PUSH",
-        "OP_POP"
+        "OP_POP",
+        "OP_ENTER",
+        "OP_LEAVE",
+        "OP_CALL",
 };
 
 
@@ -140,6 +146,7 @@ uint8_t n_args(const uint16_t in) {
         case OP_OUT:
         case OP_PUSH:
         case OP_POP:
+        case OP_CALL:
             return 1;
 
         default:
@@ -244,6 +251,13 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
 // Gets the value in the argument, returning memory pointers for references
 #define arg_val(arg) ((arg)->addr? &mem[*arg_raw(arg) + (arg)->offset] : arg_raw(arg))
 
+#define push(a) mem[regs[REG_SP]] = a; \
+                regs[REG_SP]--
+
+#define pop(a)  regs[REG_SP]++; \
+                a = mem[regs[REG_SP]]
+
+
 #define printstack(n) for(int i=0 ; i<n ; i++)printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
 
 int interp(Op_t* prog, uint16_t* mem) {
@@ -297,13 +311,11 @@ int interp(Op_t* prog, uint16_t* mem) {
                 break;
 
             case OP_PUSH:
-                mem[regs[REG_SP]] = *arg_val(&op->arg1);
-                regs[REG_SP]--; // sub sp, sp, 1
+                push(*arg_val(&op->arg1));
                 break;
 
             case OP_POP:
-                regs[REG_SP]++; // add sp, sp, 1
-                *arg_val(&op->arg1) = mem[regs[REG_SP]];
+                pop(*arg_val(&op->arg1));
                 break;
 
             // TODO conditional branching with flags
@@ -316,18 +328,31 @@ int interp(Op_t* prog, uint16_t* mem) {
                 *arg_val(&op->arg1) = getchar();
                 getchar(); // For \n
                 break;
-            case OP_OUT: {
+            case OP_OUT:
                 printf("%d\n", *arg_val(&op->arg1));
-
                 break;
-            }
 
             case OP_BRKPT:
                 break;
 
+            case OP_ENTER:
+                push(regs[REG_BP]);
+                regs[REG_BP] = regs[REG_SP];
+                break;
+
+            case OP_LEAVE:
+                regs[REG_SP] = regs[REG_BP];
+                pop(regs[REG_BP]);
+                break;
+
+            case OP_CALL:
+                push((*ip)+1);
+                *ip = *arg_val(&op->arg1);
+                break;
+
             default:
                 fprintf(stderr, "Invalid opcode: %02x\n", op->code);
-                break;
+                goto end;
         }
 
         if(start_ip == *ip) // If IP has not been modified, then increment it
