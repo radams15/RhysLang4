@@ -275,7 +275,7 @@ int interp(Op_t* prog, uint16_t* mem) {
         start_ip = *ip;
         Op_t* op = &prog[*ip];
 
-        printf("%02x: %s\n", *ip, opstrings[op->code]);
+        //printf("%02x: %s\n", *ip, opstrings[op->code]);
 
         switch (op->code) {
             case OP_HALT:
@@ -329,7 +329,7 @@ int interp(Op_t* prog, uint16_t* mem) {
                 getchar(); // For \n
                 break;
             case OP_OUT:
-                printf("%d\n", *arg_val(&op->arg1));
+                printf("%c", *arg_val(&op->arg1));
                 break;
 
             case OP_BRKPT:

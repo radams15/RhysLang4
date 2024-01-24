@@ -8,9 +8,16 @@ asm('
 
 sub outc(n: int) : void;
 
+sub hello() : void {
+	outc(104);
+	outc(101);
+	outc(108);
+	outc(108);
+	outc(111);
+	outc(10);
+}
+
 sub main() : void {
-	outc(70);
-	outc(71);
-	outc(72);
+	hello();
 	return 1+1;
 }
