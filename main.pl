@@ -5,6 +5,7 @@ use warnings;
 
 use v5.10.1;
 use experimental 'switch';
+no warnings 'deprecated';
 
 use Getopt::Long;
 use Data::Dumper;

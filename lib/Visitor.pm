@@ -5,6 +5,7 @@ use strict;
 
 use v5.10.1;
 use experimental 'switch';
+no warnings 'deprecated';
 
 use Data::Dumper;
 
@@ -199,21 +200,17 @@ sub visit_all {
 	my $class = shift;
 	
 	map {$class->visit($_)} @_;
-	
-	halt;
-	
-	dump_asm;
 }
 
 sub prologue {
-    #&push(reg('BP')),
+    #&op_push(reg('BP')),
     #&mov(reg('BP'), reg('SP'));
     &enter;
 }
 
 sub epilogue {
     #&mov(reg('SP'), reg('BP')),
-    #&pop(reg('BP'))
+    #&op_pop(reg('BP'))
     &leave,
     &ret;
 }
@@ -237,15 +234,16 @@ sub visit_program {
 	
 	$class->visit_all(@{$program->{body}});
 	
-	$class->inc;
 	for(@{$class->{strings}}) {
-		expel($_);
+		my ($name, $len, $data) = @$_;
+		raw($name, $data, $len);
 	}
 	
-	$class->dec;
     raw('_heap', '', $HEAP_SIZE);
 	#expel("_heap: times $HEAP_SIZE db 0");
 	#expel("_heap_top: ".$class->wordsize('PTR')." _heap");
+	
+	dump_asm;
 }
 
 sub method_hash {
@@ -334,7 +332,7 @@ sub visit_sub {
 		$arg_size = $class->sizeof_type($type);
 		$offset = $class->{stack_offset};
 		&comment("$name @ bp+$offset");
-		&push(reg $register);
+		&op_push($register);
 		$class->{scope}->set($name, {
 			type => 'LOCAL',
 			offset => $offset,
@@ -622,16 +620,16 @@ sub visit_term {
 	given($term->{op}->{name}) {
 		when ('PLUS') {
 			$class->visit($term->{left});
-			&push(reg 'A');
+			&op_push(reg 'A');
 			$class->visit($term->{right});
-			&pop(reg 'C');
+			&op_pop(reg 'C');
 			&add(reg('A'), reg('A'), reg('C'));
 		}
 		when ('MINUS') {
 			$class->visit($term->{right});
-			&push(reg 'A');
+			&op_push(reg 'A');
 			$class->visit($term->{left});
-			&pop(reg 'C');
+			&op_pop(reg 'C');
 			&sub(reg('A'), reg('A'), reg('C'));
 		}
 		
@@ -743,7 +741,7 @@ sub get_str_ref {
 	my ($val, $id) = @_;
 	
 	$id = ('str_' . (scalar @{$class->{strings}} + 1)) if not defined $id;
-	
+		
 	my $len = length($val);
 	
 	my @str_vals = ();
@@ -762,9 +760,8 @@ sub get_str_ref {
 			default { push @str_vals, "'$_'"; }
 		}
 	}
-		
-	my $str_data = join ', ', ($len, @str_vals, 0);
-	push @{$class->{strings}}, "$id: db $str_data";
+
+	push @{$class->{strings}}, [$id, $len, (join ' ', @str_vals), 0];
 	
 	$id;
 }
@@ -774,7 +771,7 @@ sub visit_literal {
 	my ($literal) = @_;
 	
 	my $type = $class->typeof($literal);
-		
+	
 	given ($type) {
 		when ('STR') {
 		    &mov(reg('A'), $class->get_str_ref($literal->{value}));
@@ -900,14 +897,14 @@ sub visit_call {
 	for my $arg (@args) {
 		$class->visit($arg);
 		
-		&push(reg 'A');
+		&op_push(reg 'A');
 	}
 	
 	
 =pod
 	my @reversed_registers = ( @{$class->{call_registers}}[0..$num_args-1] );
 	for my $register(@reversed_registers) {
-	    &pop($register);
+	    &op_pop($register);
 	}
 =cut
 	
@@ -915,7 +912,7 @@ sub visit_call {
 	&call(reg 'A');
 	
 	for(my $i=0 ; $i<$num_args ; $i++) {
-		&pop(reg 'TMP');
+		&op_pop(reg 'TMP');
 	}
 }
 

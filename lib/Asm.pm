@@ -10,7 +10,7 @@ use Exporter 'import';
 use List::Util qw/ sum /;
 
 our @EXPORT_OK = qw//;
-our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz in out comp not or and stackat push pop call ret raw dump_asm /;
+our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz in out comp op_not op_or op_and stackat op_push op_pop call ret raw dump_asm /;
 
 my %REGISTERS = (
     A => 'r0',
@@ -122,7 +122,7 @@ sub label {
 }
 
 sub comment {
-    push @code, [$p, '; ' . join(' ', @_)];
+    push @code, [$p, '; ' . join(' ', grep {defined $_} @_)];
 }
 
 
@@ -227,14 +227,14 @@ sub comp {
     &triad('sub', reg('tmp'), $a, $b);
 }
 
-sub not {
+sub op_not {
     my ($a, $b) = @_;
     
     &comment('not', $a, $b);
     &triad('nand', $a, $b, $b);
 }
 
-sub or {
+sub op_or {
     my ($a, $b, $c) = @_;
     
     &comment('or', $a, $b, $c);
@@ -244,7 +244,7 @@ sub or {
     &triad('nand', $a, $b, $c); # A = B NAND C
 }
 
-sub and {
+sub op_and {
     my ($a, $b, $c) = @_;
     
     &comment('and', $a, $b, $c);
@@ -263,24 +263,24 @@ sub stackat {
     &mov($a, reg('J'));
 }
 
-sub push {
+sub op_push {
     my ($a) = @_;
     
     #&comment('push', $a);
     #&mov(reg('sp'), $a);
     #&sub(reg('sp'), reg('sp'), '1');
-    CORE::push @code, [$p, 'push', $a];
+    push @code, [$p, 'push', $a];
     $p++;
 }
 
-sub pop {
+sub op_pop {
     my ($a) = @_;
     
     #&comment('pop', $a);
     #&add(reg('sp'), reg('sp'), '1');
     #&mov($a, reg('sp'));
     
-    CORE::push @code, [$p, 'pop', $a];
+    push @code, [$p, 'pop', $a];
     $p++;
 }
 
@@ -293,22 +293,24 @@ sub call {
     #&push(reg('J')); # Push return vector
     #&br($a);
     
-    CORE::push @code, [$p, 'call', $a];
+    push @code, [$p, 'call', $a];
     $p++;
 }
 
 sub ret {
     &comment('ret');
 
-    &pop(reg('ip'));
+    &op_pop(reg('ip'));
 }
 
 sub raw {
     my ($name, $data, $len) = @_;
     
+    print STDERR "Define $name = $data\n";
+    
     &comment('Raw: ', $name);
     
-    CORE::push @data, {data => $data, len => $len, addr => $dp};
+    push @data, {data => $data, len => $len, addr => $dp};
     
     $labels{$name} = $dp;
     

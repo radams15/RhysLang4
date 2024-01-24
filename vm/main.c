@@ -202,10 +202,12 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
     for(int i=0 ; i<data_size ; i++) {
         int elem_size = read_word(fh);
         int addr = read_word(fh);
-        if(fread(&mem[addr], sizeof(uint8_t), elem_size, fh) < 1) {
-            fprintf(stderr, "Failed to read data\n");
-            return 1;
-        }
+
+        for(int x=0 ; x<elem_size ; x++)
+            if(fread(&mem[addr+x], sizeof(uint8_t), 1, fh) < 1) {
+                fprintf(stderr, "Failed to read data\n");
+                return 1;
+            }
 
         i += elem_size;
     }
@@ -329,7 +331,7 @@ int interp(Op_t* prog, uint16_t* mem) {
                 getchar(); // For \n
                 break;
             case OP_OUT:
-                printf("%c", *arg_val(&op->arg1));
+                printf("%c ", *arg_val(&op->arg1));
                 break;
 
             case OP_BRKPT:

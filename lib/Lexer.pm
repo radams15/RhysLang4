@@ -2,6 +2,7 @@ package Lexer;
 
 use v5.10.1;
 use experimental 'switch';
+no warnings 'deprecated';
 
 use Keywords;
 

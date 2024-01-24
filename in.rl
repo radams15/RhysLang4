@@ -8,6 +8,13 @@ asm('
 
 sub outc(n: int) : void;
 
+sub print(val: str) : void {
+	asm('
+		&mov(reg("A"), ptr("BP", +3));
+		&out(ptr("A", 2));
+	');
+}
+
 sub hello() : void {
 	outc(104);
 	outc(101);
@@ -18,6 +25,7 @@ sub hello() : void {
 }
 
 sub main() : void {
-	hello();
+	print('Hello, World');
+	print('Howdy, Planet');
 	return 1+1;
 }
