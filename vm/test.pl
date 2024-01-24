@@ -10,7 +10,9 @@ use lib '../lib';
 use Asm;
 
 &label('_start');
+&enter;
 &call('main');
+&leave;
 &halt;
 
 &label("outc");
@@ -20,6 +22,7 @@ use Asm;
 &ret;
 
 &label('main');
+&enter;
 &push(66);
 &call('outc');
 &pop(reg 'A');
@@ -32,6 +35,7 @@ use Asm;
 &call('outc');
 &pop(reg 'A');
 
+&leave;
 &ret;
 
 open FH, '>out.rba';

@@ -152,10 +152,10 @@ sub new {
 	}, $class;
 	
 	$this->{call_registers} = [
-		reg('A'),
 		reg('B'),
-		reg ('C'),
-		reg ('D')
+		reg('C'),
+		reg ('D'),
+		reg ('E')
 	];
 	
 	$this->{stack_offset} = -($this->sizeof_type('PTR'));
@@ -227,6 +227,7 @@ sub visit_program {
 	
 	&label('_start');
 	&call('main');
+	&halt;
 	
 	$class->{global_scope}->set('_heap_top', {
 		type => 'GLOBAL',
@@ -903,13 +904,19 @@ sub visit_call {
 	}
 	
 	
+=pod
 	my @reversed_registers = ( @{$class->{call_registers}}[0..$num_args-1] );
 	for my $register(@reversed_registers) {
 	    &pop($register);
 	}
+=cut
 	
 	$class->visit($call->{callee});
 	&call(reg 'A');
+	
+	for(my $i=0 ; $i<$num_args ; $i++) {
+		&pop(reg 'TMP');
+	}
 }
 
 sub visit_asm {

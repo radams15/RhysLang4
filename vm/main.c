@@ -259,6 +259,7 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
 
 
 #define printstack(n) for(int i=0 ; i<n ; i++)printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
+#define printstack_rev(n) for(int i=n ; i>=0 ; i--)printf("BP+%d = %d = %04x %s\n", i, regs[REG_BP]+i, mem[regs[REG_BP]+i], (regs[REG_BP]+i == regs[REG_SP]? "<= SP" : ""));
 
 int interp(Op_t* prog, uint16_t* mem) {
     uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -313,7 +314,6 @@ int interp(Op_t* prog, uint16_t* mem) {
             case OP_PUSH:
                 push(*arg_val(&op->arg1));
                 break;
-
             case OP_POP:
                 pop(*arg_val(&op->arg1));
                 break;
@@ -367,8 +367,8 @@ end:
 }
 
 int main(int argc, char** argv) {
-    //const char* file = "../out.rba";
-    const char* file = "out.rba";
+    const char* file = "../out.rba";
+    //const char* file = "out.rba";
 
     uint16_t* mem = calloc(mem_size, sizeof(uint16_t));
 
