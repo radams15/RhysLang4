@@ -10,7 +10,7 @@ use Exporter 'import';
 use List::Util qw/ sum /;
 
 our @EXPORT_OK = qw//;
-our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz in out comp op_not op_or op_and stackat op_push op_pop call ret raw dump_asm /;
+our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz in out comp op_not op_or op_and stackat op_push op_pop call ret raw op_inc dump_asm /;
 
 my %REGISTERS = (
     A => 'r0',
@@ -303,10 +303,17 @@ sub ret {
     &op_pop(reg('ip'));
 }
 
+sub op_inc {
+	my ($a) = @_;
+	&comment('inc');
+	
+	&add($a, $a, 1);
+}
+
 sub raw {
     my ($name, $data, $len) = @_;
     
-    print STDERR "Define $name = $data\n";
+    print STDERR "Define $name = '$data'\n";
     
     &comment('Raw: ', $name);
     
@@ -314,7 +321,7 @@ sub raw {
     
     $labels{$name} = $dp;
     
-    $dp += $len;
+    $dp += $len + 1;
 }
 
 ## Dumping ##

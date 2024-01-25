@@ -23,17 +23,21 @@ use Asm;
 
 &label('main');
 &enter;
-&push(66);
+&op_push(66);
 &call('outc');
-&pop(reg 'A');
+&op_pop(reg 'A');
 
-&push(67);
-&call('outc');
-&pop(reg 'A');
+&mov(reg('A'), 1);
+&comp(reg('A'), 1); # a-1 == 0?
+&brnz('main');
 
-&push(68);
+&op_push(67);
 &call('outc');
-&pop(reg 'A');
+&op_pop(reg 'A');
+
+&op_push(68);
+&call('outc');
+&op_pop(reg 'A');
 
 &leave;
 &ret;

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <libc.h>
 
 const uint16_t mem_size = 64;
 
@@ -322,8 +323,12 @@ int interp(Op_t* prog, uint16_t* mem) {
 
             // TODO conditional branching with flags
             case OP_BRZ:
+                if(regs[REG_TMP] == 0)
+                    *ip = *arg_val(&op->arg1);
                 break;
             case OP_BRNZ:
+                if(regs[REG_TMP] != 0)
+                    *ip = *arg_val(&op->arg1);
                 break;
 
             case OP_IN:
@@ -331,7 +336,7 @@ int interp(Op_t* prog, uint16_t* mem) {
                 getchar(); // For \n
                 break;
             case OP_OUT:
-                printf("%c ", *arg_val(&op->arg1));
+                printf("%c", *arg_val(&op->arg1));
                 break;
 
             case OP_BRKPT:

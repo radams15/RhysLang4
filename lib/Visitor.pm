@@ -165,6 +165,7 @@ sub new {
 }
 
 sub expel {
+	die "Disabled\n";
 	for(@_) {
 		print '', ("\t" x $level), $_, "\n";
 	}
@@ -748,20 +749,20 @@ sub get_str_ref {
 	for(split /\\(\w)/, $val) {
 		given ($_) {
 			when ('n') {
-				push @str_vals, ord "\n";
+				push @str_vals, "\n";
 				$len--; # Length 1 less as removed '\\'.
 			}
 			
 			when ('r') {
-				push @str_vals, ord "\r";
+				push @str_vals, "\r";
 				$len--; # Length 1 less as removed '\\'.
 			}
 			
-			default { push @str_vals, "'$_'"; }
+			default { push @str_vals, "$_"; }
 		}
 	}
 
-	push @{$class->{strings}}, [$id, $len, (join ' ', @str_vals), 0];
+	push @{$class->{strings}}, [$id, $len, (join '', @str_vals), 0];
 	
 	$id;
 }

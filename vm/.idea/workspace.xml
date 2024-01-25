@@ -21,15 +21,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Function calls still not quite working.">
-      <change afterPath="$PROJECT_DIR$/../lib/Visitor.pmbak" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/../Makefile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../in.rl" beforeDir="false" afterPath="$PROJECT_DIR$/../in.rl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lib/Asm.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Asm.pm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lib/Lexer.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Lexer.pm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lib/Visitor.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Visitor.pm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../main.pl" beforeDir="false" afterPath="$PROJECT_DIR$/../main.pl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.pl" beforeDir="false" afterPath="$PROJECT_DIR$/test.pl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,11 +76,6 @@
   }
 }]]></component>
   <component name="RunManager">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="vm" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="VM" TARGET_NAME="vm" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="VM" RUN_TARGET_NAME="vm">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -105,7 +95,9 @@
       <workItem from="1705665293451" duration="7618000" />
       <workItem from="1705863255569" duration="6081000" />
       <workItem from="1706026751991" duration="4416000" />
-      <workItem from="1706101092533" duration="5920000" />
+      <workItem from="1706101092533" duration="7067000" />
+      <workItem from="1706173005158" duration="411000" />
+      <workItem from="1706192414683" duration="1158000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -213,16 +205,5 @@
     <MESSAGE value="Functions not working properly with return addresses." />
     <MESSAGE value="Function calls still not quite working." />
     <option name="LAST_COMMIT_MESSAGE" value="Function calls still not quite working." />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/main.c</url>
-          <line>333</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
