@@ -3,9 +3,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <libc.h>
 
-const uint16_t mem_size = 64;
+const uint16_t mem_size = 1024;
 
 typedef enum Opcode {
     OP_HALT = 0x0,
@@ -21,8 +20,8 @@ typedef enum Opcode {
     OP_BR = 0xa,
     OP_BRZ = 0xb,
     OP_BRNZ = 0xc,
-    OP_IN = 0xd,
-    OP_OUT = 0xe,
+    OP_INT = 0xd,
+    OP_NULL1 = 0xe,
     OP_BRKPT = 0xf,
 
     OP_PUSH = 0x10,
@@ -46,8 +45,8 @@ const char* opstrings[] = {
         "OP_BR",
         "OP_BRZ",
         "OP_BRNZ",
-        "OP_IN",
-        "OP_OUT",
+        "OP_INT",
+        "",
         "OP_BRKPT",
         "OP_PUSH",
         "OP_POP",
@@ -79,6 +78,11 @@ typedef enum Register {
     REG_RET,
     REG_TMP
 } Register_t;
+
+typedef enum IntCode {
+    IN = 0x0,
+    OUT = 0x1
+} IntCode_t;
 
 typedef struct Arg {
     uint16_t val;
@@ -143,8 +147,7 @@ uint8_t n_args(const uint16_t in) {
         case OP_BR:
         case OP_BRZ:
         case OP_BRNZ:
-        case OP_IN:
-        case OP_OUT:
+        case OP_INT:
         case OP_PUSH:
         case OP_POP:
         case OP_CALL:
@@ -264,6 +267,24 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
 #define printstack(n) for(int i=0 ; i<n ; i++)printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
 #define printstack_rev(n) for(int i=n ; i>=0 ; i--)printf("BP+%d = %d = %04x %s\n", i, regs[REG_BP]+i, mem[regs[REG_BP]+i], (regs[REG_BP]+i == regs[REG_SP]? "<= SP" : ""));
 
+int intr(IntCode_t num, uint16_t* regs, uint16_t* mem) {
+    switch (num) {
+        case IN:
+            regs[REG_A] = getchar();
+            getchar(); // for \n
+            break;
+        case OUT:
+            printf("%c", regs[REG_A]);
+            break;
+
+        default:
+            fprintf(stderr, "Invalid interrupt: %02x\n", num);
+            return 1;
+    }
+
+    return 0;
+}
+
 int interp(Op_t* prog, uint16_t* mem) {
     uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     uint16_t* ip = &regs[REG_IP];
@@ -331,12 +352,8 @@ int interp(Op_t* prog, uint16_t* mem) {
                     *ip = *arg_val(&op->arg1);
                 break;
 
-            case OP_IN:
-                *arg_val(&op->arg1) = getchar();
-                getchar(); // For \n
-                break;
-            case OP_OUT:
-                printf("%c", *arg_val(&op->arg1));
+            case OP_INT:
+                intr(*arg_val(&op->arg1), regs, mem);
                 break;
 
             case OP_BRKPT:

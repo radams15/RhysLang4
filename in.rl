@@ -1,37 +1,20 @@
-asm('
-&label("outc");
-&enter;
-&out(ptr("bp", +3));
-&leave;
-&ret;
-');
-
-sub outc(n: int) : void;
-
 sub print(val: str) : void {
 	asm('
-		&mov(reg("A"), ptr("BP", +3));
+		&mov(reg("C"), ptr("BP", +3));
 		&mov(reg("B"), 0);
 		
 		&label("print.top");
-		&comp(ptr("A"), 0);
+		&comp(ptr("C"), 0);
 		&brz("print.end");
 		
-		&out(ptr("A"));
-		&op_inc(reg("A"));
+		&mov(reg("A"), ptr("C"));
+		&intr(1);
+		#&out(ptr("C"));
+		&op_inc(reg("C"));
 		&br("print.top");
 		
 		&label("print.end");
 	');
-}
-
-sub hello() : void {
-	outc(104);
-	outc(101);
-	outc(108);
-	outc(108);
-	outc(111);
-	outc(10);
 }
 
 sub main() : void {
