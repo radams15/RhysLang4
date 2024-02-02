@@ -923,7 +923,7 @@ sub visit_asm {
 	
 	my $val = $asm->{str}->{value};
 	
-	eval($val);
+	eval($val) or die $@;
 }
 
 1;

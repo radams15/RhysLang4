@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h>
 
 const uint16_t mem_size = 1024;
 
@@ -81,7 +82,9 @@ typedef enum Register {
 
 typedef enum IntCode {
     IN = 0x0,
-    OUT = 0x1
+    OUT = 0x1,
+    WRITE = 0x2,
+    READ = 0x3
 } IntCode_t;
 
 typedef struct Arg {
@@ -275,6 +278,10 @@ int intr(IntCode_t num, uint16_t* regs, uint16_t* mem) {
             break;
         case OUT:
             printf("%c", regs[REG_A]);
+            break;
+
+        case WRITE:
+            write(1, &mem[regs[REG_A]], regs[REG_B]);
             break;
 
         default:

@@ -1,14 +1,15 @@
 sub print(val: str) : void {
 	asm('
+	    &mov(reg("B"), 1); # B = count@write = 1 char
+	    
 		&mov(reg("C"), ptr("BP", +3));
-		&mov(reg("B"), 0);
 		
 		&label("print.top");
 		&comp(ptr("C"), 0);
 		&brz("print.end");
 		
-		&mov(reg("A"), ptr("C"));
-		&intr(1);
+		&mov(reg("A"), reg("C"));
+		&intr(2);
 		#&out(ptr("C"));
 		&op_inc(reg("C"));
 		&br("print.top");

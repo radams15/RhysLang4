@@ -10,7 +10,7 @@ use Exporter 'import';
 use List::Util qw/ sum /;
 
 our @EXPORT_OK = qw//;
-our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz in out comp op_not op_or op_and stackat op_push op_pop call ret raw op_inc dump_asm /;
+our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz intr in out comp op_not op_or op_and stackat op_push op_pop call ret raw op_inc dump_asm /;
 
 my %REGISTERS = (
     A => 'r0',
@@ -44,15 +44,22 @@ my %OPS = (
     BR => 0xa,
     BRZ => 0xb,
     BRNZ => 0xc,
-    IN => 0xd,
-    OUT => 0xe,
+    INTR => 0xd,
+    #OUT => 0xe,
     BRKPT => 0xf,
     
     PUSH => 0x10,
     POP => 0x11,
     ENTER => 0x12,
     LEAVE => 0x13,
-    CALL => 0x14
+    CALL => 0x14,
+);
+
+my %INTS = (
+    IN => 0x0,
+    OUT => 0x1,
+    WRITE => 0x2,
+    READ => 0x3,
 );
 
 my %labels;
@@ -201,23 +208,34 @@ sub brnz {
     $p++;
 }
 
+sub intr {
+    my ($num) = @_;
+    
+    push @code, [$p, 'intr', $num];
+    $p++;
+}
+
+## MACROS ##
+
 sub in {
     my ($addr) = @_;
     
-    push @code, [$p, 'in', $addr];
-    $p++;
+    &comment('in', $addr);
+    &op_push(reg('A'));
+    &intr($INTS{IN});
+    &mov($addr, reg('A'));
+    &op_pop(reg('A'));
 }
 
 sub out {
     my ($addr) = @_;
     
-    push @code, [$p, 'out', $addr];
-    $p++;
+    &comment('out', $addr);
+    &op_push(reg('A'));
+    &mov(reg('A'), $addr);
+    &intr($INTS{OUT});
+    &op_pop(reg('A'));
 }
-
-
-
-## MACROS ##
 
 
 sub comp {
