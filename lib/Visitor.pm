@@ -388,23 +388,21 @@ sub visit_if {
 	
 	$class->visit($if->{expr});
 	
-	expel(
-		'cmp ' . register('ax') . ', 0',
-		"je $start",
-	);
-	
-	expel('; TRUE:');
+	&comp(reg('A'), 0);
+	&brz($start);
+
+	&comment('TRUE:');
 	$class->visit($if->{true});
 	
-	expel('; END TRUE');
+	&comment('END TRUE');
 	
-	$class->dec; expel("$start:"); $class->inc;
+	&label($start);
 	
 	$class->visit($if->{false}) if defined $if->{false};
 	
-	expel("jmp $end");
+	&br($end);
 	
-	$class->dec; expel("$end:"); $class->inc;
+	&label($end);
 	
 	"INT";
 }
@@ -528,32 +526,27 @@ sub cmp {
 	
 	my ($start, $end) = &generate_labels('cmp');
 	
-	expel(
-		"cmp $a, $b",
-	);
+	&comp($a, $b);
 	
 	my $jump_instr;
 	given ($op) {
-		when ('LESS') { $jump_instr = 'jl' }
-		when ('GREATER') { $jump_instr = 'jg' }
-		when ('EQUALS') { $jump_instr = 'je' }
+		when ('LESS') { $jump_instr = \&brlz }
+		when ('GREATER') { $jump_instr = \&brgz }
+		when ('EQUALS') { $jump_instr = \&brz }
 		
 		default { die "Unknown cmp op: $op" }
 	}
 	
-	expel(
-		"$jump_instr $start",
-		"mov $a, 0",
-		"jmp $end",
-	);
+	$jump_instr->($start);
+	&mov($a, 0);
+	&br($end);
 	
-	$class->dec; expel("$start:"); $class->inc;
-	expel(
-		"mov $a, 1",
-		"jmp $end",
-	);
+	&label($start);
 	
-	$class->dec; expel("$end:"); $class->inc;
+	&mov($a, 1);
+	&br($end);
+	
+	&label($end);
 }
 
 sub visit_comparison {
@@ -595,18 +588,18 @@ sub visit_equality {
 	given($equality->{op}->{name}) {
 		when (/BANG_EQUALS|EQUALS/) {
 			$class->visit($equality->{left});
-			expel('push ' . register('ax'));
+			&op_push(reg 'A');
 			$class->visit($equality->{right});
-			expel('pop ' . register('cx'));
+			&op_pop(reg 'C');
 			
 			$class->cmp(
-				register('ax'),
-				register('cx'),
+				reg('A'),
+				reg('C'),
 				'EQUALS',
 			);
 			
 			when('BANG_EQUALS') {
-				expel('not ' . register('ax')); # invert if !=
+			    &op_not(reg('A'), reg('A')); # Invert if not equal
 			}
 		}
 
@@ -646,10 +639,10 @@ sub visit_my {
 		if(defined $my->{initialiser}) {
 			$class->visit($my->{initialiser});
 		} else {
-			expel('xor ' . register('ax') . ', ' . register('ax'));
+		    &mov(reg('A'), 0);
 		}
 		
-		expel('push '. register('ax'));
+		&op_push(reg 'A');
 		
 		my $datatype;
 				
@@ -661,7 +654,7 @@ sub visit_my {
 			die "Declarations require either a declared datatype or an initialiser.";
 		}
 		
-		print "; Name: $my->{name}->{value}, Datatype: $datatype\n";
+		&comment("Name: $my->{name}->{value}, Datatype: $datatype");
 		
 		$class->{scope}->set_new($my->{name}->{value}, {
 			type => 'LOCAL',

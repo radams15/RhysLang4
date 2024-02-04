@@ -20,6 +20,9 @@ sub print(val: str) : void {
 
 sub main() : void {
 	print('Hello, World\n');
-	print('Howdy, Planet\n');
+	my a = 1;
+	if(a == 1) {
+	    print('Howdy, Planet\n');
+	}
 	return 1+1;
 }
