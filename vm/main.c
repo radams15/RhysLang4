@@ -398,8 +398,8 @@ end:
 }
 
 int main(int argc, char** argv) {
-    const char* file = "../out.rba";
-    //const char* file = "out.rba";
+    //const char* file = "../out.rba";
+    const char* file = "out.rba";
 
     uint16_t* mem = calloc(mem_size, sizeof(uint16_t));
 

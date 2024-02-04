@@ -9,34 +9,38 @@ use lib '../lib';
 
 use Asm;
 
+&raw('name', 'world', 5);
+
 &label('_start');
 &enter;
 &call('main');
 &leave;
 &halt;
 
-&label("outc");
-&enter;
-&out(ptr('bp', +3));
-&leave;
-&ret;
+&label("print");
+    &enter;
+    &mov(reg("B"), 1); # B = count@write = 1 char
+
+    &mov(reg("C"), ptr("BP", +3));
+
+    &label("print.top");
+    &comp(ptr("C"), 0);
+    &brz("print.end");
+
+    &mov(reg("A"), reg("C"));
+    &intr(2);
+    &op_inc(reg("C"));
+    &br("print.top");
+
+    &label("print.end");
+    &leave;
+    &ret
 
 &label('main');
 &enter;
-&op_push(66);
-&call('outc');
-&op_pop(reg 'A');
 
-&mov(reg('A'), 1);
-&comp(reg('A'), 1); # a-1 == 0?
-&brnz('main');
-
-&op_push(67);
-&call('outc');
-&op_pop(reg 'A');
-
-&op_push(68);
-&call('outc');
+&op_push('name');
+&call('print');
 &op_pop(reg 'A');
 
 &leave;
