@@ -30,6 +30,9 @@ typedef enum Opcode {
     OP_ENTER = 0x12,
     OP_LEAVE = 0x13,
     OP_CALL = 0x14,
+
+    OP_BRLZ = 0x15, // less than zero
+    OP_BRGZ = 0x16, // greater than zero
 } Opcode_t;
 
 const char* opstrings[] = {
@@ -54,6 +57,8 @@ const char* opstrings[] = {
         "OP_ENTER",
         "OP_LEAVE",
         "OP_CALL",
+        "OP_BRLZ",
+        "OP_BRGZ"
 };
 
 
@@ -150,6 +155,8 @@ uint8_t n_args(const uint16_t in) {
         case OP_BR:
         case OP_BRZ:
         case OP_BRNZ:
+        case OP_BRGZ:
+        case OP_BRLZ:
         case OP_INT:
         case OP_PUSH:
         case OP_POP:
@@ -358,6 +365,15 @@ int interp(Op_t* prog, uint16_t* mem) {
                 if(regs[REG_TMP] != 0)
                     *ip = *arg_val(&op->arg1);
                 break;
+            case OP_BRGZ:
+                if(regs[REG_TMP] > 0)
+                    *ip = *arg_val(&op->arg1);
+                break;
+            case OP_BRLZ:
+                if(regs[REG_TMP] < 0)
+                    *ip = *arg_val(&op->arg1);
+                break;
+
 
             case OP_INT:
                 intr(*arg_val(&op->arg1), regs, mem);
@@ -398,8 +414,8 @@ end:
 }
 
 int main(int argc, char** argv) {
-    //const char* file = "../out.rba";
-    const char* file = "out.rba";
+    const char* file = "../out.rba";
+    //const char* file = "out.rba";
 
     uint16_t* mem = calloc(mem_size, sizeof(uint16_t));
 

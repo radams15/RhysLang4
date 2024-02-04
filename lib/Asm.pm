@@ -10,7 +10,7 @@ use Exporter 'import';
 use List::Util qw/ sum /;
 
 our @EXPORT_OK = qw//;
-our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz intr in out comp op_not op_or op_and stackat op_push op_pop call ret raw op_inc dump_asm /;
+our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz brlz brgz intr in out comp op_not op_or op_and op_push op_pop call ret raw op_inc dump_asm /;
 
 my %REGISTERS = (
     A => 'r0',
@@ -53,6 +53,8 @@ my %OPS = (
     ENTER => 0x12,
     LEAVE => 0x13,
     CALL => 0x14,
+    BRLZ => 0x15,
+    BRGZ => 0x16,
 );
 
 my %INTS = (
@@ -208,6 +210,20 @@ sub brnz {
     $p++;
 }
 
+sub brlz {
+    my ($addr) = @_;
+    
+    push @code, [$p, 'brlz', $addr];
+    $p++;
+}
+
+sub brgz {
+    my ($addr) = @_;
+    
+    push @code, [$p, 'brgz', $addr];
+    $p++;
+}
+
 sub intr {
     my ($num) = @_;
     
@@ -269,16 +285,6 @@ sub op_and {
     
     &triad('nand', $a, $b, $c); # A = B NAND C
     &not($a, $a);
-}
-
-sub stackat {
-    my ($a, $b) = @_;
-    
-    &comment('stackat ', $b, ' to ', $a);
-    
-    &mov(reg('J'), reg('bp'));
-    &sub(reg('J'), reg('J'), $b);
-    &mov($a, reg('J'));
 }
 
 sub op_push {

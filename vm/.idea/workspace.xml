@@ -20,10 +20,10 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Add write interrupt.">
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Improve test script.">
+      <change beforePath="$PROJECT_DIR$/../lib/Asm.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Asm.pm" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.pl" beforeDir="false" afterPath="$PROJECT_DIR$/test.pl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,7 +104,7 @@
       <workItem from="1706173005158" duration="411000" />
       <workItem from="1706192414683" duration="1158000" />
       <workItem from="1706881204032" duration="2744000" />
-      <workItem from="1707064122382" duration="351000" />
+      <workItem from="1707064122382" duration="1316000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -202,7 +202,15 @@
       <option name="project" value="LOCAL" />
       <updated>1706883677101</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Improve test script.">
+      <option name="closed" value="true" />
+      <created>1707064481295</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1707064481295</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -230,6 +238,7 @@
     <MESSAGE value="Function calls still not quite working." />
     <MESSAGE value="Move in/out to interrupt instruction." />
     <MESSAGE value="Add write interrupt." />
-    <option name="LAST_COMMIT_MESSAGE" value="Add write interrupt." />
+    <MESSAGE value="Improve test script." />
+    <option name="LAST_COMMIT_MESSAGE" value="Improve test script." />
   </component>
 </project>
