@@ -319,27 +319,20 @@ sub visit_sub {
 	
 	my $arity = scalar ${$sub->{params}}->keys;
 	
-	my $used_regs=0;
 	my ($register, $offset, $arg_size);
 	
 	my @call_regs = reverse(@{$class->{call_registers}}[0..$arity-1]);
 	comment("Call registers: ", @call_regs);
 	my $param_iterator = ${$sub->{params}}->iterator;
 	while(my ($name, $type) = $param_iterator->()) {
-		$register = $call_regs[$used_regs];
-
 		$arg_size = $class->sizeof_type($type);
-		$offset = $class->{stack_offset};
+		$offset = $class->{stack_offset}+3;
 		&comment("$name @ bp+$offset");
-		&op_push($register);
 		$class->{scope}->set($name, {
 			type => 'LOCAL',
 			offset => $offset,
 			datatype => $type,
 		});
-		
-		$class->{stack_offset} -= $arg_size;
-		$used_regs++;
 	}
 	
 	$class->visit($sub->{block});

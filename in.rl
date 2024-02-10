@@ -32,7 +32,8 @@ sub print(val: str) : void {
 
 sub main() : void {
 	print('Hello, World\n');
-	print('test\n');
+	my two = 'quest\n';
+	print(two);
 	
 	return 1+1;
 }

@@ -218,8 +218,6 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
         int elem_size = read_word(fh);
         int addr = read_word(fh);
 
-        printf("Addr => %02x\n", addr);
-
         for(int x=0 ; x<elem_size ; x++)
             if(fread(&mem[addr+x], sizeof(uint8_t), 1, fh) < 1) {
                 fprintf(stderr, "Failed to read data\n");
