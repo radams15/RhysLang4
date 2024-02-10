@@ -364,18 +364,17 @@ sub visit_loop {
 	
 	my ($start, $end) = generate_labels('loop');
 	
-	$class->dec; expel("$start:"); $class->inc;
+	&label($start);
 	$class->visit($loop->{expr});
-	expel(
-		'cmp ' . register('ax') . ', 0',
-		"je $end",
-	);
+	
+	&comp(reg('A'), 0);
+	&brz($end);
 	
 	$class->visit($loop->{body});
 	
-	expel("jmp $start");
+	&br($start);
 	
-	$class->dec; expel("$end:"); $class->inc;
+    &label($end);
 }
 
 sub visit_if {
@@ -425,15 +424,15 @@ sub visit_assign {
 	
 	given($var->{type}) {
 		when('LOCAL') {
-			print "; $assign->{name}->{value} @ $var->{offset}\n";
+			&comment("$assign->{name}->{value} @ $var->{offset}");
 			
-			expel('mov ' . register('bp', 1, $var->{offset}) . ', ' . register('ax'));
+			&mov(ptr('B', $var->{offset}), reg('A'))
 		}
 		
 		when('GLOBAL') {
-			print "; $assign->{name} @ $var->{name}\n";
+			&comment("$assign->{name} @ $var->{name}");
 			
-			expel('mov [' . $var->{name} . '], ' . register('ax'));
+			&mov($var->{name}, reg('A'));
 		}
 	}
 }
@@ -491,31 +490,6 @@ sub visit_set {
 	expel('pop '.register('dx')); # dx => assigned value
 
 	expel('mov '.register('ax', 1, $offset).', '.register('dx')); # ax => attribute
-}
-
-
-sub get_flag {
-	my $class = shift;
-	my ($name) = @_;
-		
-	my $mask;
-	given ($name) {
-		when('ZF') { $mask = 0x0040 }
-		
-		when('CF') { $mask = 0x0001 }
-		
-		when('SF') { $mask = 0x0080 }
-		
-		when('OF') { $mask = 0x0800 }
-		
-		default { die "Unknown flag: $name" }
-	}
-	
-	expel(
-		'pushf',
-		'pop ax',
-		"xor ax, $mask",
-	); # Flags in ax
 }
 
 sub cmp {

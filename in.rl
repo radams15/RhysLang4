@@ -5,7 +5,7 @@ sub putc(val: int) : void {
     ');
 }
 
-sub print(val: str) : void {
+sub print1(val: str) : void {
     asm('
 	    &mov(reg("B"), 1); # B = count@write = 1 char
 	    
@@ -24,15 +24,16 @@ sub print(val: str) : void {
 	');
 }
 
+sub print(val: str) : void {
+    my i=5;
+    
+    if(5>10) {
+        putc(44);
+    }
+}
+
 sub main() : void {
-	my a = 66;
-	my b = 54;
-	putc(a);
-	putc(b);
-	
 	print('Hello, World\n');
-	if(a <= 1) {
-	    print('Howdy, Planet\n');
-	}
+	
 	return 1+1;
 }
