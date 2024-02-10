@@ -15,34 +15,15 @@ sub putc(val: int) : void {
 sub strlen(val: str) : int {
     asm('
         &mov(reg("A"), ptr("BP", +3));
-        &mov(reg("A"), ptr("A"));
+        &mov(reg("A"), ptr("A")); # dereference A (index 0)
     ');
-}
-
-sub print1(val: str) : void {
-    asm('
-	    &mov(reg("B"), 1); # B = count@write = 1 char
-	    
-		&mov(reg("C"), ptr("BP", +3));
-		
-		&label("print.top");
-		&comp(ptr("C"), 0);
-		&brz("print.end");
-		
-		&mov(reg("A"), reg("C"));
-		&intr(2);
-		&op_inc(reg("C"));
-		&br("print.top");
-		
-		&label("print.end");
-	');
 }
 
 sub print(val: str) : void {
     my len = strlen(val);
     my i=0;
     
-    while(i<len-1) {
+    while(i<len) {
         putc(val[i]);
         
         i = i+1;
@@ -51,6 +32,7 @@ sub print(val: str) : void {
 
 sub main() : void {
 	print('Hello, World\n');
+	print('test\n');
 	
 	return 1+1;
 }

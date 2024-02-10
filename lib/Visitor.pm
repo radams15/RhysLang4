@@ -709,27 +709,26 @@ sub get_str_ref {
 	my ($val, $id) = @_;
 	
 	$id = ('str_' . (scalar @{$class->{strings}} + 1)) if not defined $id;
-		
-	my $len = length($val);
 	
 	my @str_vals = ();
 	for(split /\\(\w)/, $val) {
 		given ($_) {
 			when ('n') {
 				push @str_vals, "\n";
-				$len--; # Length 1 less as removed '\\'.
 			}
 			
 			when ('r') {
 				push @str_vals, "\r";
-				$len--; # Length 1 less as removed '\\'.
 			}
 			
 			default { push @str_vals, "$_"; }
 		}
 	}
+	
+	$val = join('', @str_vals);
+	my $len = length($val);
 
-	push @{$class->{strings}}, [$id, $len+1, (pack('s<', $len).join('', @str_vals)), 0];
+	push @{$class->{strings}}, [$id, $len+2, pack('s<', $len).$val];
 	
 	$id;
 }
