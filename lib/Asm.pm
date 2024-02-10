@@ -460,7 +460,7 @@ sub parse {
         
         $val->{'ref'} = $ref;
         
-        CORE::push @out, $val;
+        push @out, $val;
     }
     
     @out;
