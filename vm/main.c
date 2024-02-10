@@ -89,7 +89,8 @@ typedef enum IntCode {
     IN = 0x0,
     OUT = 0x1,
     WRITE = 0x2,
-    READ = 0x3
+    READ = 0x3,
+    OUTI = 0x4
 } IntCode_t;
 
 typedef struct Arg {
@@ -284,6 +285,10 @@ int intr(IntCode_t num, uint16_t* regs, uint16_t* mem) {
             getchar(); // for \n
             break;
         case OUT:
+            printf("%c", regs[REG_A]);
+            break;
+
+        case OUTI:
             printf("%d", regs[REG_A]);
             break;
 

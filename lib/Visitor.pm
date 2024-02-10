@@ -42,13 +42,13 @@ sub typeof {
 			
 			when ('CALL') {
 				my $var = $class->{scope}->get($data->{callee}->{name}->{value});
-				printf "; %s returns: %s\n", $data->{callee}->{name}->{value}, $var->{def}->{returns}->{value};
+				&comment(sprintf "%s returns: %s\n", $data->{callee}->{name}->{value}, $var->{def}->{returns}->{value});
 				return $var->{def}->{returns}->{value};
 			}
 			
 			when ('METHOD_CALL') {
 				my $var = $class->{scope}->get(&method_hash($data->{callee}->{name}->{value}, $data->{name}->{value}));
-				printf "; %s returns: %s\n", $data->{name}->{value}, $var->{def}->{returns}->{value};
+				&comment(sprintf "; %s returns: %s\n", $data->{name}->{value}, $var->{def}->{returns}->{value});
 				return $var->{def}->{returns}->{value};
 			}
 		}
@@ -729,7 +729,7 @@ sub get_str_ref {
 		}
 	}
 
-	push @{$class->{strings}}, [$id, $len, (join '', @str_vals), 0];
+	push @{$class->{strings}}, [$id, $len+1, (pack('s<', $len).join('', @str_vals)), 0];
 	
 	$id;
 }
@@ -787,21 +787,23 @@ sub visit_index {
 	my ($index) = @_;
 	
 	my $type = $class->visit($index->{value});
-	
-	expel('push ' . register('ax'));
 
+    &op_push(reg 'B'); # back-up b
+
+    &op_push(reg 'A');
+    &op_pop(reg 'B');
+    
 	$class->visit($index->{index});
-	if($type eq 'STR') {
-		expel('inc ' . register('ax')); # Go over the string length.
+	if(uc $type eq 'STR') {
+	    &add(reg('A'), reg('A'), 2); # Skip over string length
 	}
-	expel('push ' . register('ax'));
-
-	expel('pop ' . register('si')); # si = index
-	expel('pop ' . register('bx')); # bx = array
-	expel('add ' . register('bx') . ', ' . register('si'));
 	
-	expel('xor ' . register('ax') . ', ' . register('ax'));
-	expel('mov ' . register('al') . ', ' . register('bx', 1));
+	# b = val, a = index
+	
+	&add(reg('b'), reg('a'), reg('b'));
+	&mov(reg('a'), ptr('b')); # deref b to a
+	
+	&op_pop(reg 'B'); # restore b
 }
 
 sub visit_sizeof {
