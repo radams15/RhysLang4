@@ -426,7 +426,7 @@ sub visit_assign {
 		when('LOCAL') {
 			&comment("$assign->{name}->{value} @ $var->{offset}");
 			
-			&mov(ptr('B', $var->{offset}), reg('A'))
+			&mov(ptr('BP', $var->{offset}), reg('A'))
 		}
 		
 		when('GLOBAL') {

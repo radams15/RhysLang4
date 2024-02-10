@@ -27,8 +27,9 @@ sub print1(val: str) : void {
 sub print(val: str) : void {
     my i=5;
     
-    if(5>10) {
-        putc(44);
+    while(i<10) {
+        putc(i);
+        i = i+1;
     }
 }
 
