@@ -20,7 +20,8 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Add getc function.">
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Reformat.">
+      <change beforePath="$PROJECT_DIR$/../lib/Visitor.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Visitor.pm" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
@@ -105,7 +106,7 @@
       <workItem from="1706881204032" duration="2744000" />
       <workItem from="1707064122382" duration="2949000" />
       <workItem from="1707571412279" duration="8477000" />
-      <workItem from="1707586041663" duration="236000" />
+      <workItem from="1707586041663" duration="749000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -291,7 +292,15 @@
       <option name="project" value="LOCAL" />
       <updated>1707584471569</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="Reformat.">
+      <option name="closed" value="true" />
+      <created>1707586293498</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1707586293498</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -329,6 +338,7 @@
     <MESSAGE value="String improvements, indexing fixed." />
     <MESSAGE value="Fix subroutine arguments." />
     <MESSAGE value="Add getc function." />
-    <option name="LAST_COMMIT_MESSAGE" value="Add getc function." />
+    <MESSAGE value="Reformat." />
+    <option name="LAST_COMMIT_MESSAGE" value="Reformat." />
   </component>
 </project>

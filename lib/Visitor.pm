@@ -21,8 +21,6 @@ sub wordsize {
 	$class->{datasizes}->{NAMES}->{uc $name};
 }
 
-my @CALL_REGISTERS = qw/di si dx cx/;
-
 
 sub typeof {
 	my $class = shift;
@@ -130,6 +128,7 @@ sub sizeof {
 }
 
 my $level = 0;
+my $initial_stack_offset;
 
 sub new {
 	my $class = shift;
@@ -150,14 +149,9 @@ sub new {
 		global_scope => $global_scope,
 	}, $class;
 	
-	$this->{call_registers} = [
-		reg('B'),
-		reg('C'),
-		reg ('D'),
-		reg ('E')
-	];
+	$initial_stack_offset = 0; #-$this->sizeof_type('INT');
 	
-	$this->{stack_offset} = 0;
+	$this->{stack_offset} = $initial_stack_offset;
 	
 	$this;
 }
@@ -311,7 +305,7 @@ sub visit_sub {
 	&label($sub_name);
 	$class->{in_sub} = $sub;
 	$class->{scope} = $class->{scope}->child;
-	$class->{stack_offset} = 0;
+	$class->{stack_offset} = $initial_stack_offset;
 	
 	$class->inc;
 	comment("Args: ", ${$sub->{params}}->keys);
@@ -321,8 +315,6 @@ sub visit_sub {
 	
 	my ($register, $offset, $arg_size);
 	
-	my @call_regs = reverse(@{$class->{call_registers}}[0..$arity-1]);
-	comment("Call registers: ", @call_regs);
 	my $param_iterator = ${$sub->{params}}->iterator;
 	while(my ($name, $type) = $param_iterator->()) {
 		$arg_size = $class->sizeof_type($type);
@@ -861,14 +853,6 @@ sub visit_call {
 		
 		&op_push(reg 'A');
 	}
-	
-	
-=pod
-	my @reversed_registers = ( @{$class->{call_registers}}[0..$num_args-1] );
-	for my $register(@reversed_registers) {
-	    &op_pop($register);
-	}
-=cut
 	
 	$class->visit($call->{callee});
 	&call(reg 'A');

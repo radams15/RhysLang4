@@ -270,11 +270,9 @@ uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
 #define arg_val(arg) ((arg)->addr? \
     &mem[*arg_raw(arg) + (arg)->offset] : arg_raw(arg))
 
-#define push(a) mem[regs[REG_SP]] = a; \
-                regs[REG_SP]--
+#define push(a) mem[regs[REG_SP]] = a; regs[REG_SP]--
 
-#define pop(a)  regs[REG_SP]++; \
-                a = mem[regs[REG_SP]]
+#define pop(a) regs[REG_SP]++; a = mem[regs[REG_SP]]
 
 
 #define printstack(n) for(int i=0 ; i<n ; i++)printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
