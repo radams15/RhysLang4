@@ -20,10 +20,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Variable defining working.">
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Fix variable recalling by fixing initial stack offset.">
       <change beforePath="$PROJECT_DIR$/../in.rl" beforeDir="false" afterPath="$PROJECT_DIR$/../in.rl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../lib/Visitor.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Visitor.pm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../main.pl" beforeDir="false" afterPath="$PROJECT_DIR$/../main.pl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
@@ -107,7 +106,7 @@
       <workItem from="1706192414683" duration="1158000" />
       <workItem from="1706881204032" duration="2744000" />
       <workItem from="1707064122382" duration="2949000" />
-      <workItem from="1707571412279" duration="320000" />
+      <workItem from="1707571412279" duration="1875000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -229,7 +228,15 @@
       <option name="project" value="LOCAL" />
       <updated>1707065608239</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Fix variable recalling by fixing initial stack offset.">
+      <option name="closed" value="true" />
+      <created>1707571748521</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1707571748521</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -260,6 +267,7 @@
     <MESSAGE value="Improve test script." />
     <MESSAGE value="If statements seem to be working." />
     <MESSAGE value="Variable defining working." />
-    <option name="LAST_COMMIT_MESSAGE" value="Variable defining working." />
+    <MESSAGE value="Fix variable recalling by fixing initial stack offset." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix variable recalling by fixing initial stack offset." />
   </component>
 </project>

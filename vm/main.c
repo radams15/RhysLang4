@@ -356,7 +356,7 @@ int interp(Op_t* prog, uint16_t* mem) {
                 pop(*arg_val(&op->arg1));
                 break;
 
-            // TODO conditional branching with flags
+
             case OP_BRZ:
                 if(regs[REG_TMP] == 0)
                     *ip = *arg_val(&op->arg1);

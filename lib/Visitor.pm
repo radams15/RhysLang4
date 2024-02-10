@@ -520,7 +520,7 @@ sub get_flag {
 
 sub cmp {
 	my $class = shift;
-	my ($a, $b, $op) = @_;
+	my ($a, $b, $op, $inv) = (@_);
 	
 	my ($start, $end) = &generate_labels('cmp');
 	
@@ -542,9 +542,10 @@ sub cmp {
 	&label($start);
 	
 	&mov($a, 1);
-	&br($end);
-	
+
 	&label($end);
+	
+	&op_not($a, $a) if $inv;
 }
 
 sub visit_comparison {
@@ -554,25 +555,26 @@ sub visit_comparison {
 	given($comparison->{op}->{name}) {
 		when (/LESS|GREATER/) {
 			$class->visit($comparison->{right});
-			expel('push ' . register('ax'));
+			&op_push(reg 'A');
 			$class->visit($comparison->{left});
-			expel('pop ' . register('cx'));
+			&op_pop(reg 'C');
 			
-			when('LESS') {
-				$class->cmp(
-					register('ax'),
-					register('cx'),
-					'LESS',
-				);
+			my $name = $comparison->{op}->{name};
+			my $inv = 0;
+			
+			if($name =~ /(LESS|GREATER)_EQUALS/) {
+			    $inv = 1;
+
+			    $name = 'GREATER' if($name =~ /LESS_EQUALS/);
+			    $name = 'LESS' if ($name =~ /GREATER_EQUALS/);
 			}
 			
-			when('GREATER') {
-				$class->cmp(
-					register('ax'),
-					register('cx'),
-					'GREATER',
-				);
-			}
+			$class->cmp(
+				&reg('A'),
+				&reg('C'),
+				$name,
+				$inv
+			);
 		}
 
 		default { die "Unknown term: $comparison->{op}->{name}" }

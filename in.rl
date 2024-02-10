@@ -1,5 +1,12 @@
+sub putc(val: int) : void {
+    asm('
+		&mov(reg("A"), ptr("BP", +3)); # a = val
+		&intr(1);
+    ');
+}
+
 sub print(val: str) : void {
-	asm('
+    asm('
 	    &mov(reg("B"), 1); # B = count@write = 1 char
 	    
 		&mov(reg("C"), ptr("BP", +3));
@@ -17,20 +24,14 @@ sub print(val: str) : void {
 	');
 }
 
-sub putc(val: int) : void {
-    asm('
-		&mov(reg("A"), ptr("BP", +3)); # a = val
-		&intr(1);
-    ');
-}
-
 sub main() : void {
-	print('Hello, World\n');
 	my a = 66;
 	my b = 54;
 	putc(a);
 	putc(b);
-	if(a == 1) {
+	
+	print('Hello, World\n');
+	if(a <= 1) {
 	    print('Howdy, Planet\n');
 	}
 	return 1+1;
