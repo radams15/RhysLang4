@@ -284,7 +284,7 @@ int intr(IntCode_t num, uint16_t* regs, uint16_t* mem) {
             getchar(); // for \n
             break;
         case OUT:
-            printf("%c", regs[REG_A]);
+            printf("%d", regs[REG_A]);
             break;
 
         case WRITE:
@@ -406,9 +406,6 @@ int interp(Op_t* prog, uint16_t* mem) {
             (*ip)++;
     }
 end:
-
-    /*for(int i=0 ; i<10 ; i++)
-        printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));*/
 
     return 0;
 }

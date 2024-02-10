@@ -10,7 +10,6 @@ sub print(val: str) : void {
 		
 		&mov(reg("A"), reg("C"));
 		&intr(2);
-		#&out(ptr("C"));
 		&op_inc(reg("C"));
 		&br("print.top");
 		
@@ -18,9 +17,19 @@ sub print(val: str) : void {
 	');
 }
 
+sub putc(val: int) : void {
+    asm('
+		&mov(reg("A"), ptr("BP", +3)); # a = val
+		&intr(1);
+    ');
+}
+
 sub main() : void {
 	print('Hello, World\n');
-	my a = 1;
+	my a = 66;
+	my b = 54;
+	putc(a);
+	putc(b);
 	if(a == 1) {
 	    print('Howdy, Planet\n');
 	}

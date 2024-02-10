@@ -133,9 +133,6 @@ my $level = 0;
 
 sub new {
 	my $class = shift;
-	my $registers = shift;
-	my $datasizes = shift;
-	my ($preface) = @_;
 
 	my $global_scope = Scope->new;
 
@@ -145,9 +142,10 @@ sub new {
 		scope => $global_scope,
 		strings => [],
 		subs => {},
-		registers => $registers,
-		datasizes => $datasizes,
-		preface => $preface,
+		datasizes => {
+			INT => 1,
+	        PTR => 1
+		},
 		
 		global_scope => $global_scope,
 	}, $class;
@@ -159,7 +157,7 @@ sub new {
 		reg ('E')
 	];
 	
-	$this->{stack_offset} = -($this->sizeof_type('PTR'));
+	$this->{stack_offset} = 0;
 	
 	$this;
 }
@@ -313,7 +311,7 @@ sub visit_sub {
 	&label($sub_name);
 	$class->{in_sub} = $sub;
 	$class->{scope} = $class->{scope}->child;
-	$class->{stack_offset} = -$class->sizeof_type('PTR');
+	$class->{stack_offset} = 0;
 	
 	$class->inc;
 	comment("Args: ", ${$sub->{params}}->keys);
@@ -654,7 +652,7 @@ sub visit_my {
 			die "Declarations require either a declared datatype or an initialiser.";
 		}
 		
-		&comment("Name: $my->{name}->{value}, Datatype: $datatype");
+		&comment("Name: $my->{name}->{value}, Datatype: $datatype @ $class->{stack_offset}");
 		
 		$class->{scope}->set_new($my->{name}->{value}, {
 			type => 'LOCAL',
@@ -789,14 +787,14 @@ sub visit_variable {
 	
 	given($value->{type}) {
 		when ('LOCAL') {
-			expel("mov ". register('ax') .", " . register('bp', 1, $value->{offset}));
+		    &mov(reg('A'), ptr('BP', $value->{offset}));
 		}
 		
 		when ('GLOBAL') {
 			if($value->{datatype} eq 'PTR') {
-			    mov reg('a'), ptr($value->{name});
+			    mov(reg('a'), ptr($value->{name}));
 			} else {
-			    mov reg('a'), $value->{name};
+			    mov(reg('a'), $value->{name});
 			}
 		}
 		
