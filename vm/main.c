@@ -35,7 +35,7 @@ typedef enum Opcode {
     OP_BRGZ = 0x16, // greater than zero
 } Opcode_t;
 
-const char* opstrings[] = {
+const char *opstrings[] = {
         "OP_HALT",
         "OP_MOVE",
         "OP_ADD",
@@ -114,11 +114,11 @@ int8_t get_offset(uint16_t in) {
     uint16_t without_reg = in >> 4;
     uint8_t abs_val = (uint8_t) without_reg;
 
-    return abs_val * (negative? -1 : 1);
+    return abs_val * (negative ? -1 : 1);
 }
 
-int parse_arg(uint16_t in, Arg_t* arg) {
-    if((in >> 15) & 1) {
+int parse_arg(uint16_t in, Arg_t *arg) {
+    if ((in >> 15) & 1) {
         arg->type = ARG_REG;
         arg->val = (uint8_t) (in & ~(1 << 15)) & ~(0b1111 << 4); // Only take first 4 bits
         arg->offset = get_offset(in);
@@ -128,7 +128,7 @@ int parse_arg(uint16_t in, Arg_t* arg) {
         arg->offset = 0;
     }
 
-    if((in >> 14) & 1) {
+    if ((in >> 14) & 1) {
         arg->addr = 1;
         arg->val &= ~(1 << 14);
     } else {
@@ -169,44 +169,44 @@ uint8_t n_args(const uint16_t in) {
     }
 }
 
-int parse_op(const uint16_t* in, Op_t* op) {
+int parse_op(const uint16_t *in, Op_t *op) {
     op->code = in[0];
 
     op->n_args = n_args(in[0]);
 
-    if(op->n_args == 3) {
+    if (op->n_args == 3) {
         parse_arg(in[1], &op->arg1);
         parse_arg(in[2], &op->arg2);
         parse_arg(in[3], &op->arg3);
-    } else if(op->n_args == 2) {
+    } else if (op->n_args == 2) {
         parse_arg(in[1], &op->arg1);
         parse_arg(in[2], &op->arg2);
-    } else if(op->n_args == 1) {
+    } else if (op->n_args == 1) {
         parse_arg(in[1], &op->arg1);
     }
 
     return 0;
 }
 
-uint16_t read_word(FILE* fh) {
+uint16_t read_word(FILE *fh) {
     uint8_t a, b;
 
-    if(fread(&a, sizeof(uint8_t), 1, fh) < 0) {
+    if (fread(&a, sizeof(uint8_t), 1, fh) < 0) {
         fprintf(stderr, "Failed to read file\n");
         exit(1);
     }
 
-    if(fread(&b, sizeof(uint8_t), 1, fh) < 0) {
+    if (fread(&b, sizeof(uint8_t), 1, fh) < 0) {
         fprintf(stderr, "Failed to read file\n");
         exit(1);
     }
 
-    return a | (b<<8);
+    return a | (b << 8);
 }
 
-uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
-    FILE* fh = fopen(file, "r");
-    if(fh == NULL) {
+uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
+    FILE *fh = fopen(file, "r");
+    if (fh == NULL) {
         fprintf(stderr, "Failed to open file '%s'\n", file);
         return 1;
     }
@@ -214,12 +214,12 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
     uint16_t size = read_word(fh);
     uint16_t data_size = read_word(fh);
 
-    for(int i=0 ; i<data_size ; i++) {
+    for (int i = 0; i < data_size; i++) {
         int elem_size = read_word(fh);
         int addr = read_word(fh);
 
-        for(int x=0 ; x<elem_size ; x++)
-            if(fread(&mem[addr+x], sizeof(uint8_t), 1, fh) < 1) {
+        for (int x = 0; x < elem_size; x++)
+            if (fread(&mem[addr + x], sizeof(uint8_t), 1, fh) < 1) {
                 fprintf(stderr, "Failed to read data\n");
                 return 1;
             }
@@ -228,14 +228,14 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
     }
 
 
-    uint16_t* raw = malloc(size * sizeof(uint16_t));
+    uint16_t *raw = malloc(size * sizeof(uint16_t));
 
     uint16_t in_op = 0;
     uint16_t n_ops = 0;
-    for(uint16_t i=0 ; i<size ; i++) {
+    for (uint16_t i = 0; i < size; i++) {
         raw[i] = read_word(fh);
 
-        if(in_op <= 0) {
+        if (in_op <= 0) {
             in_op = n_args(raw[i]);
             n_ops++;
         } else {
@@ -244,11 +244,11 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
     }
     fclose(fh);
 
-    Op_t* ops = malloc(n_ops * sizeof(Op_t));
+    Op_t *ops = malloc(n_ops * sizeof(Op_t));
 
     uint16_t p = 0;
     uint16_t i = 0;
-    while(p < size) {
+    while (p < size) {
         parse_op(&raw[p], &ops[i]);
 
         p += ops[i].n_args + 1;
@@ -263,10 +263,12 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
 }
 
 // Gets the value in the argument, ignoring references
-#define arg_raw(arg) ((arg)->type == ARG_REG ? &regs[(arg)->val] : &(arg)->val)
+#define arg_raw(arg) ((arg)->type == ARG_REG? \
+    &regs[(arg)->val] : &(arg)->val)
 
 // Gets the value in the argument, returning memory pointers for references
-#define arg_val(arg) ((arg)->addr? &mem[*arg_raw(arg) + (arg)->offset] : arg_raw(arg))
+#define arg_val(arg) ((arg)->addr? \
+    &mem[*arg_raw(arg) + (arg)->offset] : arg_raw(arg))
 
 #define push(a) mem[regs[REG_SP]] = a; \
                 regs[REG_SP]--
@@ -278,7 +280,7 @@ uint8_t load_ops(const char* file, Op_t** ops_ptr, uint16_t* mem) {
 #define printstack(n) for(int i=0 ; i<n ; i++)printf("BP-%d = %d = %04x %s\n", i, regs[REG_BP]-i, mem[regs[REG_BP]-i], (regs[REG_BP]-i == regs[REG_SP]? "<= SP" : ""));
 #define printstack_rev(n) for(int i=n ; i>=0 ; i--)printf("BP+%d = %d = %04x %s\n", i, regs[REG_BP]+i, mem[regs[REG_BP]+i], (regs[REG_BP]+i == regs[REG_SP]? "<= SP" : ""));
 
-int intr(IntCode_t num, uint16_t* regs, uint16_t* mem) {
+int intr(IntCode_t num, uint16_t *regs, uint16_t *mem) {
     switch (num) {
         case IN:
             regs[REG_A] = getchar();
@@ -304,9 +306,9 @@ int intr(IntCode_t num, uint16_t* regs, uint16_t* mem) {
     return 0;
 }
 
-int interp(Op_t* prog, uint16_t* mem) {
+int interp(Op_t *prog, uint16_t *mem) {
     uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    uint16_t* ip = &regs[REG_IP];
+    uint16_t *ip = &regs[REG_IP];
 
     regs[REG_SP] = mem_size;
     regs[REG_BP] = mem_size;
@@ -314,9 +316,9 @@ int interp(Op_t* prog, uint16_t* mem) {
     *ip = 0; // Entrypoint @ instruction 0
 
     uint16_t start_ip;
-    while(1) {
+    while (1) {
         start_ip = *ip;
-        Op_t* op = &prog[*ip];
+        Op_t *op = &prog[*ip];
 
         switch (op->code) {
             case OP_HALT:
@@ -343,7 +345,7 @@ int interp(Op_t* prog, uint16_t* mem) {
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) << *arg_val(&op->arg3);
                 break;
             case OP_NAND:
-                *arg_val(&op->arg1) = ! (*arg_val(&op->arg2) & *arg_val(&op->arg3));
+                *arg_val(&op->arg1) = !(*arg_val(&op->arg2) & *arg_val(&op->arg3));
                 break;
             case OP_XOR:
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) ^ *arg_val(&op->arg3);
@@ -353,27 +355,27 @@ int interp(Op_t* prog, uint16_t* mem) {
                 break;
 
             case OP_PUSH:
-                push(*arg_val(&op->arg1));
+            push(*arg_val(&op->arg1));
                 break;
             case OP_POP:
-                pop(*arg_val(&op->arg1));
+            pop(*arg_val(&op->arg1));
                 break;
 
 
             case OP_BRZ:
-                if(regs[REG_TMP] == 0)
+                if (regs[REG_TMP] == 0)
                     *ip = *arg_val(&op->arg1);
                 break;
             case OP_BRNZ:
-                if(regs[REG_TMP] != 0)
+                if (regs[REG_TMP] != 0)
                     *ip = *arg_val(&op->arg1);
                 break;
             case OP_BRGZ:
-                if(((int16_t)regs[REG_TMP]) > 0)
+                if (((int16_t) regs[REG_TMP]) > 0)
                     *ip = *arg_val(&op->arg1);
                 break;
             case OP_BRLZ:
-                if(((int16_t)regs[REG_TMP]) < 0)
+                if (((int16_t) regs[REG_TMP]) < 0)
                     *ip = *arg_val(&op->arg1);
                 break;
 
@@ -386,7 +388,7 @@ int interp(Op_t* prog, uint16_t* mem) {
                 break;
 
             case OP_ENTER:
-                push(regs[REG_BP]);
+            push(regs[REG_BP]);
                 regs[REG_BP] = regs[REG_SP];
                 break;
 
@@ -396,7 +398,7 @@ int interp(Op_t* prog, uint16_t* mem) {
                 break;
 
             case OP_CALL:
-                push((*ip)+1);
+            push((*ip) + 1);
                 *ip = *arg_val(&op->arg1);
                 break;
 
@@ -405,23 +407,23 @@ int interp(Op_t* prog, uint16_t* mem) {
                 goto end;
         }
 
-        if(start_ip == *ip) // If IP has not been modified, then increment it
+        if (start_ip == *ip) // If IP has not been modified, then increment it
             (*ip)++;
     }
-end:
+    end:
 
     return 0;
 }
 
-int main(int argc, char** argv) {
-    const char* file = "../out.rba";
+int main(int argc, char **argv) {
+    const char *file = "../out.rba";
     //const char* file = "out.rba";
 
-    uint16_t* mem = calloc(mem_size, sizeof(uint16_t));
+    uint16_t *mem = calloc(mem_size, sizeof(uint16_t));
 
-    Op_t* ops;
+    Op_t *ops;
 
-    if(load_ops(file, &ops, mem) != 0) {
+    if (load_ops(file, &ops, mem) != 0) {
         fprintf(stderr, "Failed to load program\n");
         return 1;
     }
