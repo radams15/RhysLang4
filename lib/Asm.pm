@@ -447,7 +447,7 @@ sub parse {
     
     my @out = ({type => 'o', val => $opcode});
     
-    debug "\n%02x => $name @args", $ip;
+    debug "%02x => $name @args", $ip;
     
     for my $arg (@args) {
         my $ref = 0;
@@ -462,6 +462,8 @@ sub parse {
         
         push @out, $val;
     }
+    
+    debug "";
     
     @out;
 }

@@ -20,10 +20,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="String improvements, indexing fixed.">
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Fix subroutine arguments.">
       <change beforePath="$PROJECT_DIR$/../in.rl" beforeDir="false" afterPath="$PROJECT_DIR$/../in.rl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../lib/Asm.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Asm.pm" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,7 +104,7 @@
       <workItem from="1706192414683" duration="1158000" />
       <workItem from="1706881204032" duration="2744000" />
       <workItem from="1707064122382" duration="2949000" />
-      <workItem from="1707571412279" duration="7502000" />
+      <workItem from="1707571412279" duration="8352000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -275,7 +274,15 @@
       <option name="project" value="LOCAL" />
       <updated>1707577379375</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Fix subroutine arguments.">
+      <option name="closed" value="true" />
+      <created>1707579165741</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1707579165741</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -311,6 +318,7 @@
     <MESSAGE value="Fix brlz, brgz not working due to not using signed ints." />
     <MESSAGE value="Fix typo in assignment handler leading to crashes." />
     <MESSAGE value="String improvements, indexing fixed." />
-    <option name="LAST_COMMIT_MESSAGE" value="String improvements, indexing fixed." />
+    <MESSAGE value="Fix subroutine arguments." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix subroutine arguments." />
   </component>
 </project>

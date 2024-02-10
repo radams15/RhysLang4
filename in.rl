@@ -12,6 +12,17 @@ sub putc(val: int) : void {
     ');
 }
 
+sub getc() : int {
+    my out: int;
+    
+    asm('
+        &intr(0);
+        &mov(ptr("BP"), reg("A"));
+    ');
+    
+    return out;
+}
+
 sub strlen(val: str) : int {
     asm('
         &mov(reg("A"), ptr("BP", +3));
@@ -34,6 +45,9 @@ sub main() : void {
 	print('Hello, World\n');
 	my two = 'quest\n';
 	print(two);
+	
+	my i = getc();
+	putc(i);
 	
 	return 1+1;
 }
