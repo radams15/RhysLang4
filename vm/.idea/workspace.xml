@@ -20,10 +20,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Reformat.">
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Remove call_regsisters.">
       <change beforePath="$PROJECT_DIR$/../lib/Visitor.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Visitor.pm" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,7 +105,7 @@
       <workItem from="1706881204032" duration="2744000" />
       <workItem from="1707064122382" duration="2949000" />
       <workItem from="1707571412279" duration="8477000" />
-      <workItem from="1707586041663" duration="749000" />
+      <workItem from="1707586041663" duration="1762000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -300,7 +299,15 @@
       <option name="project" value="LOCAL" />
       <updated>1707586293498</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="Remove call_regsisters.">
+      <option name="closed" value="true" />
+      <created>1707586804836</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1707586804836</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -339,6 +346,7 @@
     <MESSAGE value="Fix subroutine arguments." />
     <MESSAGE value="Add getc function." />
     <MESSAGE value="Reformat." />
-    <option name="LAST_COMMIT_MESSAGE" value="Reformat." />
+    <MESSAGE value="Remove call_regsisters." />
+    <option name="LAST_COMMIT_MESSAGE" value="Remove call_regsisters." />
   </component>
 </project>

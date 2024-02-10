@@ -213,6 +213,9 @@ sub visit_program {
 	my $class = shift;
 	my ($program) = @_;
 	
+    my $heap_addr = raw('_heap', '', $HEAP_SIZE);
+    raw('_heap_top', pack('s<', $heap_addr), 1);
+	
 	expel($class->{preface}) if $class->{preface};
 	
 	&label('_start');
@@ -232,7 +235,6 @@ sub visit_program {
 		raw($name, $data, $len);
 	}
 	
-    raw('_heap', '', $HEAP_SIZE);
 	#expel("_heap: times $HEAP_SIZE db 0");
 	#expel("_heap_top: ".$class->wordsize('PTR')." _heap");
 	
@@ -417,7 +419,10 @@ sub visit_assign {
 		when('GLOBAL') {
 			&comment("$assign->{name} @ $var->{name}");
 			
-			&mov($var->{name}, reg('A'));
+			&op_push(reg 'B');
+			&mov(reg('B'), $var->{name});
+			&mov(ptr('B'), reg('A'));
+			&op_pop(reg 'B');
 		}
 	}
 }
@@ -752,7 +757,8 @@ sub visit_variable {
 		
 		when ('GLOBAL') {
 			if($value->{datatype} eq 'PTR') {
-			    mov(reg('a'), ptr($value->{name}));
+			    mov(reg('a'), $value->{name});
+			    mov(reg('a'), ptr('a'));
 			} else {
 			    mov(reg('a'), $value->{name});
 			}
