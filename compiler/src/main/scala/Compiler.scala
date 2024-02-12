@@ -19,6 +19,5 @@ object Compiler {
     )))*/
 
     val src = new Source("bye2 hello1", 0)
-    val result = Parser.hello.parse(src)
   }
 }
