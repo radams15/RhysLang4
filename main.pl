@@ -5,6 +5,7 @@ use warnings;
 
 use v5.10.1;
 use experimental 'switch';
+no warnings 'deprecated';
 
 use Getopt::Long;
 use Data::Dumper;
@@ -34,30 +35,6 @@ GetOptions(
 	'<>' => \&add_file,
 );
 
-my ($register_func, $datasize_func);
-
-my $preface;
-
-if(uc $os eq 'DOS') {
-	$preface .= "org 100h\n";
-}
-
-given ($arch) {
-	when ('x86_64') {
-		($register_func, $datasize_func) = (Registers_x86_64::registers, Registers_x86_64::datasizes);
-	}
-	
-	when ('x86_32') {
-		($register_func, $datasize_func) = (Registers_x86_32::registers, Registers_x86_32::datasizes);
-	}
-	
-	when ('x86_16') {
-		($register_func, $datasize_func) = (Registers_x86_16::registers, Registers_x86_16::datasizes);
-	}
-	
-	default { die "Unknown arch: $arch" }
-}
-
 my $data;
 if (scalar @files == 0){
 	$data = join '', <>;
@@ -81,6 +58,6 @@ my $program = $parser->parse;
 
 #print Dumper $program;
 
-my $visitor = Visitor->new($register_func, $datasize_func, $preface);
+my $visitor = Visitor->new();
 
 $visitor->visit($program);

@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="CMakePresetLoader">{
+  &quot;useNewFormat&quot;: true
+}</component>
+  <component name="CMakeReloadState">
+    <option name="reloaded" value="true" />
+  </component>
+  <component name="CMakeRunConfigurationManager">
+    <generated>
+      <config projectName="VM" targetName="vm" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Fix malloc, global variable assignment.">
+      <change beforePath="$PROJECT_DIR$/../Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/../Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../in.rl" beforeDir="false" afterPath="$PROJECT_DIR$/../in.rl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../lib/Asm.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Asm.pm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../stdlib/stdlib.rl" beforeDir="false" afterPath="$PROJECT_DIR$/../stdlib/stdlib.rl" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectApplicationVersion">
+    <option name="ide" value="CLion" />
+    <option name="majorVersion" value="2023" />
+    <option name="minorVersion" value="3.2" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="2b8FzYFpXmFL8hTTwcVJ4F2XoN6" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;CMake Application.vm.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/rhys/scripts/RhysLang4/vm&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="vm" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="VM" TARGET_NAME="vm" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="VM" RUN_TARGET_NAME="vm">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="" />
+      <created>1705589062277</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1705589062277</updated>
+      <workItem from="1705589064039" duration="1772000" />
+      <workItem from="1705591609059" duration="12574000" />
+      <workItem from="1705665293451" duration="7618000" />
+      <workItem from="1705863255569" duration="6081000" />
+      <workItem from="1706026751991" duration="4416000" />
+      <workItem from="1706101092533" duration="7067000" />
+      <workItem from="1706173005158" duration="411000" />
+      <workItem from="1706192414683" duration="1158000" />
+      <workItem from="1706881204032" duration="2744000" />
+      <workItem from="1707064122382" duration="2949000" />
+      <workItem from="1707571412279" duration="8477000" />
+      <workItem from="1707586041663" duration="2384000" />
+    </task>
+    <task id="LOCAL-00001" summary="Begin C VM.">
+      <option name="closed" value="true" />
+      <created>1705590830721</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1705590830721</updated>
+    </task>
+    <task id="LOCAL-00002" summary="C VM parses all args now.">
+      <option name="closed" value="true" />
+      <created>1705597375360</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1705597375360</updated>
+    </task>
+    <task id="LOCAL-00003" summary="C VM parses all args now.">
+      <option name="closed" value="true" />
+      <created>1705597383358</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1705597383358</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Move opcode loading into separate function.">
+      <option name="closed" value="true" />
+      <created>1705597734791</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1705597734791</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Update gitignore.">
+      <option name="closed" value="true" />
+      <created>1705597764153</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1705597764153</updated>
+    </task>
+    <task id="LOCAL-00006" summary="VM references working.">
+      <option name="closed" value="true" />
+      <created>1705605264209</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1705605264209</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Test complete with upper-casing program.">
+      <option name="closed" value="true" />
+      <created>1705605609493</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1705605609493</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Can now extract abitrary values from the stack.">
+      <option name="closed" value="true" />
+      <created>1705612338355</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1705612338355</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Functions not working properly with return addresses.">
+      <option name="closed" value="true" />
+      <created>1705869560206</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1705869560206</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Function calls still not quite working.">
+      <option name="closed" value="true" />
+      <created>1706030353525</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1706030353525</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Move in/out to interrupt instruction.">
+      <option name="closed" value="true" />
+      <created>1706883394644</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1706883394644</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Add write interrupt.">
+      <option name="closed" value="true" />
+      <created>1706883677101</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1706883677101</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Improve test script.">
+      <option name="closed" value="true" />
+      <created>1707064481295</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1707064481295</updated>
+    </task>
+    <task id="LOCAL-00014" summary="If statements seem to be working.">
+      <option name="closed" value="true" />
+      <created>1707065464536</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1707065464536</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Variable defining working.">
+      <option name="closed" value="true" />
+      <created>1707065608239</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1707065608239</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Fix variable recalling by fixing initial stack offset.">
+      <option name="closed" value="true" />
+      <created>1707571748521</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1707571748521</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Fix comparison operators.">
+      <option name="closed" value="true" />
+      <created>1707573326261</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1707573326261</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Fix brlz, brgz not working due to not using signed ints.">
+      <option name="closed" value="true" />
+      <created>1707575623425</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1707575623425</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Fix typo in assignment handler leading to crashes.">
+      <option name="closed" value="true" />
+      <created>1707575805782</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1707575805782</updated>
+    </task>
+    <task id="LOCAL-00020" summary="String improvements, indexing fixed.">
+      <option name="closed" value="true" />
+      <created>1707577372814</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1707577372814</updated>
+    </task>
+    <task id="LOCAL-00021" summary="String improvements, indexing fixed.">
+      <option name="closed" value="true" />
+      <created>1707577379374</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1707577379375</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Fix subroutine arguments.">
+      <option name="closed" value="true" />
+      <created>1707579165741</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1707579165741</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Add getc function.">
+      <option name="closed" value="true" />
+      <created>1707584471569</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1707584471569</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Reformat.">
+      <option name="closed" value="true" />
+      <created>1707586293498</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1707586293498</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Remove call_regsisters.">
+      <option name="closed" value="true" />
+      <created>1707586804836</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1707586804836</updated>
+    </task>
+    <task id="LOCAL-00026" summary="Fix malloc, global variable assignment.">
+      <option name="closed" value="true" />
+      <created>1707587878678</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1707587878678</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.pl" />
+  </component>
+  <component name="VCPKGProject">
+    <isAutomaticEditVcpkgJson value="true" />
+    <isAutomaticCheckingOnLaunch value="false" />
+    <isAutomaticFoundErrors value="true" />
+    <isAutomaticFoundErrors value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="Begin C VM." />
+    <MESSAGE value="C VM parses all args now." />
+    <MESSAGE value="Move opcode loading into separate function." />
+    <MESSAGE value="Update gitignore." />
+    <MESSAGE value="VM references working." />
+    <MESSAGE value="Test complete with upper-casing program." />
+    <MESSAGE value="Can now extract abitrary values from the stack." />
+    <MESSAGE value="Functions not working properly with return addresses." />
+    <MESSAGE value="Function calls still not quite working." />
+    <MESSAGE value="Move in/out to interrupt instruction." />
+    <MESSAGE value="Add write interrupt." />
+    <MESSAGE value="Improve test script." />
+    <MESSAGE value="If statements seem to be working." />
+    <MESSAGE value="Variable defining working." />
+    <MESSAGE value="Fix variable recalling by fixing initial stack offset." />
+    <MESSAGE value="Fix comparison operators." />
+    <MESSAGE value="Fix brlz, brgz not working due to not using signed ints." />
+    <MESSAGE value="Fix typo in assignment handler leading to crashes." />
+    <MESSAGE value="String improvements, indexing fixed." />
+    <MESSAGE value="Fix subroutine arguments." />
+    <MESSAGE value="Add getc function." />
+    <MESSAGE value="Reformat." />
+    <MESSAGE value="Remove call_regsisters." />
+    <MESSAGE value="Fix malloc, global variable assignment." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix malloc, global variable assignment." />
+  </component>
+</project>

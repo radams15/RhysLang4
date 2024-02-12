@@ -1,17 +1,15 @@
 %include stdlib
 
 sub main() : void {
-	my file = File.open("test.txt", 2);
+	puts('Hello, World');
+	puts('test2');
 	
-	my i = 10;
-	while(i>0) {
-	    file.write("Hello world!\n");
-	    i = i-1;
-	}
-
-	file.close();
+	#my i = getc();
+	#putc(i);
 	
-	puts('Done!\n');
+	puti(malloc(100));
+	puti(malloc(100));
+	puti(malloc(100));
 	
-	exit(0);
+	return 1+1;
 }
