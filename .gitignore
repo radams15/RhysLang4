@@ -7,3 +7,5 @@ out
 *.rba
 copy.sh
 test.txt
+compiler/target
+compiler/project
