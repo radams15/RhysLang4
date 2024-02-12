@@ -342,10 +342,12 @@ sub raw {
     &comment('Raw: ', $name);
     
     push @data, {data => $data, len => $len, addr => $dp};
-    
+    my $out = $dp;
     $labels{$name} = $dp;
     
     $dp += $len + 1;
+    
+    $out;
 }
 
 ## Dumping ##

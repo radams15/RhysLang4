@@ -1,10 +1,4 @@
-all: compile assemble
+all: compile
 
 compile:
-	cat in.rl | perl -MCarp::Always main.pl > out.rba
-
-assemble:
-	../rabbit/rabbit-asm out.rba
-
-run:
-	./out
+	perl preprocess.pl in.rl | perl -MCarp::Always main.pl > out.rba

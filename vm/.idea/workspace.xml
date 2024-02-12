@@ -20,9 +20,11 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Remove call_regsisters.">
-      <change beforePath="$PROJECT_DIR$/../lib/Visitor.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Visitor.pm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Fix malloc, global variable assignment.">
+      <change beforePath="$PROJECT_DIR$/../Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/../Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../in.rl" beforeDir="false" afterPath="$PROJECT_DIR$/../in.rl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../lib/Asm.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Asm.pm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../stdlib/stdlib.rl" beforeDir="false" afterPath="$PROJECT_DIR$/../stdlib/stdlib.rl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,7 +107,7 @@
       <workItem from="1706881204032" duration="2744000" />
       <workItem from="1707064122382" duration="2949000" />
       <workItem from="1707571412279" duration="8477000" />
-      <workItem from="1707586041663" duration="1762000" />
+      <workItem from="1707586041663" duration="2384000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -307,7 +309,15 @@
       <option name="project" value="LOCAL" />
       <updated>1707586804836</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Fix malloc, global variable assignment.">
+      <option name="closed" value="true" />
+      <created>1707587878678</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1707587878678</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -347,6 +357,7 @@
     <MESSAGE value="Add getc function." />
     <MESSAGE value="Reformat." />
     <MESSAGE value="Remove call_regsisters." />
-    <option name="LAST_COMMIT_MESSAGE" value="Remove call_regsisters." />
+    <MESSAGE value="Fix malloc, global variable assignment." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix malloc, global variable assignment." />
   </component>
 </project>
