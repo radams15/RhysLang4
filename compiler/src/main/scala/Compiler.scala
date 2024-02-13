@@ -2,8 +2,6 @@ package uk.co.therhys
 
 import node.*
 
-import parser.{Parser, Source}
-
 object Compiler {
   def main(args: Array[String]): Unit = {
     /*new Function("factorial", Array("n"), new Block(Array(
@@ -18,6 +16,5 @@ object Compiler {
       new Return(new Id("result")),
     )))*/
 
-    val src = new Source("bye2 hello1", 0)
   }
 }
