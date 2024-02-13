@@ -16,13 +16,13 @@ class Lexer(source: String) {
 
   private def isAlphaNumeric(c: Char): Boolean = isAlpha(c) || isNumeric(c)
 
-
   private def sourceAt(start: Int, end: Int): String = source.substring(start, end)
   private def sourceAt(start: Int): Char = sourceAt(start, start+1).charAt(0)
   private def peek(inc: Int = 0): Char = sourceAt(current+inc)
   private def advance: Char = {
+    val out = sourceAt(current)
     current += 1
-    sourceAt(current)
+    out
   }
 
   private def atEnd: Boolean = current >= source.length
