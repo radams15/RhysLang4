@@ -2,6 +2,8 @@ package uk.co.therhys
 
 import node.*
 
+import uk.co.therhys.lexer.Lexer
+
 object Compiler {
   def main(args: Array[String]): Unit = {
     /*new Function("factorial", Array("n"), new Block(Array(
@@ -16,5 +18,26 @@ object Compiler {
       new Return(new Id("result")),
     )))*/
 
+    val inp =
+      """|
+        |sub main() : void {
+        |	puts('Hello, World');
+        |	puts('test2');
+        |
+        |	#my i = getc();
+        |	#putc(i);
+        |
+        |	puti(malloc(100));
+        |	puti(malloc(100));
+        |	puti(malloc(100));
+        |
+        |	return 1+1;
+        |}
+      |""".stripMargin
+
+    println(inp.substring(90))
+
+    val lex = new Lexer(inp)
+    println(lex.scanTokens)
   }
 }

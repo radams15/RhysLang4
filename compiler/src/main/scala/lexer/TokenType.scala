@@ -1,0 +1,33 @@
+package uk.co.therhys
+package lexer
+
+enum TokenType {
+  case
+  LEFT_PAREN,
+  RIGHT_PAREN,
+  LEFT_BRACE,
+  RIGHT_BRACE,
+  LEFT_BRACKET,
+  RIGHT_BRACKET,
+  COMMA,
+  DOT,
+  MINUS,
+  PLUS,
+  MULTIPLY,
+  DIVIDE,
+  SEMICOLON,
+  COLON,
+  BANG_EQUALS,
+  BANG,
+  EQUALS_EQUALS,
+  EQUALS,
+  LESS_EQUALS,
+  LESS,
+  GREATER_EQUALS,
+  GREATER,
+
+  STRING,
+  NUMBER,
+  IDENTIFIER,
+  EOF
+}
