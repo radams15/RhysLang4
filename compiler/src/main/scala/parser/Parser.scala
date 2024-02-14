@@ -55,7 +55,99 @@ class Parser(tokens: Array[Token]) {
 
   def declaration: AST = if matches(MY)
   then varDeclaration
-  else advance
+  else statement
+
+  private def statement: AST =
+    if(matches(IF)) ifStmt
+    else if(matches(WHILE)) whileStmt
+    else if(matches(SUB)) subDef
+    else if(matches(RETURN)) returnStmt
+    else if(matches(LEFT_BRACE)) block
+    else expressionStatement
+
+  def expressionStatement: AST = {
+    val expr = expression
+
+    consume(SEMICOLON, "Expressions must end with ';'")
+
+    Expression(expr)
+  }
+
+  private def returnStmt: Return = {
+    val value =
+      if check(SEMICOLON) then null
+      else expression
+
+    consume(SEMICOLON, "Exprected ';'")
+
+    Return(value)
+  }
+
+  private def ifStmt: While = {
+    consume(LEFT_PAREN, "Expected '(")
+    val expr = expression
+    consume(RIGHT_PAREN, "Expected ')")
+
+    val trueBranch = statement
+
+    val falseBranch =
+      if matches(ELSE) then statement
+      else null
+
+    If(expr, trueBranch, falseBranch)
+  }
+
+  private def whileStmt: While = {
+    consume(LEFT_PAREN, "Expected '(")
+    val expr = expression
+    consume(RIGHT_PAREN, "Expected ')")
+
+    val body = statement
+
+    While(expr, body)
+  }
+
+  private def block: Block = {
+    val statements: ListBuffer[AST] = ListBuffer()
+
+    while(!check(RIGHT_BRACE) && !atEnd) {
+      statements.addOne(declaration)
+    }
+
+    consume(RIGHT_BRACE, "Expected '}")
+
+    Block(statements.toArray)
+  }
+
+  def subDef: Function = {
+    val name = consume(IDENTIFIER, "Subroutine requires name")
+    consume(LEFT_PAREN, "Subroutine requries '('")
+
+    val params: ListBuffer[Map[String, Token]] = ListBuffer()
+
+    if(! check(RIGHT_PAREN)) {
+      while {
+        val name = consume(IDENTIFIER, "Subroutine declaration requires parameters")
+        consume(COLON, "Subroutine parameter requires type")
+        val varType = consume(IDENTIFIER, "Subroutine parameter requires type")
+
+        params.addOne(Map("name" -> name, "value" -> varType))
+
+        matches(COMMA)
+      } do()
+
+      consume(RIGHT_PAREN, "Subroutine requires ')' after param list")
+      consume(COLON, "Subroutine requires type after param list")
+      val returnType = consume(IDENTIFIER, "Subroutine requires type after param list")
+
+      val subBlock = if check(LEFT_BRACE) then {
+        consume(LEFT_BRACE, "")
+        block
+      } else consume(SEMICOLON, "Expected ';' or '{'")
+
+      Function(name, params.toArray, returnType, subBlock, params.length)
+    }
+  }
 
   def varDeclaration = {
     val name = consume(IDENTIFIER, "Variable must have identifier")

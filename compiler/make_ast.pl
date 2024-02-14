@@ -24,6 +24,11 @@ my @defs = (
    'value: AST, index: AST'
  ],
  [
+   'Expression',
+   'AST',
+   'expr: AST'
+ ],
+ [
    'Block',
    'AST',
    'statements: Array[AST]'
@@ -36,7 +41,7 @@ my @defs = (
  [
    'Function',
    'AST',
-   'name: String, params: Array[String], body: AST'
+   'name: String, params: Array[Map[String, Token]], returns: Token, body: Block, arity: Int'
  ],
  [
    'Grouping',
