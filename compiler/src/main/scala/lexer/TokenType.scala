@@ -44,7 +44,11 @@ enum TokenType {
   STATIC,
   STRUCT,
   SIZEOF,
-  ALLOC
+  ALLOC,
+  FALSE,
+  TRUE,
+  NULL,
+  VOID
 }
 
 val keywords = Map(
@@ -62,4 +66,8 @@ val keywords = Map(
   "STRUCT" -> TokenType.STRUCT,
   "SIZEOF" -> TokenType.SIZEOF,
   "ALLOC" -> TokenType.ALLOC,
+  "FALSE" -> TokenType.FALSE,
+  "TRUE" -> TokenType.TRUE,
+  "NULL" -> TokenType.NULL,
+  "VOID" -> TokenType.VOID,
 ).map((k, v) => (k.toLowerCase(), v))

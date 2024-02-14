@@ -1,11 +1,12 @@
 package uk.co.therhys
 
 import node.*
-
 import lexer.Lexer
 
+import uk.co.therhys.parser.Parser
+
 object Compiler {
-  def main(args: Array[String]): Unit = {
+  def main(args: Array[StringLiteral]): Unit = {
     /*new Function("factorial", Array("n"), new Block(Array(
       new Var("result", new Number(1)),
       new While(new NotEqual(new Id("n"),
@@ -36,6 +37,7 @@ object Compiler {
       |""".stripMargin
 
     val lex = new Lexer(inp)
-    println(lex.scanTokens)
+    val parse = new Parser(lex.scanTokens.toArray)
+    println(parse.parse.toString)
   }
 }

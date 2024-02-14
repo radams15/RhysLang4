@@ -1,6 +1,6 @@
 package uk.co.therhys
 package node
 
-class Id(value: String) extends AST {
+class Id(value: StringLiteral) extends AST {
   override def equals(other: AST): Boolean = false
 }

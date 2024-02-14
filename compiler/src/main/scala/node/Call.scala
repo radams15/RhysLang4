@@ -1,8 +1,8 @@
 package uk.co.therhys
 package node
 
-class Call(callee: String, args: Array[AST]) extends AST {
-  private def getCallee: String = callee
+class Call(callee: StringLiteral, args: Array[AST]) extends AST {
+  private def getCallee: StringLiteral = callee
   private def getArgs: Array[AST] = args
 
   override def equals(other: AST): Boolean = other.isInstanceOf[Call]

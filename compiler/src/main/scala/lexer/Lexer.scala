@@ -133,7 +133,6 @@ class Lexer(source: String) {
       start = current
       val tok = scanToken
       if(tok != null) {
-        println(tok)
         tokens.addOne(tok)
       }
     }

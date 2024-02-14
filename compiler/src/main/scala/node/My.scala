@@ -3,6 +3,6 @@ package node
 
 import lexer.Token
 
-class Var(name: Token) extends AST {
+class My(name: Token, initialiser: AST, datatype: Token) extends AST {
   override def equals(other: AST): Boolean = false
 }
