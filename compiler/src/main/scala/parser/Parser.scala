@@ -78,6 +78,118 @@ class Parser(tokens: Array[Token]) {
   }
 
 
+  def equality: AST = {
+    var expr = factor
+
+    while (matches(BANG_EQUALS) || matches(EQUALS_EQUALS)) {
+      val op = previous
+      val right = factor
+
+      expr = Equality(expr, op, right)
+    }
+
+    expr
+  }
+
+
+  def comparison: AST = {
+    var expr = term
+
+    while (matches(GREATER) || matches(GREATER_EQUALS) || matches(LESS) || matches(LESS_EQUALS)) {
+      val op = previous
+      val right = term
+
+      expr = Comparison(expr, op, right)
+    }
+
+    expr
+  }
+
+  def term: AST = {
+    var expr = factor
+
+    while (matches(MINUS) || matches(PLUS)) {
+      val op = previous
+      val right = factor
+
+      expr = Term(expr, op, right)
+    }
+
+    expr
+  }
+
+  def factor: AST = {
+    var expr = unary
+
+    while(matches(DIVIDE) || matches(MULTIPLY)) {
+      val op = previous
+      val right = unary
+
+      expr = Factor(expr, op, right)
+    }
+
+    expr
+  }
+
+  def unary: AST =
+    if(matches(BANG) || matches(MINUS)) {
+      val op = previous
+      val right = unary
+
+      Unary(op, right)
+    } else {
+      index
+    }
+
+  def index: AST = {
+    val expr = primary
+
+    if(matches(LEFT_BRACKET)) {
+      val indexExpr = expression
+      consume(RIGHT_BRACKET, "Index requires closing']'")
+
+      Index(expr, indexExpr)
+    }
+
+    expr
+  }
+
+  def asm: AST =
+    if(matches(ASM)) {
+      consume(LEFT_PAREN, "asm must have parentheses")
+      val code = expression
+      consume(RIGHT_PAREN, "asm must have parentheses")
+
+      Asm(code)
+    } else {
+      call
+    }
+
+  def call = {
+    var expr = primary
+
+    while(!matches(LEFT_PAREN)) {
+      expr = finishCall(expr)
+    }
+
+    expr
+  }
+
+
+  def finishCall(callee: Token) = {
+    val arguments: Array[AST] = Array()
+
+    if(! check(RIGHT_PAREN)) {
+      while({
+        arguments ::: expression
+        matches(COMMA)
+      }) ()
+    }
+
+    val paren = consume(RIGHT_PAREN, "Expect ')' after subroutine call")
+
+    Call(callee, paren, arguments)
+  }
 
 
   def primary: AST =

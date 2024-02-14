@@ -11,7 +11,17 @@ my @defs = (
  [
    'Assign',
    'AST',
-   'name: StringLiteral, value: AST'
+   'name: String, value: AST'
+ ],
+ [
+   'Asm',
+   'AST',
+   'value: Token'
+ ],
+ [
+   'Index',
+   'AST',
+   'value: Token, index: AST'
  ],
  [
    'Block',
@@ -21,12 +31,12 @@ my @defs = (
  [
    'Call',
    'AST',
-   'callee: StringLiteral, args: Array[AST]'
+   'callee: Token, paren: Token, args: Array[AST]'
  ],
  [
    'Function',
    'AST',
-   'name: StringLiteral, params: Array[StringLiteral], body: AST'
+   'name: String, params: Array[String], body: AST'
  ],
  [
    'Grouping',
@@ -36,7 +46,7 @@ my @defs = (
  [
    'Id',
    'AST',
-   'value: StringLiteral'
+   'value: String'
  ],
  [
    'If',
@@ -54,34 +64,24 @@ my @defs = (
    'value: Int'
  ],
  [
-  'Equal',
+  'Equality',
   'AST',
-  'left: AST, right: AST'
+  'left: AST, op: Token, right: AST'
  ],
  [
-  'NotEqual',
+  'Comparison',
   'AST',
-  'left: AST, right: AST'
+  'left: AST, op: Token, right: AST'
  ],
  [
-  'Add',
+  'Term',
   'AST',
-  'left: AST, right: AST'
+  'left: AST, op: Token, right: AST'
  ],
  [
-  'Subtract',
+  'Factor',
   'AST',
-  'left: AST, right: AST'
- ],
- [
-  'Multiply',
-  'AST',
-  'left: AST, right: AST'
- ],
- [
-  'Divide',
-  'AST',
-  'left: AST, right: AST'
+  'left: AST, op: Token, right: AST'
  ],
  [
    'Return',
@@ -91,7 +91,7 @@ my @defs = (
  [
    'StringLiteral',
    'AST',
-   'value: StringLiteral'
+   'value: String'
  ],
  [
    'Var',
@@ -102,6 +102,11 @@ my @defs = (
    'While',
    'AST',
    'conditional: AST, body: AST'
+ ],
+ [
+   'Unary',
+   'AST',
+   'op: Token, right: AST'
  ]
 );
 

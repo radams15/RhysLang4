@@ -3,6 +3,6 @@ package node
 
 import lexer.Token
 
-class StringLiteral(value: StringLiteral) extends AST {
+class StringLiteral(value: String) extends AST {
   override def toString: String = s"StringLiteral()"
 }

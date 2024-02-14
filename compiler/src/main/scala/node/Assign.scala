@@ -3,6 +3,6 @@ package node
 
 import lexer.Token
 
-class Assign(name: StringLiteral, value: AST) extends AST {
+class Assign(name: String, value: AST) extends AST {
   override def toString: String = s"Assign()"
 }

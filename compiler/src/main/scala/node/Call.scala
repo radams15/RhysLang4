@@ -3,6 +3,6 @@ package node
 
 import lexer.Token
 
-class Call(callee: StringLiteral, args: Array[AST]) extends AST {
+class Call(callee: Token, paren: Token, args: Array[AST]) extends AST {
   override def toString: String = s"Call()"
 }

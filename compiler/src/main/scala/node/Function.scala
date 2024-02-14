@@ -3,6 +3,6 @@ package node
 
 import lexer.Token
 
-class Function(name: StringLiteral, params: Array[StringLiteral], body: AST) extends AST {
+class Function(name: String, params: Array[String], body: AST) extends AST {
   override def toString: String = s"Function()"
 }
