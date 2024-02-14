@@ -41,7 +41,7 @@ my @defs = (
  [
    'Function',
    'AST',
-   'name: String, params: Array[Map[String, Token]], returns: Token, body: Block, arity: Int'
+   'name: Token, params: Array[Map[String, Token]], returns: Token, body: Block, arity: Int'
  ],
  [
    'Grouping',

@@ -48,8 +48,7 @@ enum TokenType {
   ALLOC,
   FALSE,
   TRUE,
-  NULL,
-  VOID
+  NULL
 }
 
 val keywords = Map(
@@ -70,6 +69,5 @@ val keywords = Map(
   "ALLOC" -> TokenType.ALLOC,
   "FALSE" -> TokenType.FALSE,
   "TRUE" -> TokenType.TRUE,
-  "NULL" -> TokenType.NULL,
-  "VOID" -> TokenType.VOID,
+  "NULL" -> TokenType.NULL
 ).map((k, v) => (k.toLowerCase(), v))

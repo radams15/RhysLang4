@@ -10,13 +10,13 @@ import scala.collection.mutable.ListBuffer
 class Parser(tokens: Array[Token]) {
   private var current = 0
 
-  def error(err: String) = throw Exception(err)
+  private def error(err: String) = throw Exception(s"Error at line ${peek().getLine}:${peek().getCol} => $err")
 
-  def peek(inc: Int = 0) = tokens(current + inc)
+  private def peek(inc: Int = 0): Token = tokens(current + inc)
 
-  def previous: Token = tokens(current - 1)
+  private def previous: Token = tokens(current - 1)
 
-  def advance: Token = {
+  private def advance: Token = {
     current += 1
     previous
   }
@@ -58,11 +58,11 @@ class Parser(tokens: Array[Token]) {
   else statement
 
   private def statement: AST =
-    if(matches(IF)) ifStmt
-    else if(matches(WHILE)) whileStmt
-    else if(matches(SUB)) subDef
-    else if(matches(RETURN)) returnStmt
-    else if(matches(LEFT_BRACE)) block
+    if (matches(IF)) ifStmt
+    else if (matches(WHILE)) whileStmt
+    else if (matches(SUB)) subDef
+    else if (matches(RETURN)) returnStmt
+    else if (matches(LEFT_BRACE)) block
     else expressionStatement
 
   def expressionStatement: AST = {
@@ -83,7 +83,7 @@ class Parser(tokens: Array[Token]) {
     Return(value)
   }
 
-  private def ifStmt: While = {
+  private def ifStmt: If = {
     consume(LEFT_PAREN, "Expected '(")
     val expr = expression
     consume(RIGHT_PAREN, "Expected ')")
@@ -110,7 +110,7 @@ class Parser(tokens: Array[Token]) {
   private def block: Block = {
     val statements: ListBuffer[AST] = ListBuffer()
 
-    while(!check(RIGHT_BRACE) && !atEnd) {
+    while (!check(RIGHT_BRACE) && !atEnd) {
       statements.addOne(declaration)
     }
 
@@ -119,13 +119,13 @@ class Parser(tokens: Array[Token]) {
     Block(statements.toArray)
   }
 
-  def subDef: Function = {
+  private def subDef: Function = {
     val name = consume(IDENTIFIER, "Subroutine requires name")
     consume(LEFT_PAREN, "Subroutine requries '('")
 
     val params: ListBuffer[Map[String, Token]] = ListBuffer()
 
-    if(! check(RIGHT_PAREN)) {
+    if (!check(RIGHT_PAREN)) {
       while {
         val name = consume(IDENTIFIER, "Subroutine declaration requires parameters")
         consume(COLON, "Subroutine parameter requires type")
@@ -134,22 +134,25 @@ class Parser(tokens: Array[Token]) {
         params.addOne(Map("name" -> name, "value" -> varType))
 
         matches(COMMA)
-      } do()
-
-      consume(RIGHT_PAREN, "Subroutine requires ')' after param list")
-      consume(COLON, "Subroutine requires type after param list")
-      val returnType = consume(IDENTIFIER, "Subroutine requires type after param list")
-
-      val subBlock = if check(LEFT_BRACE) then {
-        consume(LEFT_BRACE, "")
-        block
-      } else consume(SEMICOLON, "Expected ';' or '{'")
-
-      Function(name, params.toArray, returnType, subBlock, params.length)
+      } do ()
     }
+
+    consume(RIGHT_PAREN, "Subroutine requires ')' after param list")
+    consume(COLON, "Expected ';'")
+    val returnType = consume(IDENTIFIER, "Subroutine requires type after param list")
+
+    val subBlock: Block = if check(LEFT_BRACE) then {
+      consume(LEFT_BRACE, "")
+      block
+    } else {
+      consume(SEMICOLON, "Expected ';' or '{'")
+      null
+    }
+
+    node.Function(name, params.toArray, returnType, subBlock, params.length)
   }
 
-  def varDeclaration = {
+  def varDeclaration: My = {
     val name = consume(IDENTIFIER, "Variable must have identifier")
 
     var initialiser: AST = null
@@ -174,7 +177,7 @@ class Parser(tokens: Array[Token]) {
   def assignment: AST = {
     val expr = equality
 
-    if(matches(EQUALS)) {
+    if (matches(EQUALS)) {
       val value = assignment
 
       expr match
