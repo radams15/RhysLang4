@@ -3,6 +3,8 @@ package node
 
 import lexer.Token
 
-class Index(value: Token, index: AST) extends AST {
+class Index(value: AST, index: AST) extends AST {
   override def toString: String = s"Index()"
+
+  
 }

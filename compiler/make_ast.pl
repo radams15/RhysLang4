@@ -11,17 +11,17 @@ my @defs = (
  [
    'Assign',
    'AST',
-   'name: String, value: AST'
+   'name: Token, value: AST'
  ],
  [
    'Asm',
    'AST',
-   'value: Token'
+   'value: AST'
  ],
  [
    'Index',
    'AST',
-   'value: Token, index: AST'
+   'value: AST, index: AST'
  ],
  [
    'Block',
@@ -31,7 +31,7 @@ my @defs = (
  [
    'Call',
    'AST',
-   'callee: Token, paren: Token, args: Array[AST]'
+   'callee: AST, paren: Token, args: Array[AST]'
  ],
  [
    'Function',
@@ -96,7 +96,10 @@ my @defs = (
  [
    'Var',
    'AST',
-   'name: Token'
+   'name: Token',
+<<EOF
+def getName: Token = name
+EOF
  ],
  [
    'While',
@@ -111,7 +114,7 @@ my @defs = (
 );
 
 sub mktemplate {
-    my ($name, $child, $params) = @_;
+    my ($name, $child, $params, $extra) = @_;
 
     return <<EOF;
 package uk.co.therhys
@@ -121,14 +124,16 @@ import lexer.Token
 
 class $name($params) extends $child {
   override def toString: String = s"$name()"
+
+  $extra
 }
 EOF
 }
 
 for (@defs) {
-    my ($name, $child, $params) = @$_;
+    my ($name, $child, $params, $extra) = (@$_, '');
 
-    my $template = mktemplate($name, $child, $params);
+    my $template = mktemplate($name, $child, $params, $extra);
 
     open FH, '>', "src/main/scala/node/$name.scala";
     print FH $template;

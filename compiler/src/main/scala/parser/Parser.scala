@@ -26,7 +26,7 @@ class Parser(tokens: Array[Token]) {
   def check(expected: TokenType): Boolean = peek().getName == expected
 
   def consume(expected: TokenType, err: String): Token =
-    if! check(expected) then
+    if !check(expected) then
       error(s"$err at $previous")
     else
       advance
@@ -46,16 +46,16 @@ class Parser(tokens: Array[Token]) {
   def program: AST = {
     val out = ListBuffer[AST]()
 
-    while(! atEnd) {
-      out ::: declaration
+    while (!atEnd) {
+      out.addOne(declaration)
     }
 
     Block(out.toArray)
   }
 
-  def declaration = if matches(MY)
-    then varDeclaration
-    else statement
+  def declaration: AST = if matches(MY)
+  then varDeclaration
+  else advance
 
   def varDeclaration = {
     val name = consume(IDENTIFIER, "Variable must have identifier")
@@ -63,13 +63,13 @@ class Parser(tokens: Array[Token]) {
     var initialiser: AST = null
     var datatype: Token = null
 
-    if(matches(COLON))
+    if (matches(COLON))
       datatype = consume(IDENTIFIER, "Declarations with ':' must have type")
 
-    if(matches(EQUALS))
+    if (matches(EQUALS))
       initialiser = expression
 
-    if(datatype == null && initialiser == null)
+    if (datatype == null && initialiser == null)
       error("Declarations require either a type declaration or an intialiser statement")
 
     consume(SEMICOLON, "Declaration must end with ';'")
@@ -77,6 +77,23 @@ class Parser(tokens: Array[Token]) {
     new My(name, initialiser, datatype)
   }
 
+  def expression: AST = assignment
+
+  def assignment: AST = {
+    val expr = equality
+
+    if(matches(EQUALS)) {
+      val value = assignment
+
+      expr match
+        case name: Var =>
+          Assign(name.getName, value)
+        case _ =>
+          error("Invalid assignment target")
+    } else {
+      expr
+    }
+  }
 
   def equality: AST = {
     var expr = factor
@@ -121,7 +138,7 @@ class Parser(tokens: Array[Token]) {
   def factor: AST = {
     var expr = unary
 
-    while(matches(DIVIDE) || matches(MULTIPLY)) {
+    while (matches(DIVIDE) || matches(MULTIPLY)) {
       val op = previous
       val right = unary
 
@@ -132,7 +149,7 @@ class Parser(tokens: Array[Token]) {
   }
 
   def unary: AST =
-    if(matches(BANG) || matches(MINUS)) {
+    if (matches(BANG) || matches(MINUS)) {
       val op = previous
       val right = unary
 
@@ -142,9 +159,9 @@ class Parser(tokens: Array[Token]) {
     }
 
   def index: AST = {
-    val expr = primary
+    val expr = asm
 
-    if(matches(LEFT_BRACKET)) {
+    if (matches(LEFT_BRACKET)) {
       val indexExpr = expression
       consume(RIGHT_BRACKET, "Index requires closing']'")
 
@@ -155,7 +172,7 @@ class Parser(tokens: Array[Token]) {
   }
 
   def asm: AST =
-    if(matches(ASM)) {
+    if (matches(ASM)) {
       consume(LEFT_PAREN, "asm must have parentheses")
       val code = expression
       consume(RIGHT_PAREN, "asm must have parentheses")
@@ -168,7 +185,7 @@ class Parser(tokens: Array[Token]) {
   def call = {
     var expr = primary
 
-    while(!matches(LEFT_PAREN)) {
+    while (!matches(LEFT_PAREN)) {
       expr = finishCall(expr)
     }
 
@@ -176,36 +193,36 @@ class Parser(tokens: Array[Token]) {
   }
 
 
-  def finishCall(callee: Token) = {
-    val arguments: Array[AST] = Array()
+  def finishCall(callee: AST) = {
+    val arguments: ListBuffer[AST] = ListBuffer()
 
-    if(! check(RIGHT_PAREN)) {
-      while({
-        arguments ::: expression
+    if (!check(RIGHT_PAREN)) {
+      while ( {
+        arguments.addOne(expression)
         matches(COMMA)
       }) ()
     }
 
     val paren = consume(RIGHT_PAREN, "Expect ')' after subroutine call")
 
-    Call(callee, paren, arguments)
+    Call(callee, paren, arguments.toArray)
   }
 
 
   def primary: AST =
-    if(matches(FALSE))
-    NumberLiteral(0)
-    else if(matches(TRUE))
+    if (matches(FALSE))
+      NumberLiteral(0)
+    else if (matches(TRUE))
       NumberLiteral(1)
-    else if(matches(NULL))
+    else if (matches(NULL))
       NullLiteral()
-    else if(matches(NUMBER))
+    else if (matches(NUMBER))
       NumberLiteral(Integer.parseInt(previous.getLiteral.get))
-    else if(matches(STRING))
+    else if (matches(STRING))
       StringLiteral(previous.getLiteral.get)
-    else if(matches(IDENTIFIER))
+    else if (matches(IDENTIFIER))
       Var(previous)
-    else if(matches(LEFT_PAREN)) {
+    else if (matches(LEFT_PAREN)) {
       val expr = expression
       consume(RIGHT_PAREN, "Expect ')' after expression")
       Grouping(expr)

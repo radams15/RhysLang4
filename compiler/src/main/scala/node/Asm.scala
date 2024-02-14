@@ -3,6 +3,8 @@ package node
 
 import lexer.Token
 
-class Asm(value: Token) extends AST {
+class Asm(value: AST) extends AST {
   override def toString: String = s"Asm()"
+
+  
 }

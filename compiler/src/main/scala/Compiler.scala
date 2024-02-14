@@ -3,10 +3,10 @@ package uk.co.therhys
 import node.*
 import lexer.Lexer
 
-import uk.co.therhys.parser.Parser
+import parser.Parser
 
 object Compiler {
-  def main(args: Array[StringLiteral]): Unit = {
+  def main(args: Array[String]): Unit = {
     /*new Function("factorial", Array("n"), new Block(Array(
       new Var("result", new Number(1)),
       new While(new NotEqual(new Id("n"),
