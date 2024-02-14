@@ -1,17 +1,8 @@
 package uk.co.therhys
 package node
 
-class Call(callee: StringLiteral, args: Array[AST]) extends AST {
-  private def getCallee: StringLiteral = callee
-  private def getArgs: Array[AST] = args
+import lexer.Token
 
-  override def equals(other: AST): Boolean = other.isInstanceOf[Call]
-    && callee == other.asInstanceOf[Call].getCallee
-    && args.length == other.asInstanceOf[Call].getArgs.length
-    && args.zipWithIndex.forall((arg, i) =>
-      arg.equals(
-        other.asInstanceOf[Call]
-          .getArgs(i)
-      )
-    )
+class Call(callee: StringLiteral, args: Array[AST]) extends AST {
+  override def toString: String = s"Call()"
 }

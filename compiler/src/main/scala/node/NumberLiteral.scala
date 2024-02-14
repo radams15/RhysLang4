@@ -1,6 +1,8 @@
 package uk.co.therhys
 package node
 
+import lexer.Token
+
 class NumberLiteral(value: Int) extends AST {
-  override def equals(other: AST): Boolean = false
+  override def toString: String = s"NumberLiteral()"
 }

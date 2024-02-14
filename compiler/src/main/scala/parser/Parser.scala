@@ -10,7 +10,7 @@ import scala.collection.mutable.ListBuffer
 class Parser(tokens: Array[Token]) {
   private var current = 0
 
-  def error(err: StringLiteral) = throw Exception(err)
+  def error(err: String) = throw Exception(err)
 
   def peek(inc: Int = 0) = tokens(current + inc)
 
@@ -25,7 +25,7 @@ class Parser(tokens: Array[Token]) {
 
   def check(expected: TokenType): Boolean = peek().getName == expected
 
-  def consume(expected: TokenType, err: StringLiteral): Token =
+  def consume(expected: TokenType, err: String): Token =
     if! check(expected) then
       error(s"$err at $previous")
     else
