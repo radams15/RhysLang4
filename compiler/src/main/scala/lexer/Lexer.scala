@@ -71,9 +71,11 @@ class Lexer(source: String) {
 
     val value = sourceAt(start, current)
 
-    // TODO: check if value is a keyword
+    val tokenType = if keywords.contains(value)
+      then keywords(value)
+      else IDENTIFIER
 
-    addToken(IDENTIFIER, Some(value))
+    addToken(tokenType, Some(value))
   }
 
 

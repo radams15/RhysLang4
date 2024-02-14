@@ -2,7 +2,7 @@ package uk.co.therhys
 
 import node.*
 
-import uk.co.therhys.lexer.Lexer
+import lexer.Lexer
 
 object Compiler {
   def main(args: Array[String]): Unit = {
@@ -24,8 +24,8 @@ object Compiler {
         |	puts('Hello, World');
         |	puts('test2');
         |
-        |	#my i = getc();
-        |	#putc(i);
+        |	my i = getc();
+        |	putc(i);
         |
         |	puti(malloc(100));
         |	puti(malloc(100));
@@ -34,8 +34,6 @@ object Compiler {
         |	return 1+1;
         |}
       |""".stripMargin
-
-    println(inp.substring(90))
 
     val lex = new Lexer(inp)
     println(lex.scanTokens)

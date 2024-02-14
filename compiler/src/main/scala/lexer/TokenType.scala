@@ -29,5 +29,37 @@ enum TokenType {
   STRING,
   NUMBER,
   IDENTIFIER,
-  EOF
+  EOF,
+
+  MY,
+  FOR,
+  WHILE,
+  IF,
+  SUB,
+  OR,
+  AND,
+  NOT,
+  RETURN,
+  ASM,
+  STATIC,
+  STRUCT,
+  SIZEOF,
+  ALLOC
 }
+
+val keywords = Map(
+  "MY" -> TokenType.MY,
+  "FOR" -> TokenType.FOR,
+  "WHILE" -> TokenType.WHILE,
+  "IF" -> TokenType.IF,
+  "SUB" -> TokenType.SUB,
+  "OR" -> TokenType.OR,
+  "AND" -> TokenType.AND,
+  "NOT" -> TokenType.NOT,
+  "RETURN" -> TokenType.RETURN,
+  "ASM" -> TokenType.ASM,
+  "STATIC" -> TokenType.STATIC,
+  "STRUCT" -> TokenType.STRUCT,
+  "SIZEOF" -> TokenType.SIZEOF,
+  "ALLOC" -> TokenType.ALLOC,
+).map((k, v) => (k.toLowerCase(), v))
