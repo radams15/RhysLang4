@@ -6,12 +6,16 @@ import visitor.Visitor
 import node.*
 
 class Generator extends Visitor {
+  private def emit(str: String): Unit = println(str)
+  private val globalScope = new Scope()
+  private var scope = globalScope
+
   override def visitAssign(assignObj: Assign): Unit = {
 
   }
 
   override def visitAsm(asmObj: Asm): Unit = {
-
+    emit(asmObj.getValue.getLiteral.get)
   }
 
   override def visitIndex(indexObj: Index): Unit = {
@@ -19,16 +23,26 @@ class Generator extends Visitor {
   }
 
   override def visitExpression(expressionObj: Expression): Unit = {
-    expressionObj.getExpr.accept(this)
+    expressionObj.getExpr
+      .accept(this)
   }
 
   override def visitBlock(blockObj: Block): Unit = {
-    blockObj.getStatements.foreach(s => s.accept(this))
+    blockObj.getStatements
+      .foreach { s => s.accept(this) }
   }
 
   override def visitCall(callObj: Call): Unit = {
+    callObj.getArgs.foreach(arg => {
+      arg.accept(this)
+      emit("op_push(reg 'A')")
+    })
+
     callObj.getCallee.accept(this)
-    callObj.getArgs.foreach(arg => arg.accept(this))
+    emit("op_call(reg 'A')")
+
+    Range(1, callObj.getArgs.length)
+      .foreach(_ => emit("op_pop(reg 'tmp')"))
   }
 
   override def visitFunction(functionObj: node.Function): Unit = {
@@ -81,7 +95,8 @@ class Generator extends Visitor {
   }
 
   override def visitVar(varObj: Var): Unit = {
-
+    val name = varObj.getName.getValue
+    emit(s"# Get $name")
   }
 
   override def visitWhile(whileObj: While): Unit = {

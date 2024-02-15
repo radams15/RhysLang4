@@ -16,7 +16,7 @@ my @defs = (
  [
    'Asm',
    'AST',
-   'value: AST'
+   'value: Token'
  ],
  [
    'Index',
@@ -124,8 +124,6 @@ sub mk_nodetemplate {
     my ($name, $child, $params, $extra) = @_;
 
     my @params = map {[split /\:\s*/, $_]} (split /,\s+/, $params);
-
-    print Dumper @params;
 
     my $getters = join "\n", map {
     my ($name, $type) = @$_;

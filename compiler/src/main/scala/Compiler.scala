@@ -22,6 +22,29 @@ object Compiler {
 
     val inp =
       """|
+      |sub strlen(val: str) : int {
+         |    asm('
+         |        &mov(reg("A"), ptr("BP", +3));
+         |        &mov(reg("A"), ptr("A")); # dereference A (index 0)
+         |    ');
+         |}
+      |sub putc(val: int) : void {
+         |    asm('
+         |		&mov(reg("A"), ptr("BP", +3)); # a = val
+         |		&intr(1);
+         |    ');
+         |}
+         |sub puts(data: str) : void {
+         |	my i = 0;
+         |	my len = strlen(data);
+         |
+         |	while(i < len) {
+         |		putc(data[i]);
+         |		i = i + 1;
+         |	}
+         |
+         |	putc(10); # \n
+         |}
         |sub main() : void {
         |	puts('Hello, World');
         |	puts('test2');
@@ -35,13 +58,13 @@ object Compiler {
         |
         |	return 1+1;
         |}
-      |""".stripMargin
+        |""".stripMargin
 
     val lex = new Lexer(inp)
     val parse = new Parser(lex.scanTokens.toArray)
     val objects = parse.parse
 
-    val gen = new PrettyPrinter()
+    val gen = new Generator()
 
     objects.accept(gen)
   }

@@ -269,7 +269,7 @@ class Parser(tokens: Array[Token]) {
   def asm: AST =
     if (matches(ASM)) {
       consume(LEFT_PAREN, "asm must have parentheses")
-      val code = expression
+      val code = consume(STRING, "asm requires a string")
       consume(RIGHT_PAREN, "asm must have parentheses")
 
       Asm(code)
