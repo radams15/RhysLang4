@@ -4,7 +4,7 @@ import node.*
 import lexer.Lexer
 import parser.Parser
 
-import uk.co.therhys.generator.Generator
+import uk.co.therhys.generator.{Generator, PrettyPrinter}
 
 object Compiler {
   def main(args: Array[String]): Unit = {
@@ -41,7 +41,7 @@ object Compiler {
     val parse = new Parser(lex.scanTokens.toArray)
     val objects = parse.parse
 
-    val gen = new Generator()
+    val gen = new PrettyPrinter()
 
     objects.accept(gen)
   }
