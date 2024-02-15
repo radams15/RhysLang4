@@ -39,11 +39,11 @@ class Parser(tokens: Array[Token]) {
       false
     }
 
-  def parse: AST = {
+  def parse: Block = {
     program
   }
 
-  def program: AST = {
+  def program: Block = {
     val out = ListBuffer[AST]()
 
     while (!atEnd) {

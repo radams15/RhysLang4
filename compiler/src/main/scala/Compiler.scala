@@ -2,8 +2,9 @@ package uk.co.therhys
 
 import node.*
 import lexer.Lexer
-
 import parser.Parser
+
+import uk.co.therhys.generator.Generator
 
 object Compiler {
   def main(args: Array[String]): Unit = {
@@ -38,6 +39,10 @@ object Compiler {
 
     val lex = new Lexer(inp)
     val parse = new Parser(lex.scanTokens.toArray)
-    println(parse.parse.toString)
+    val objects = parse.parse
+
+    val gen = new Generator()
+
+    gen.visitBlock(objects)
   }
 }

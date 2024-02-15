@@ -6,5 +6,10 @@ import lexer.Token
 class While(conditional: AST, body: AST) extends AST {
   override def toString: String = s"While()"
 
-  
+   def getConditional: AST = conditional;
+
+   def getBody: AST = body;
+
+
+
 }

@@ -41,7 +41,7 @@ my @defs = (
  [
    'Function',
    'AST',
-   'name: Token, params: Array[Map[String, Token]], returns: Token, body: Block, arity: Int'
+   'name: Token, params: Array[Map[String,Token]], returns: Token, body: Block, arity: Int'
  ],
  [
    'Grouping',
@@ -121,6 +121,17 @@ EOF
 sub mk_nodetemplate {
     my ($name, $child, $params, $extra) = @_;
 
+    my @params = map {[split /\:\s*/, $_]} (split /,\s+/, $params);
+
+    print Dumper @params;
+
+    my $getters = join "\n", map {
+    my ($name, $type) = @$_;
+<<EOF
+   def get@{[ucfirst $name]}: $type = $name;
+EOF
+    } @params;
+
     return <<EOF;
 package uk.co.therhys
 package node
@@ -130,7 +141,9 @@ import lexer.Token
 class $name($params) extends $child {
   override def toString: String = s"$name()"
 
-  $extra
+$getters
+
+$extra
 }
 EOF
 }
