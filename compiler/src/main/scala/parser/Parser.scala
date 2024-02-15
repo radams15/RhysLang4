@@ -191,11 +191,11 @@ class Parser(tokens: Array[Token]) {
   }
 
   def equality: AST = {
-    var expr = factor
+    var expr = comparison
 
     while (matches(BANG_EQUALS) || matches(EQUALS_EQUALS)) {
       val op = previous
-      val right = factor
+      val right = comparison
 
       expr = Equality(expr, op, right)
     }
