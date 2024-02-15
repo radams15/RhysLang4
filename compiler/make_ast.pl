@@ -101,10 +101,7 @@ my @defs = (
  [
    'Var',
    'AST',
-   'name: Token',
-<<EOF
-def getName: Token = name
-EOF
+   'name: Token'
  ],
  [
    'While',
@@ -127,19 +124,26 @@ sub mk_nodetemplate {
 
     my $getters = join "\n", map {
     my ($name, $type) = @$_;
-<<EOF
+<<EOF;
    def get@{[ucfirst $name]}: $type = $name;
 EOF
     } @params;
+
+    my $accept = <<EOF;
+  def accept(visitor: Visitor): Unit = visitor.visit$name(this)
+EOF
 
     return <<EOF;
 package uk.co.therhys
 package node
 
 import lexer.Token
+import visitor.Visitor
 
 class $name($params) extends $child {
   override def toString: String = s"$name()"
+
+$accept
 
 $getters
 

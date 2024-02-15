@@ -14,7 +14,7 @@ class Generator extends Visitor {
 
   override def visitExpression(expressionObj: Expression): Unit = ???
 
-  override def visitBlock(blockObj: Block): Unit = ???
+  override def visitBlock(blockObj: Block): Unit = blockObj.getStatements.foreach(s => s)
 
   override def visitCall(callObj: Call): Unit = ???
 

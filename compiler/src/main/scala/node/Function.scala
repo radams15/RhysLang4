@@ -2,9 +2,13 @@ package uk.co.therhys
 package node
 
 import lexer.Token
+import visitor.Visitor
 
 class Function(name: Token, params: Array[Map[String,Token]], returns: Token, body: Block, arity: Int) extends AST {
   override def toString: String = s"Function()"
+
+  def accept(visitor: Visitor): Unit = visitor.visitFunction(this)
+
 
    def getName: Token = name;
 
