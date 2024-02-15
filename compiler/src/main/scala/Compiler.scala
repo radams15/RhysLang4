@@ -43,6 +43,6 @@ object Compiler {
 
     val gen = new Generator()
 
-    gen.visitBlock(objects)
+    objects.accept(gen)
   }
 }
