@@ -78,7 +78,7 @@ class Parser(tokens: Array[Token]) {
       if check(SEMICOLON) then null
       else expression
 
-    consume(SEMICOLON, "Exprected ';'")
+    consume(SEMICOLON, "Expected ';'")
 
     Return(value)
   }

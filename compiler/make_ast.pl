@@ -118,7 +118,7 @@ EOF
  ]
 );
 
-sub mktemplate {
+sub mk_nodetemplate {
     my ($name, $child, $params, $extra) = @_;
 
     return <<EOF;
@@ -135,12 +135,45 @@ class $name($params) extends $child {
 EOF
 }
 
+sub mk_visitortemplate {
+    my (@names) = @_;
+
+    my $classes = join "\n", map {
+    my $name = lc $_;
+<<EOF
+    def visit$_(${name}Obj: $_): Unit
+EOF
+    } @names;
+
+    return <<EOF;
+package uk.co.therhys
+package visitor
+
+import node.*
+
+trait Visitor {
+
+$classes
+
+}
+EOF
+}
+
+my @names;
 for (@defs) {
     my ($name, $child, $params, $extra) = (@$_, '');
 
-    my $template = mktemplate($name, $child, $params, $extra);
+    push @names, $name;
+
+    my $node_template = mk_nodetemplate($name, $child, $params, $extra);
 
     open FH, '>', "src/main/scala/node/$name.scala";
-    print FH $template;
+    print FH $node_template;
     close FH;
 }
+
+my $visitor = mk_visitortemplate(@names);
+
+open FH, '>', "src/main/scala/visitor/Visitor.scala";
+print FH $visitor;
+close FH;
