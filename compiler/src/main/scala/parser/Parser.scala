@@ -10,7 +10,7 @@ import scala.collection.mutable.ListBuffer
 class Parser(tokens: Array[Token]) {
   private var current = 0
 
-  private def error(err: String) = throw Exception(s"Error at line ${peek().getLine}:${peek().getCol} => $err")
+  private def error(err: String) = throw Exception(s"Error at line ${peek().getLine}:${peek().getCol} (${peek()}) => $err")
 
   private def peek(inc: Int = 0): Token = tokens(current + inc)
 
@@ -65,7 +65,7 @@ class Parser(tokens: Array[Token]) {
     else if (matches(LEFT_BRACE)) block
     else expressionStatement
 
-  def expressionStatement: AST = {
+  private def expressionStatement: AST = {
     val expr = expression
 
     consume(SEMICOLON, "Expressions must end with ';'")
@@ -152,7 +152,7 @@ class Parser(tokens: Array[Token]) {
     node.Function(name, params.toArray, returnType, subBlock, params.length)
   }
 
-  def varDeclaration: My = {
+  private def varDeclaration: My = {
     val name = consume(IDENTIFIER, "Variable must have identifier")
 
     var initialiser: AST = null
@@ -172,9 +172,9 @@ class Parser(tokens: Array[Token]) {
     new My(name, initialiser, datatype)
   }
 
-  def expression: AST = assignment
+  private def expression: AST = assignment
 
-  def assignment: AST = {
+  private def assignment: AST = {
     val expr = equality
 
     if (matches(EQUALS)) {
@@ -280,7 +280,7 @@ class Parser(tokens: Array[Token]) {
   def call = {
     var expr = primary
 
-    while (!matches(LEFT_PAREN)) {
+    while (matches(LEFT_PAREN)) {
       expr = finishCall(expr)
     }
 
