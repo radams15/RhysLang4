@@ -7,7 +7,7 @@ import visitor.Visitor
 class Assign(name: Token, value: AST) extends AST {
   override def toString: String = s"Assign()"
 
-  def accept(visitor: Visitor): Unit = visitor.visitAssign(this)
+  override def accept(visitor: Visitor): Unit = visitor.visitAssign(this)
 
 
    def getName: Token = name;

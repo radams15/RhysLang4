@@ -7,7 +7,7 @@ import visitor.Visitor
 class Call(callee: AST, paren: Token, args: Array[AST]) extends AST {
   override def toString: String = s"Call()"
 
-  def accept(visitor: Visitor): Unit = visitor.visitCall(this)
+  override def accept(visitor: Visitor): Unit = visitor.visitCall(this)
 
 
    def getCallee: AST = callee;

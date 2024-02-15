@@ -7,7 +7,7 @@ import visitor.Visitor
 class If(conditional: AST, ifTrue: AST, ifFalse: AST) extends AST {
   override def toString: String = s"If()"
 
-  def accept(visitor: Visitor): Unit = visitor.visitIf(this)
+  override def accept(visitor: Visitor): Unit = visitor.visitIf(this)
 
 
    def getConditional: AST = conditional;

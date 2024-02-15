@@ -41,6 +41,8 @@ trait Visitor {
 
     def visitStringLiteral(stringliteralObj: StringLiteral): Unit
 
+    def visitNullLiteral(nullliteralObj: NullLiteral): Unit
+
     def visitVar(varObj: Var): Unit
 
     def visitWhile(whileObj: While): Unit

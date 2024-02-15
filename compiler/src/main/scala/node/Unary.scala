@@ -7,7 +7,7 @@ import visitor.Visitor
 class Unary(op: Token, right: AST) extends AST {
   override def toString: String = s"Unary()"
 
-  def accept(visitor: Visitor): Unit = visitor.visitUnary(this)
+  override def accept(visitor: Visitor): Unit = visitor.visitUnary(this)
 
 
    def getOp: Token = op;

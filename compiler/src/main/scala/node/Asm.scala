@@ -7,7 +7,7 @@ import visitor.Visitor
 class Asm(value: AST) extends AST {
   override def toString: String = s"Asm()"
 
-  def accept(visitor: Visitor): Unit = visitor.visitAsm(this)
+  override def accept(visitor: Visitor): Unit = visitor.visitAsm(this)
 
 
    def getValue: AST = value;

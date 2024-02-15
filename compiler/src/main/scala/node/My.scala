@@ -7,7 +7,7 @@ import visitor.Visitor
 class My(name: Token, initialiser: AST, datatype: Token) extends AST {
   override def toString: String = s"My()"
 
-  def accept(visitor: Visitor): Unit = visitor.visitMy(this)
+  override def accept(visitor: Visitor): Unit = visitor.visitMy(this)
 
 
    def getName: Token = name;

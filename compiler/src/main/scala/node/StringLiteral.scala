@@ -7,7 +7,7 @@ import visitor.Visitor
 class StringLiteral(value: String) extends AST {
   override def toString: String = s"StringLiteral()"
 
-  def accept(visitor: Visitor): Unit = visitor.visitStringLiteral(this)
+  override def accept(visitor: Visitor): Unit = visitor.visitStringLiteral(this)
 
 
    def getValue: String = value;

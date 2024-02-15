@@ -7,7 +7,7 @@ import visitor.Visitor
 class Id(value: String) extends AST {
   override def toString: String = s"Id()"
 
-  def accept(visitor: Visitor): Unit = visitor.visitId(this)
+  override def accept(visitor: Visitor): Unit = visitor.visitId(this)
 
 
    def getValue: String = value;

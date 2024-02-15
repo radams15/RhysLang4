@@ -99,6 +99,11 @@ my @defs = (
    'value: String'
  ],
  [
+   'NullLiteral',
+   'AST',
+   ''
+ ],
+ [
    'Var',
    'AST',
    'name: Token'
@@ -130,7 +135,7 @@ EOF
     } @params;
 
     my $accept = <<EOF;
-  def accept(visitor: Visitor): Unit = visitor.visit$name(this)
+  override def accept(visitor: Visitor): Unit = visitor.visit$name(this)
 EOF
 
     return <<EOF;
