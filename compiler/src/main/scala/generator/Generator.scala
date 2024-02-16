@@ -2,8 +2,10 @@ package uk.co.therhys
 package generator
 
 import visitor.Visitor
-
 import node.*
+import lexer.TokenType.{EQUALS, GREATER, LESS}
+
+import uk.co.therhys.lexer.TokenType
 
 class Generator extends Visitor {
   private def emit(str: String): Unit = println(str)
@@ -19,6 +21,8 @@ class Generator extends Visitor {
 
     (start, s"${start}_end")
   }
+
+  private def error(str: String) = throw Exception(str)
 
 
   override def visitAssign(assignObj: Assign): Unit = ???
@@ -73,7 +77,42 @@ class Generator extends Visitor {
 
   override def visitEquality(equalityObj: Equality): Unit = ???
 
-  override def visitComparison(comparisonObj: Comparison): Unit = ???
+  private def cmp(a: String, b: String, op: TokenType, inv: Boolean): Unit = {
+    val (start, end) = generateLabel("cmp")
+
+    emit(s"comp($a, $b)")
+
+    emit(op match
+      case LESS => s"brlz('$start')"
+      case GREATER => s"brgbz('$start')"
+      case EQUALS => s"brz('$start')"
+      case default => error(s"Unknown op: $op")
+    )
+
+    emit(s"mov($a, 0)")
+    emit(s"br('$end')")
+    emit(s"label('$start')")
+    emit(s"mov($a, 1)")
+
+    emit(s"label('$end')")
+
+    if(inv)
+      emit(s"op_not($a, $a)")
+  }
+
+  override def visitComparison(comparisonObj: Comparison): Unit = {
+    comparisonObj.getOp.getName match
+      case LESS | GREATER => {
+        comparisonObj.getRight.accept(this)
+        emit("op_push(reg('A'))")
+        comparisonObj.getLeft.accept(this)
+        emit("op_pop(reg('C'))")
+
+        cmp("reg('A')", "reg('C')", comparisonObj.getOp.getName, false)
+      }
+
+      case default => error(s"Unknown term: ${comparisonObj.getOp.getName}")
+  }
 
   override def visitTerm(termObj: Term): Unit = {
     termObj.getLeft.accept(this)
@@ -109,7 +148,21 @@ class Generator extends Visitor {
     emit(s"# Get $name")
   }
 
-  override def visitWhile(whileObj: While): Unit = ???
+  override def visitWhile(whileObj: While): Unit = {
+    val (start, end) = generateLabel("loop")
+
+    emit(s"label('$start')")
+    whileObj.getConditional.accept(this)
+
+    emit("comp(reg('A'), 0)")
+    emit(s"brz('$end')")
+
+    whileObj.getBody.accept(this)
+
+    emit(s"br('$start')'")
+
+    emit(s"label('$end')")
+  }
 
   override def visitUnary(unaryObj: Unary): Unit = ???
 
