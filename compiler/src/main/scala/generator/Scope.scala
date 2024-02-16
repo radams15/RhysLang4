@@ -4,6 +4,12 @@ package generator
 class Scope(parent: Scope = null) {
   private val variables: scala.collection.mutable.Map[String, String] = scala.collection.mutable.Map()
 
+  private var stackOffset = 0
+
+  def getStackOffset: Int = stackOffset
+  def addStackOffset(n: Int): Unit = stackOffset += n
+  def subStackOffset(n: Int): Unit = stackOffset -= n
+
   def get(name: String): Option[String] = {
     getScopeOf(name) match
       case Some(value) => value.get(name)
