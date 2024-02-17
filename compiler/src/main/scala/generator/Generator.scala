@@ -11,9 +11,10 @@ class Generator extends Visitor {
   private def emit(str: String): Unit = println(str)
   private val globalScope = new Scope()
   private var scope = globalScope
+  private var inSub: Boolean = false
 
   private var labelIndex = 0
-  private var strings: scala.collection.mutable.Map[String, String] = scala.collection.mutable.Map()
+  private val strings: scala.collection.mutable.Map[String, String] = scala.collection.mutable.Map()
   private def generateLabel(labelType: String): (String, String) = {
     val start = s".${labelType}_$labelIndex"
 
@@ -22,10 +23,49 @@ class Generator extends Visitor {
     (start, s"${start}_end")
   }
 
+  private def typeof(func: Function): String =
+    func.getReturns.getValue match
+      case "STRING" | "str" => "STR"
+      case "NUMBER" | "int" => "NUM"
+      case "void" => "VOID"
+
+  private def typeof(ast: AST): String =
+    ast match
+      case varType: Var =>
+        scope.get(varType.getName.getValue).get
+          .getDataType
+      case callType: Call =>
+        scope.get(callType.getCallee.asInstanceOf[Var].getName.getValue) match
+          case Some(variable) => variable.getDataType
+          case None | null => error(s"Return type ${callType.getCallee.asInstanceOf[Var].getName.getValue} undefined")
+      case numberLiteral: NumberLiteral => "INT"
+      case stringLiteral: StringLiteral => "STR"
+      case default => error(s"Typeof does apply to: '${ast.getClass.getName}'")
+
+  private def typeof(ast: String): String =
+    if(ast.forall(c => c.isDigit)) "INT"
+    else "STR"
+
+  private def sizeofType(str: String): Int = 1
+  private def sizeof(a: Any): Int = 1
+
+
   private def error(str: String) = throw Exception(str)
 
 
-  override def visitAssign(assignObj: Assign): Unit = ???
+  override def visitAssign(assignObj: Assign): Unit = {
+    assignObj.getValue.accept(this)
+
+
+    scope.get(assignObj.getName.getValue) match
+      case Some(varObj) =>
+        varObj match
+          case variable: LocalVariable =>
+            emit(s"mov(ptr('BP', ${variable.getOffset}), reg('A'))")
+          case _ => // Global
+            error("Undefined 2")
+      case default => error(s"Undefined variable: ${assignObj.getName.getValue}")
+  }
 
   override def visitAsm(asmObj: Asm): Unit = {
     emit(asmObj.getValue.getLiteral.get)
@@ -57,7 +97,35 @@ class Generator extends Visitor {
   }
 
   override def visitFunction(functionObj: node.Function): Unit = {
+    val name = functionObj.getName.getValue
+    globalScope.set(name, new GlobalVariable(
+      dataType = "SUB",
+      definition = functionObj
+    ))
+
+    if (functionObj.getBody == null)
+      return ()
+
+    scope = scope.getNewChild
+
+    emit(s"label('$name')")
+    emit("enter()")
+
+    functionObj.getParams.foreach(arg => {
+      val size = sizeofType(arg("type").getValue)
+      val offset = scope.getStackOffset + 3 // ????
+      scope.setNew(arg("name").getValue, new LocalVariable(
+        dataType = arg("type").getValue, offset = offset, definition = null
+      ))
+    })
+
+    inSub = true
     functionObj.getBody.accept(this)
+    inSub = false
+
+    emit(s"label('.end_$name')")
+    emit("leave()")
+    scope = scope.getParent
   }
 
   override def visitGrouping(groupingObj: Grouping): Unit = ???
@@ -67,7 +135,29 @@ class Generator extends Visitor {
   override def visitIf(ifObj: If): Unit = ???
 
   override def visitMy(myObj: My): Unit = {
-    myObj.getInitialiser.accept(this)
+    if(inSub) {
+      if(myObj.getInitialiser != null)
+        myObj.getInitialiser.accept(this)
+      else
+        emit("mov(reg('A'), 0)")
+
+      emit("op_push(reg('A')")
+      val datatype: String = if(myObj.getDatatype != null)
+          myObj.getDatatype.getValue
+        else if(myObj.getInitialiser != null)
+          typeof(myObj.getInitialiser)
+        else error("Declarations require either a datatype or initialiser")
+
+      println(s"Define: ${myObj.getName.getValue}")
+
+      scope.setNew(myObj.getName.getValue, new LocalVariable(
+        dataType = datatype,
+        offset = scope.getStackOffset,
+        definition = myObj
+      ))
+
+      scope.subStackOffset(sizeofType(datatype))
+    } else error("Globals unimplemented") // TODO: global vars
   }
 
   override def visitNumberLiteral(numberliteralObj: NumberLiteral): Unit = {
@@ -145,7 +235,21 @@ class Generator extends Visitor {
 
   override def visitVar(varObj: Var): Unit = {
     val name = varObj.getName.getValue
-    emit(s"# Get $name")
+    val value = scope.get(name) match
+      case Some(value) => value
+      case None | null =>
+        error(s"Variable ${name} undefined")
+
+    value match
+      case localVariable: LocalVariable => emit(s"mov(reg('A'), ptr('BP', ${localVariable.getOffset}))")
+      case globalVariable: GlobalVariable =>
+        globalVariable.getDataType match
+          case "PTR" =>
+            emit(s"mov(reg('A'), $name)")
+            emit("mov(reg('A'), ptr('A'))")
+          case default => emit(s"mov(reg('A'), $name)")
+      case default =>
+        error(s"Variable ${name} undefined")
   }
 
   override def visitWhile(whileObj: While): Unit = {
