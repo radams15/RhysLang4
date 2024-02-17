@@ -131,7 +131,7 @@ class Parser(tokens: Array[Token]) {
         consume(COLON, "Subroutine parameter requires type")
         val varType = consume(IDENTIFIER, "Subroutine parameter requires type")
 
-        params.addOne(Map("name" -> name, "value" -> varType))
+        params.addOne(Map("name" -> name, "type" -> varType))
 
         matches(COMMA)
       } do ()

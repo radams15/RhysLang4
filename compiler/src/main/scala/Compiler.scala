@@ -4,18 +4,28 @@ import node.*
 import lexer.Lexer
 import parser.Parser
 
-import uk.co.therhys.generator.{Generator, PrettyPrinter}
+import generator.{Generator, PrettyPrinter}
 
 object Compiler {
   def main(args: Array[String]): Unit = {
     val inp =
       """|
-      |sub strlen(val: str) : int {
+      |sub malloc() : int {
+         |    return 123;
+         |}
+         |sub strlen(val: str) : int {
          |    asm('
          |        &mov(reg("A"), ptr("BP", +3));
          |        &mov(reg("A"), ptr("A")); # dereference A (index 0)
          |    ');
          |}
+         |sub puti(val: int) : void {
+         |    asm('
+         |		&mov(reg("A"), ptr("BP", +3)); # a = val
+         |		&intr(4);
+         |    ');
+         |}
+         |
       |sub putc(val: int) : void {
          |    asm('
          |		&mov(reg("A"), ptr("BP", +3)); # a = val
@@ -37,7 +47,7 @@ object Compiler {
         |	puts('Hello, World');
         |	puts('test2');
         |
-        |	my i = getc();
+        |	my i = 88;
         |	putc(i);
         |
         |	puti(malloc(100));
