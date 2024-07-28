@@ -112,9 +112,9 @@ sub enter {
 sub leave {
 	push @code, [$p, 'leave'];
 	$p++;
-	
+
 	#&mov(reg('SP'), reg('BP')),
-    #&pop(reg('BP'))
+	#&pop(reg('BP'))
 }
 
 

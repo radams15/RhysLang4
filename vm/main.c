@@ -5,6 +5,18 @@
 #include <string.h>
 #include <unistd.h>
 
+#define DEBUG
+
+
+#ifdef DEBUG
+
+#define dbprintf(...) \
+    fprintf(stderr, __VA_ARGS__)
+
+#else
+#define dbprintf(...)
+#endif
+
 const uint16_t mem_size = 1024;
 
 typedef enum Opcode {
@@ -279,24 +291,30 @@ uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
 #define printstack_rev(n) for(int i=n ; i>=0 ; i--)printf("BP+%d = %d = %04x %s\n", i, regs[REG_BP]+i, mem[regs[REG_BP]+i], (regs[REG_BP]+i == regs[REG_SP]? "<= SP" : ""));
 
 int intr(IntCode_t num, uint16_t *regs, uint16_t *mem) {
+    dbprintf("Interrupt: ");
     switch (num) {
         case IN:
+            dbprintf("IN\n");
             regs[REG_A] = getchar();
             getchar(); // for \n
             break;
         case OUT:
+            dbprintf("OUT\n");
             printf("%c", regs[REG_A]);
             break;
 
         case OUTI:
+            dbprintf("OUTI\n");
             printf("%d", regs[REG_A]);
             break;
 
         case WRITE:
+            dbprintf("WRITE\n");
             write(1, &mem[regs[REG_A]], regs[REG_B]);
             break;
 
         default:
+            dbprintf("INVALID\n");
             fprintf(stderr, "Invalid interrupt: %02x\n", num);
             return 1;
     }
@@ -318,61 +336,80 @@ int interp(Op_t *prog, uint16_t *mem) {
         start_ip = *ip;
         Op_t *op = &prog[*ip];
 
+        dbprintf("IP = %d\n", *ip);
+
         switch (op->code) {
             case OP_HALT:
+                dbprintf("HALT\n");
                 goto end;
             case OP_MOVE:
+                dbprintf("MOVE %d => %d\n", op->arg1.val, op->arg2.val);
                 *arg_val(&op->arg1) = *arg_val(&op->arg2);
                 break;
             case OP_ADD:
+                dbprintf("ADD %d = %d + %d\n", op->arg1.val, op->arg2.val, op->arg3.val);
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) + *arg_val(&op->arg3);
                 break;
             case OP_SUB:
+                dbprintf("SUB %d = %d - %d\n", op->arg1.val, op->arg2.val, op->arg3.val);
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) - *arg_val(&op->arg3);
                 break;
             case OP_MUL:
+                dbprintf("MUL %d = %d * %d\n", op->arg1.val, op->arg2.val, op->arg3.val);
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) * *arg_val(&op->arg3);
                 break;
             case OP_DIV:
+                dbprintf("DIV %d = %d / %d\n", op->arg1.val, op->arg2.val, op->arg3.val);
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) / *arg_val(&op->arg3);
                 break;
             case OP_SHR:
+                dbprintf("SHR %d = %d >> %d\n", op->arg1.val, op->arg2.val, op->arg3.val);
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) >> *arg_val(&op->arg3);
                 break;
             case OP_SHL:
+                dbprintf("SHL %d = %d << %d\n", op->arg1.val, op->arg2.val, op->arg3.val);
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) << *arg_val(&op->arg3);
                 break;
             case OP_NAND:
+                dbprintf("NAND %d = %d NAND %d\n", op->arg1.val, op->arg2.val, op->arg3.val);
                 *arg_val(&op->arg1) = !(*arg_val(&op->arg2) & *arg_val(&op->arg3));
                 break;
             case OP_XOR:
+                dbprintf("XOR %d = %d XOR %d\n", op->arg1.val, op->arg2.val, op->arg3.val);
                 *arg_val(&op->arg1) = *arg_val(&op->arg2) ^ *arg_val(&op->arg3);
                 break;
             case OP_BR:
+                dbprintf("BR %d\n", op->arg1.val);
                 *ip = *arg_val(&op->arg1);
                 break;
 
             case OP_PUSH:
-            push(*arg_val(&op->arg1));
+                dbprintf("PUSH %d\n", op->arg1.val);
+                push(*arg_val(&op->arg1));
                 break;
             case OP_POP:
-            pop(*arg_val(&op->arg1));
+                dbprintf("POP %d\n", op->arg1.val);
+                pop(*arg_val(&op->arg1));
                 break;
 
 
             case OP_BRZ:
+                dbprintf("BRZ %d\n", op->arg1.val);
                 if (regs[REG_TMP] == 0)
                     *ip = *arg_val(&op->arg1);
                 break;
             case OP_BRNZ:
+                dbprintf("BRNZ %d\n", op->arg1.val);
                 if (regs[REG_TMP] != 0)
                     *ip = *arg_val(&op->arg1);
                 break;
             case OP_BRGZ:
+                dbprintf("BRGZ %d\n", op->arg1.val);
                 if (((int16_t) regs[REG_TMP]) > 0)
                     *ip = *arg_val(&op->arg1);
                 break;
             case OP_BRLZ:
+                dbprintf("BRLZ %d\n", op->arg1.val);
                 if (((int16_t) regs[REG_TMP]) < 0)
                     *ip = *arg_val(&op->arg1);
                 break;
@@ -383,20 +420,24 @@ int interp(Op_t *prog, uint16_t *mem) {
                 break;
 
             case OP_BRKPT:
+                dbprintf("BRKPT\n");
                 break;
 
             case OP_ENTER:
-            push(regs[REG_BP]);
+                dbprintf("ENTER\n");
+                push(regs[REG_BP]);
                 regs[REG_BP] = regs[REG_SP];
                 break;
 
             case OP_LEAVE:
+                dbprintf("LEAVE\n");
                 regs[REG_SP] = regs[REG_BP];
                 pop(regs[REG_BP]);
                 break;
 
             case OP_CALL:
-            push((*ip) + 1);
+                dbprintf("CALL %d\n", op->arg1.val);
+                push((*ip) + 1);
                 *ip = *arg_val(&op->arg1);
                 break;
 
@@ -415,7 +456,8 @@ int interp(Op_t *prog, uint16_t *mem) {
 
 int main(int argc, char **argv) {
     const char *file = "../out.rba";
-    //const char* file = "out.rba";
+
+    dbprintf("Load file '%s'\n", file);
 
     uint16_t *mem = calloc(mem_size, sizeof(uint16_t));
 
