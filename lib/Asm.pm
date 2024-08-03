@@ -339,7 +339,7 @@ sub raw {
     
     print STDERR "Define $name = '$data'\n";
     
-    &comment('Raw: ', $name);
+    &comment(sprintf('Raw: %s, len: %d', $name, $len));
     
     push @data, {data => $data, len => $len, addr => $dp};
     my $out = $dp;

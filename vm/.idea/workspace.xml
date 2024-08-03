@@ -20,10 +20,11 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Fix malloc, global variable assignment.">
-      <change afterPath="$PROJECT_DIR$/defs.h" afterDir="false" />
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Move about some code.">
+      <change afterPath="$PROJECT_DIR$/../out.rba.bak" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../lib/Asm.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Asm.pm" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/defs.h" beforeDir="false" afterPath="$PROJECT_DIR$/defs.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -117,7 +118,7 @@
       <workItem from="1707586041663" duration="2384000" />
       <workItem from="1721662058484" duration="1607000" />
       <workItem from="1721726171859" duration="6291000" />
-      <workItem from="1722677545874" duration="319000" />
+      <workItem from="1722677545874" duration="6993000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -327,7 +328,15 @@
       <option name="project" value="LOCAL" />
       <updated>1707587878678</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Move about some code.">
+      <option name="closed" value="true" />
+      <created>1722677875056</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1722677875056</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -367,6 +376,7 @@
     <MESSAGE value="Reformat." />
     <MESSAGE value="Remove call_regsisters." />
     <MESSAGE value="Fix malloc, global variable assignment." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix malloc, global variable assignment." />
+    <MESSAGE value="Move about some code." />
+    <option name="LAST_COMMIT_MESSAGE" value="Move about some code." />
   </component>
 </project>

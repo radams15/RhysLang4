@@ -33,7 +33,7 @@ const char *opstrings[] = {
         "OP_BRZ",
         "OP_BRNZ",
         "OP_INT",
-        "OP_CMP",
+        "OP_NULL1",
         "OP_BRKPT",
         "OP_PUSH",
         "OP_POP",
@@ -147,28 +147,33 @@ uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
         return 1;
     }
 
-    uint16_t size = read_word(fh);
+    uint16_t prog_size = read_word(fh);
     uint16_t data_size = read_word(fh);
 
-    for (int i = 0; i < data_size; i++) {
+    dbprintf("Data Length: %d\n", data_size);
+
+    for (int i = 0; i <= data_size; i++) {
         int elem_size = read_word(fh);
         int addr = read_word(fh);
 
-        for (int x = 0; x < elem_size; x++)
+        dbprintf("\nData %d (%d) @ addr %d: \n", i, elem_size, addr);
+
+        for (int x = 0; x < elem_size; x++) {
             if (fread(&mem[addr + x], sizeof(uint8_t), 1, fh) < 1) {
                 fprintf(stderr, "Failed to read data\n");
                 return 1;
             }
+        }
 
         i += elem_size;
     }
 
 
-    uint16_t *raw = malloc(size * sizeof(uint16_t));
+    uint16_t *raw = malloc(prog_size * sizeof(uint16_t));
 
     uint16_t in_op = 0;
     uint16_t n_ops = 0;
-    for (uint16_t i = 0; i < size; i++) {
+    for (uint16_t i = 0; i < prog_size; i++) {
         raw[i] = read_word(fh);
 
         if (in_op <= 0) {
@@ -184,7 +189,7 @@ uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
 
     uint16_t p = 0;
     uint16_t i = 0;
-    while (p < size) {
+    while (p < prog_size) {
         parse_op(&raw[p], &ops[i]);
 
         p += ops[i].n_args + 1;
@@ -247,7 +252,7 @@ int intr(IntCode_t num, uint16_t *regs, uint16_t *mem) {
 }
 
 int interp(Op_t *prog, uint16_t *mem) {
-    uint16_t regs[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    uint16_t regs[REG_TMP+1] = {0};
     uint16_t *ip = &regs[REG_IP];
 
     regs[REG_SP] = mem_size;
@@ -380,6 +385,7 @@ int interp(Op_t *prog, uint16_t *mem) {
 
 int main(int argc, char **argv) {
     const char *file = "../out.rba";
+    // const char *file = "./out.rba";
 
     dbprintf("Load file '%s'\n", file);
 

@@ -21,7 +21,7 @@ typedef enum Opcode {
     OP_BRZ = 0xb,
     OP_BRNZ = 0xc,
     OP_INT = 0xd,
-    OP_CMP = 0xe,
+    OP_NULL1 = 0xe,
     OP_BRKPT = 0xf,
 
     OP_PUSH = 0x10,
@@ -54,10 +54,7 @@ typedef enum Register {
     REG_SP,
     REG_BP,
     REG_RET,
-    REG_TMP,
-    REG_ZR, // Zero
-    REG_GZ, // > Zero
-    REG_LZ // < Zero
+    REG_TMP
 } Register_t;
 
 typedef enum IntCode {
