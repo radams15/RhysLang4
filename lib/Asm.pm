@@ -432,13 +432,13 @@ sub emit {
     for (@_) {
         my %hash = %$_;
         
-        if($hash{type} eq 'c') {
+        if($hash{type} eq 'c') { # comment
             debug "Comment: %s", $hash{val};
-        } elsif($hash{type} eq 'r') {
+        } elsif($hash{type} eq 'r') { # register
             &emit_reg($hash{val}, $hash{'ref'}, $hash{offset});
-        } elsif ($hash{type} eq 'i') {
+        } elsif ($hash{type} eq 'i') { # int (16-bit)
             &emit_int($hash{val}, $hash{'ref'});
-        } elsif ($hash{type} eq 'o') {
+        } elsif ($hash{type} eq 'o') { # opcode
             &emit_short($hash{val}, $hash{'ref'});
         } else {
             die "Unknown type: '$hash{type}'";
