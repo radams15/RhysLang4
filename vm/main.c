@@ -168,6 +168,7 @@ uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
         i += elem_size;
     }
 
+    dbprintf("Program Length: %d\n", prog_size);
 
     uint16_t *raw = malloc(prog_size * sizeof(uint16_t));
 

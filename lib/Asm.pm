@@ -352,6 +352,29 @@ sub raw {
 
 ## Dumping ##
 
+sub encode_arg {
+	my ($val, $offset, $type, $addr) = @_;
+	
+=pod
+typedef struct Arg {
+    uint16_t val;
+    int8_t offset;
+    enum ArgType type;
+    uint8_t addr;
+} Arg_t;
+=cut
+	
+	return pack('ScCC', $val, $offset, $type, $addr);
+}
+
+sub encode_op {
+	my ($code, $n_args, @args) = @_;
+	
+	my @encoded_args = map {encode_arg(@$_)} @args;
+	
+	return pack('CC', $code, $n_args).join('', @encoded_args);
+}
+
 sub emit_short {
     my ($val) = @_;
     
