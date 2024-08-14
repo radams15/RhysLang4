@@ -35,12 +35,12 @@ typedef enum Opcode {
 } Opcode_t;
 
 typedef enum ArgType {
-    ARG_REG,
+    ARG_REG = 0x0,
     ARG_INT
 } ArgType_t;
 
 typedef enum Register {
-    REG_A = 0,
+    REG_A = 0x0,
     REG_B,
     REG_C,
     REG_D,

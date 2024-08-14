@@ -9,6 +9,8 @@ use Exporter 'import';
 
 use List::Util qw/ sum /;
 
+use Data::Dumper;
+
 our @EXPORT_OK = qw//;
 our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz brlz brgz intr in out comp op_not op_or op_and op_push op_pop call ret raw op_inc dump_asm /;
 
@@ -55,6 +57,11 @@ my %OPS = (
     CALL => 0x14,
     BRLZ => 0x15,
     BRGZ => 0x16,
+);
+
+my %ARG_TYPES = (
+    REG => 0x0,
+    INT => 0x1
 );
 
 my %INTS = (
@@ -368,11 +375,9 @@ typedef struct Arg {
 }
 
 sub encode_op {
-	my ($code, $n_args, @args) = @_;
+	my ($code, $n_args) = @_;
 	
-	my @encoded_args = map {encode_arg(@$_)} @args;
-	
-	return pack('CC', $code, $n_args).join('', @encoded_args);
+	return pack('CC', $code, $n_args);
 }
 
 sub emit_short {
@@ -470,10 +475,9 @@ sub parse {
     
     die "Unknown op: '$name'" unless defined $opcode;
     
-    my @out = ({type => 'o', val => $opcode});
+    debug "\n%02x => $name @args", $ip;
     
-    debug "%02x => $name @args", $ip;
-    
+    my @out_args;
     for my $arg (@args) {
         my $ref = 0;
         if($arg =~ /\((.*)\)/g) {
@@ -483,14 +487,12 @@ sub parse {
         
         my $val = &parse_elem($arg);
         
-        $val->{'ref'} = $ref;
+        my $type = ($val->{type} eq 'r'? $ARG_TYPES{REF} : $ARG_TYPES{INT});
         
-        push @out, $val;
+        push @out_args, [$val->{val}, $val->{offset}//0, $type//0, $ref//0];
     }
     
-    debug "";
-    
-    @out;
+    return encode_op($opcode, scalar(@args)), \@out_args;
 }
 
 
@@ -505,7 +507,22 @@ sub dump_asm {
     emit_data;
     
     for my $line (@code) {
-        emit parse @$line;
+        my ($op, $args) = parse @$line;
+                
+        if (ref $op eq 'HASH' and $op->{type} eq 'c') {
+        	print STDERR $op->{val}, "\n";
+        	next;
+        }
+        
+	my @encoded_args = map {encode_arg(@$_)} @$args;
+	
+        print join('', $op);
+	print join('', @encoded_args);
+	
+	print STDERR "OP: ", Dumper $op;
+	
+	print STDERR join("\t", (map {sprintf "%v08x", $_} ($op, @encoded_args))), "\n\n";
+
     }
 }
 
