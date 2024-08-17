@@ -20,9 +20,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Move about some code.">
+    <list default="true" id="ca3e5dc7-1d92-4ec2-b307-5c1a978647f6" name="Changes" comment="Now can load instructions from bytecode.&#10;&#10;Problem was that C struct was not packed but the bytecode struct was.&#10;&#10;Also C was using enums of size uint16_t rather than uint8_t.">
+      <change beforePath="$PROJECT_DIR$/../lib/Asm.pm" beforeDir="false" afterPath="$PROJECT_DIR$/../lib/Asm.pm" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/defs.h" beforeDir="false" afterPath="$PROJECT_DIR$/defs.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -286,7 +286,7 @@
       <workItem from="1723540243274" duration="2236000" />
       <workItem from="1723639742631" duration="1971000" />
       <workItem from="1723891665214" duration="55000" />
-      <workItem from="1723891817811" duration="11144000" />
+      <workItem from="1723891817811" duration="11738000" />
     </task>
     <task id="LOCAL-00001" summary="Begin C VM.">
       <option name="closed" value="true" />
@@ -504,7 +504,15 @@
       <option name="project" value="LOCAL" />
       <updated>1722677875056</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="Now can load instructions from bytecode.&#10;&#10;Problem was that C struct was not packed but the bytecode struct was.&#10;&#10;Also C was using enums of size uint16_t rather than uint8_t.">
+      <option name="closed" value="true" />
+      <created>1723909861728</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1723909861728</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -520,7 +528,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Begin C VM." />
     <MESSAGE value="C VM parses all args now." />
     <MESSAGE value="Move opcode loading into separate function." />
     <MESSAGE value="Update gitignore." />
@@ -545,7 +552,8 @@
     <MESSAGE value="Remove call_regsisters." />
     <MESSAGE value="Fix malloc, global variable assignment." />
     <MESSAGE value="Move about some code." />
-    <option name="LAST_COMMIT_MESSAGE" value="Move about some code." />
+    <MESSAGE value="Now can load instructions from bytecode.&#10;&#10;Problem was that C struct was not packed but the bytecode struct was.&#10;&#10;Also C was using enums of size uint16_t rather than uint8_t." />
+    <option name="LAST_COMMIT_MESSAGE" value="Now can load instructions from bytecode.&#10;&#10;Problem was that C struct was not packed but the bytecode struct was.&#10;&#10;Also C was using enums of size uint16_t rather than uint8_t." />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

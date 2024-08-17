@@ -366,16 +366,26 @@ sub encode_arg {
 typedef struct Arg {
     uint16_t val;
     int8_t offset;
-    enum ArgType type;
+    uint8_t type;
     uint8_t addr;
 } Arg_t;
 =cut
 	
-	return pack('ScCC', $val, $offset, $type, $addr);
+	return pack('S<cCC', $val, $offset, $type, $addr);
 }
 
 sub encode_op {
 	my ($code, $n_args) = @_;
+	
+=pod
+typedef struct Op {
+    uint8_t code;
+    uint8_t n_args;
+    Arg_t arg1;
+    Arg_t arg2;
+    Arg_t arg3;
+} Op_t;
+=cut
 	
 	return pack('CC', $code, $n_args);
 }
@@ -497,7 +507,7 @@ sub parse {
 
 
 sub dump_asm {
-    my $size = sum (map {scalar @$_} @code);
+    my $size = scalar(grep {not($_->[0] =~ /^;.*/)} @code);
     my $data_size = sum (map {$_->{len}} @data) // 0;
     
     debug "Size: %d, %d", $size, $data_size;
@@ -508,7 +518,7 @@ sub dump_asm {
     
     for my $line (@code) {
         my ($op, $args) = parse @$line;
-                
+        
         if (ref $op eq 'HASH' and $op->{type} eq 'c') {
         	print STDERR $op->{val}, "\n";
         	next;
@@ -518,8 +528,6 @@ sub dump_asm {
 	
         print join('', $op);
 	print join('', @encoded_args);
-	
-	print STDERR "OP: ", Dumper $op;
 	
 	print STDERR join("\t", (map {sprintf "%v08x", $_} ($op, @encoded_args))), "\n\n";
 

@@ -211,44 +211,19 @@ uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
 
     dbprintf("Program Length: %d\n", prog_size);
 
-    uint16_t *raw = malloc(prog_size * sizeof(uint16_t));
+    Op_t *ops = malloc(prog_size * sizeof(Op_t));
 
-    uint16_t in_op = 0;
-    uint16_t n_ops = 0;
-    Op_t op;
     for (uint16_t i = 0; i < prog_size; i++) {
-        memset(&op, 0, sizeof(Op_t));
+        memset(&ops[i], 0, sizeof(Op_t));
 
-        if(read_op(fh, &op)) {
+        if(read_op(fh, &ops[i])) {
             fprintf(stderr, "Failed to read op from file\n");
             return 1;
         }
 
-        dbprintf("OP: %s (%02x)\n", opstrings[op.code], op.n_args);
-
-        /*if (in_op <= 0) {
-            in_op = n_args(raw[i]);
-            n_ops++;
-        } else {
-            in_op--;
-        }*/
+        dbprintf("OP: %s (%02x)\n", opstrings[ops[i].code], ops[i].n_args);
     }
     fclose(fh);
-
-    return 1;
-
-    Op_t *ops = malloc(n_ops * sizeof(Op_t));
-
-    uint16_t p = 0;
-    uint16_t i = 0;
-    while (p < prog_size) {
-        parse_op(&raw[p], &ops[i]);
-
-        p += ops[i].n_args + 1;
-        i++;
-    }
-
-    free(raw);
 
     *ops_ptr = ops;
 
