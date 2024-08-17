@@ -140,6 +140,47 @@ uint16_t read_word(FILE *fh) {
     return a | (b << 8);
 }
 
+int read_arg(FILE* fh, Arg_t* arg) {
+    dbprintf("Read arg from: %04lx => ", ftell(fh));
+
+    if (fread(arg, sizeof(Arg_t), 1, fh) < 0) {
+        fprintf(stderr, "Failed to read file\n");
+        return 1;
+    }
+
+    dbprintf("to %04lx (%02x)\n", ftell(fh), sizeof(Arg_t));
+
+    return 0;
+}
+
+int read_op(FILE* fh, Op_t* op) {
+    dbprintf("Read from: %04lx => ", ftell(fh));
+    if (fread(op, sizeof(uint8_t), 2, fh) < 0) {
+        fprintf(stderr, "Failed to read file\n");
+        return 1;
+    }
+
+    dbprintf("to %04lx\n", ftell(fh));
+
+
+    dbprintf("%d args\n", op->n_args);
+
+    switch (op->n_args) {
+        case 3:
+            if(read_arg(fh, &op->arg3)) return 1;
+        case 2:
+            if(read_arg(fh, &op->arg2)) return 1;
+        case 1:
+            if(read_arg(fh, &op->arg1)) return 1;
+        case 0:
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
 uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
     FILE *fh = fopen(file, "r");
     if (fh == NULL) {
@@ -174,17 +215,27 @@ uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
 
     uint16_t in_op = 0;
     uint16_t n_ops = 0;
+    Op_t op;
     for (uint16_t i = 0; i < prog_size; i++) {
-        raw[i] = read_word(fh);
+        memset(&op, 0, sizeof(Op_t));
 
-        if (in_op <= 0) {
+        if(read_op(fh, &op)) {
+            fprintf(stderr, "Failed to read op from file\n");
+            return 1;
+        }
+
+        dbprintf("OP: %s (%02x)\n", opstrings[op.code], op.n_args);
+
+        /*if (in_op <= 0) {
             in_op = n_args(raw[i]);
             n_ops++;
         } else {
             in_op--;
-        }
+        }*/
     }
     fclose(fh);
+
+    return 1;
 
     Op_t *ops = malloc(n_ops * sizeof(Op_t));
 

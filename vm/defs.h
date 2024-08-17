@@ -65,15 +65,15 @@ typedef enum IntCode {
     OUTI = 0x4
 } IntCode_t;
 
-typedef struct Arg {
+typedef struct __attribute__((__packed__)) Arg {
     uint16_t val;
     int8_t offset;
-    enum ArgType type;
+    uint8_t type;
     uint8_t addr;
 } Arg_t;
 
-typedef struct Op {
-    enum Opcode code;
+typedef struct __attribute__((__packed__)) Op {
+    uint8_t code;
     uint8_t n_args;
     Arg_t arg1;
     Arg_t arg2;
