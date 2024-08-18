@@ -36,7 +36,7 @@ typedef enum Opcode {
 
 typedef enum ArgType {
     ARG_REG = 0x0,
-    ARG_INT
+    ARG_INT = 0x1
 } ArgType_t;
 
 typedef enum Register {

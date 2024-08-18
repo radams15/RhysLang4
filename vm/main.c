@@ -166,12 +166,18 @@ int read_op(FILE* fh, Op_t* op) {
     dbprintf("%d args\n", op->n_args);
 
     switch (op->n_args) {
-        case 3:
-            if(read_arg(fh, &op->arg3)) return 1;
-        case 2:
-            if(read_arg(fh, &op->arg2)) return 1;
         case 1:
             if(read_arg(fh, &op->arg1)) return 1;
+            break;
+        case 2:
+            if(read_arg(fh, &op->arg1)) return 1;
+            if(read_arg(fh, &op->arg2)) return 1;
+            break;
+        case 3:
+            if(read_arg(fh, &op->arg1)) return 1;
+            if(read_arg(fh, &op->arg2)) return 1;
+            if(read_arg(fh, &op->arg3)) return 1;
+            break;
         case 0:
 
         default:
@@ -221,7 +227,7 @@ uint8_t load_ops(const char *file, Op_t **ops_ptr, uint16_t *mem) {
             return 1;
         }
 
-        dbprintf("OP: %s (%02x)\n", opstrings[ops[i].code], ops[i].n_args);
+        dbprintf("OP: %s (%02x)\n\n", opstrings[ops[i].code], ops[i].n_args);
     }
     fclose(fh);
 
@@ -292,7 +298,7 @@ int interp(Op_t *prog, uint16_t *mem) {
         start_ip = *ip;
         Op_t *op = &prog[*ip];
 
-        dbprintf("IP = %d\n", *ip);
+        dbprintf("IP = %02x\n", *ip);
 
         switch (op->code) {
             case OP_HALT:
@@ -392,7 +398,7 @@ int interp(Op_t *prog, uint16_t *mem) {
                 break;
 
             case OP_CALL:
-                dbprintf("CALL %d\n", op->arg1.val);
+                dbprintf("CALL %02x\n", op->arg1.val);
                 push((*ip) + 1);
                 *ip = *arg_val(&op->arg1);
                 break;
