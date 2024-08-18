@@ -9,6 +9,8 @@ use Exporter 'import';
 
 use List::Util qw/ sum /;
 
+use Data::Dumper;
+
 our @EXPORT_OK = qw//;
 our @EXPORT = qw/ reg ptr label comment enter leave brkpt halt mov add sub mul div shr shl nand xor br brz brnz brlz brgz intr in out comp op_not op_or op_and op_push op_pop call ret raw op_inc dump_asm /;
 
@@ -55,6 +57,11 @@ my %OPS = (
     CALL => 0x14,
     BRLZ => 0x15,
     BRGZ => 0x16,
+);
+
+my %ARG_TYPES = (
+    REG => 0x0,
+    INT => 0x1
 );
 
 my %INTS = (
@@ -352,6 +359,37 @@ sub raw {
 
 ## Dumping ##
 
+sub encode_arg {
+	my ($val, $offset, $type, $addr) = @_;
+	
+=pod
+typedef struct Arg {
+    uint16_t val;
+    int8_t offset;
+    uint8_t type;
+    uint8_t addr;
+} Arg_t;
+=cut
+	
+	return pack('S<cCC', $val, $offset, $type, $addr);
+}
+
+sub encode_op {
+	my ($code, $n_args) = @_;
+	
+=pod
+typedef struct Op {
+    uint8_t code;
+    uint8_t n_args;
+    Arg_t arg1;
+    Arg_t arg2;
+    Arg_t arg3;
+} Op_t;
+=cut
+	
+	return pack('CC', $code, $n_args);
+}
+
 sub emit_short {
     my ($val) = @_;
     
@@ -409,13 +447,13 @@ sub emit {
     for (@_) {
         my %hash = %$_;
         
-        if($hash{type} eq 'c') {
+        if($hash{type} eq 'c') { # comment
             debug "Comment: %s", $hash{val};
-        } elsif($hash{type} eq 'r') {
+        } elsif($hash{type} eq 'r') { # register
             &emit_reg($hash{val}, $hash{'ref'}, $hash{offset});
-        } elsif ($hash{type} eq 'i') {
+        } elsif ($hash{type} eq 'i') { # int (16-bit)
             &emit_int($hash{val}, $hash{'ref'});
-        } elsif ($hash{type} eq 'o') {
+        } elsif ($hash{type} eq 'o') { # opcode
             &emit_short($hash{val}, $hash{'ref'});
         } else {
             die "Unknown type: '$hash{type}'";
@@ -447,10 +485,9 @@ sub parse {
     
     die "Unknown op: '$name'" unless defined $opcode;
     
-    my @out = ({type => 'o', val => $opcode});
+    debug "\n%02x => $name @args", $ip;
     
-    debug "%02x => $name @args", $ip;
-    
+    my @out_args;
     for my $arg (@args) {
         my $ref = 0;
         if($arg =~ /\((.*)\)/g) {
@@ -460,19 +497,17 @@ sub parse {
         
         my $val = &parse_elem($arg);
         
-        $val->{'ref'} = $ref;
+        my $type = ($val->{type} eq 'r'? $ARG_TYPES{REF} : $ARG_TYPES{INT});
         
-        push @out, $val;
+        push @out_args, [$val->{val}, $val->{offset}//0, $type//0, $ref//0];
     }
     
-    debug "";
-    
-    @out;
+    return encode_op($opcode, scalar(@args)), \@out_args;
 }
 
 
 sub dump_asm {
-    my $size = sum (map {scalar @$_} @code);
+    my $size = scalar(grep {not($_->[0] =~ /^;.*/)} @code);
     my $data_size = sum (map {$_->{len}} @data) // 0;
     
     debug "Size: %d, %d", $size, $data_size;
@@ -482,7 +517,20 @@ sub dump_asm {
     emit_data;
     
     for my $line (@code) {
-        emit parse @$line;
+        my ($op, $args) = parse @$line;
+        
+        if (ref $op eq 'HASH' and $op->{type} eq 'c') {
+        	print STDERR $op->{val}, "\n";
+        	next;
+        }
+        
+	my @encoded_args = map {encode_arg(@$_)} @$args;
+	
+        print join('', $op);
+	print join('', @encoded_args);
+	
+	print STDERR join("\t", (map {sprintf "%v08x", $_} ($op, @encoded_args))), "\n\n";
+
     }
 }
 

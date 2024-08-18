@@ -35,12 +35,12 @@ typedef enum Opcode {
 } Opcode_t;
 
 typedef enum ArgType {
-    ARG_REG,
-    ARG_INT
+    ARG_REG = 0x0,
+    ARG_INT = 0x1
 } ArgType_t;
 
 typedef enum Register {
-    REG_A = 0,
+    REG_A = 0x0,
     REG_B,
     REG_C,
     REG_D,
@@ -65,15 +65,15 @@ typedef enum IntCode {
     OUTI = 0x4
 } IntCode_t;
 
-typedef struct Arg {
+typedef struct __attribute__((__packed__)) Arg {
     uint16_t val;
     int8_t offset;
-    enum ArgType type;
+    uint8_t type;
     uint8_t addr;
 } Arg_t;
 
-typedef struct Op {
-    enum Opcode code;
+typedef struct __attribute__((__packed__)) Op {
+    uint8_t code;
     uint8_t n_args;
     Arg_t arg1;
     Arg_t arg2;
