@@ -5,8 +5,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define DEBUG
-
 #include "defs.h"
 
 #ifdef DEBUG

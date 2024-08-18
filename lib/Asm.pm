@@ -108,23 +108,6 @@ sub reg {
     $out;
 }
 
-sub enter {
-	push @code, [$p, 'enter'];
-	$p++;
-	
-	#&push(reg('BP')),
-    #&mov(reg('BP'), reg('SP'));
-}
-
-sub leave {
-	push @code, [$p, 'leave'];
-	$p++;
-
-	#&mov(reg('SP'), reg('BP')),
-	#&pop(reg('BP'))
-}
-
-
 sub brkpt {
     push @code, [$p, 'brkpt'];
     $p++;
@@ -239,6 +222,16 @@ sub intr {
 }
 
 ## MACROS ##
+
+sub enter {
+	&op_push(reg('BP')),
+    	&mov(reg('BP'), reg('SP'));
+}
+
+sub leave {
+	&mov(reg('SP'), reg('BP')),
+	&op_pop(reg('BP'));
+}
 
 sub in {
     my ($addr) = @_;
@@ -398,66 +391,11 @@ sub emit_short {
     print pack('s<', $val);
 }
 
-sub emit_reg {
-    my ($val, $ref, $offset) = @_;
-
-    # bits 13 = offset sign
-    $val |= ($offset<0? 1 : 0) << 13;
-    # bits 12-2 = offset
-    $val |= abs($offset) << 4;
- 
-    # bit 15 = register?
-    $val |= 1 << 15;
-    
-    # bit 14 = reference?
-    if($ref) {
-        $val |= 1 << 14;
-    } else {
-        $val &= ~(1 << 14);
-    }
-    
-    &emit_short($val);
-}
-
-sub emit_int {
-    my ($val, $ref) = @_;
-    
-    $val &= ~(1 << 15);
-    
-    if($ref) {
-        $val |= 1 << 14;
-    } else {
-        $val &= ~(1 << 14);
-    }
-    
-    &emit_short($val);
-}
-
 sub emit_data {
     for my $data (@data) {
         emit_short($data->{len});
         emit_short($data->{addr});
         print pack("a$data->{len}", $data->{data});
-    }
-}
-
-sub emit {
-    my ($hash) = @_;
-    
-    for (@_) {
-        my %hash = %$_;
-        
-        if($hash{type} eq 'c') { # comment
-            debug "Comment: %s", $hash{val};
-        } elsif($hash{type} eq 'r') { # register
-            &emit_reg($hash{val}, $hash{'ref'}, $hash{offset});
-        } elsif ($hash{type} eq 'i') { # int (16-bit)
-            &emit_int($hash{val}, $hash{'ref'});
-        } elsif ($hash{type} eq 'o') { # opcode
-            &emit_short($hash{val}, $hash{'ref'});
-        } else {
-            die "Unknown type: '$hash{type}'";
-        }
     }
 }
 
