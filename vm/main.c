@@ -415,8 +415,12 @@ int interp(Op_t *prog, uint16_t *mem) {
 }
 
 int main(int argc, char **argv) {
-    const char *file = "../out.rba";
-    // const char *file = "./out.rba";
+    if(argc < 2) {
+        fprintf(stderr, "Usage: %s FILE\n", argv[0]);
+        return 1;
+    }
+
+    const char *file = argv[1];
 
     dbprintf("Load file '%s'\n", file);
 
