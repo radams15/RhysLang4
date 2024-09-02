@@ -1,18 +1,12 @@
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "defs.h"
+#include <rhys.h>
 
-#ifdef DEBUG
-#define dbprintf(...) \
-    fprintf(stderr, __VA_ARGS__)
-#else
-#define dbprintf(...)
-#endif
+#include "defs.h"
 
 const uint16_t mem_size = 1024;
 
